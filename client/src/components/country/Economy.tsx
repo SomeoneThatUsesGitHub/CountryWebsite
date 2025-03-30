@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { EconomicData, Industry, EconomicChallenge } from '@/types';
 import { formatNumber } from '@/lib/helpers';
-import InflationGame from './InflationGame';
 
 interface EconomyProps {
   countryName: string;
@@ -55,6 +54,15 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
     'Education and workforce development',
     'Tax reform initiatives',
     'Trade agreement expansions'
+  ];
+  
+  // Reform icons
+  const reformIcons = [
+    'fa-leaf',
+    'fa-laptop-code',
+    'fa-graduation-cap',
+    'fa-file-invoice-dollar',
+    'fa-handshake'
   ];
 
   return (
@@ -173,9 +181,9 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <h3 className="text-lg font-bold mb-4">Economic Challenges & Reforms</h3>
+        <h3 className="text-lg font-bold mb-6">Economic Challenges & Reforms</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {challenges.map((challenge, index) => (
             <motion.div 
               key={challenge.title}
@@ -193,11 +201,41 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
           ))}
         </div>
         
-        <div className="mt-8">
-          <InflationGame 
-            countryName={countryName}
-            currentInflation={inflation}
-          />
+        {/* Economic Reforms */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg shadow-sm">
+          <h4 className="font-semibold mb-4 flex items-center">
+            <i className="fas fa-chart-line text-primary mr-2"></i>
+            Economic Reforms & Initiatives
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reforms.map((reform, index) => (
+              <motion.div 
+                key={index}
+                className="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 + (index * 0.1) }}
+              >
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i className={`fas ${reformIcons[index] || 'fa-arrow-up'} text-primary`}></i>
+                </div>
+                <div>
+                  <p className="text-sm">{reform}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-4 bg-white p-4 rounded-lg">
+            <h5 className="font-medium text-sm mb-2">Economic Outlook</h5>
+            <p className="text-sm text-gray-600">
+              {countryName}'s economic outlook remains positive with projected growth of {gdpGrowth.replace('%', '')}% over the next year.
+              The government continues to implement structural reforms to address challenges and stimulate sustainable growth.
+              International financial institutions have commended recent policy measures aimed at stabilizing inflation and 
+              promoting investment.
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

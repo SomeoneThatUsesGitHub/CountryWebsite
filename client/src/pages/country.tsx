@@ -7,7 +7,8 @@ import CountryTabs from '@/components/country/CountryTabs';
 import InteractiveTimeline from '@/components/country/InteractiveTimeline';
 import { PopulationChart, GDPChart, ReligionChart, generateSamplePopulationData, generateSampleGDPData, generateSampleReligionData } from '@/components/country/ChartDisplay';
 import EthnicityChart, { generateSampleEthnicGroups } from '@/components/country/EthnicityChart';
-import PoliticalSystem from '@/components/country/PoliticalSystem';
+import GovernmentSystem from '@/components/country/GovernmentSystem';
+import InternationalRelations from '@/components/country/InternationalRelations';
 import Economy from '@/components/country/Economy';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -128,15 +129,10 @@ const CountryPage: React.FC = () => {
         {activeTab === 'political-system' && (
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
-            <PoliticalSystem 
-              countryName={country.name}
-              leader={{
-                name: "Current Leader",
-                title: "President",
-                party: "Leading Party",
-                startDate: "2022-01-01"
-              }}
-            />
+            <GovernmentSystem countryName={country.name} />
+            <div className="mt-8">
+              <InternationalRelations countryName={country.name} />
+            </div>
           </div>
         )}
         

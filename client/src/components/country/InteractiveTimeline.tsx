@@ -151,26 +151,7 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
         ))}
       </div>
       
-      {/* Interactive Education Element */}
-      <motion.div 
-        className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-primary mt-10"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        <h3 className="font-bold text-lg mb-3">Did You Know?</h3>
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-            <i className="fas fa-lightbulb text-primary text-xl"></i>
-          </div>
-          <p className="text-gray-600">
-            Political events can have long-lasting impacts on a country's development. 
-            Elections, legislation, and international agreements shape the future direction of a nation.
-            Understanding these key historical moments helps citizens comprehend how their country evolved
-            and the forces that shaped its current political landscape.
-          </p>
-        </div>
-      </motion.div>
+
     </div>
   );
 };
