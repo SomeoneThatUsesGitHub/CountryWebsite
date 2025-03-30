@@ -330,14 +330,14 @@ const AdminPage: React.FC = () => {
                         <FormLabel>Government Form</FormLabel>
                         <FormControl>
                           <Select
-                            value={field.value || ''}
-                            onValueChange={(value) => field.onChange(value === '' ? null : value)}
+                            value={field.value || 'none'}
+                            onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select government form" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
                               <SelectItem value="Republic">Republic</SelectItem>
                               <SelectItem value="Constitutional Monarchy">Constitutional Monarchy</SelectItem>
                               <SelectItem value="Federal Republic">Federal Republic</SelectItem>
