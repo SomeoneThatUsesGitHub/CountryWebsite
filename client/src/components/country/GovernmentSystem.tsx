@@ -15,11 +15,14 @@ interface GovernmentProps {
     };
     freedomIndex?: number; // 0-100, higher is more free
     electionSystem?: string;
-    branches?: {
+    leader?: {
       name: string;
-      role: string;
-      power: 'Strong' | 'Moderate' | 'Limited';
-    }[];
+      title: string;
+      photoUrl?: string;
+      age: number;
+      inOfficeSince: string;
+      previousRole?: string;
+    };
   };
 }
 
@@ -41,23 +44,14 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
     },
     freedomIndex: 78,
     electionSystem: 'Representative democracy with general elections every 4 years',
-    branches: [
-      {
-        name: 'Executive',
-        role: 'Headed by the President who serves as both head of state and government',
-        power: 'Strong' as const
-      },
-      {
-        name: 'Legislative',
-        role: 'Bicameral parliament with elected representatives',
-        power: 'Moderate' as const
-      },
-      {
-        name: 'Judicial',
-        role: 'Independent court system with appointed judges',
-        power: 'Moderate' as const
-      }
-    ]
+    leader: {
+      name: 'John Doe',
+      title: 'President',
+      photoUrl: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y',
+      age: 58,
+      inOfficeSince: '2020',
+      previousRole: 'Governor of Eastern Province'
+    }
   };
   
   // Colors for government types
@@ -88,12 +82,7 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
     return 'bg-red-500';
   };
   
-  // Colors for branch power
-  const powerColors = {
-    'Strong': 'bg-blue-500',
-    'Moderate': 'bg-blue-300',
-    'Limited': 'bg-blue-200'
-  };
+
 
   return (
     <div className="mb-12">
@@ -187,7 +176,7 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
           </motion.div>
         </div>
         
-        {/* Government Branches */}
+        {/* Chief Leader Card */}
         <div className="md:col-span-1">
           <motion.div 
             className="bg-white rounded-lg shadow-sm overflow-hidden h-full"
@@ -196,21 +185,33 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <div className="p-4">
-              <h4 className="font-bold text-lg mb-3">Government Branches</h4>
+              <h4 className="font-bold text-lg mb-3">{government.leader?.title || 'President'}</h4>
               
-              <div className="space-y-4">
-                {government.branches?.map((branch, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="mt-1 w-2 h-12 rounded-full flex-shrink-0" style={{ backgroundColor: powerColors[branch.power] }}></div>
-                    <div>
-                      <h5 className="font-medium">{branch.name}</h5>
-                      <p className="text-sm text-gray-600">{branch.role}</p>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 mt-1 inline-block">
-                        {branch.power} Power
-                      </span>
-                    </div>
+              <div className="flex flex-col items-center">
+                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-100 mb-3 shadow-sm">
+                  <img 
+                    src={government.leader?.photoUrl || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
+                    alt="Leader portrait" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <h5 className="font-bold text-lg text-center mb-1">{government.leader?.name || "John Doe"}</h5>
+                <p className="text-sm text-gray-600 mb-3 text-center">
+                  Age: {government.leader?.age || 58}
+                </p>
+                
+                <div className="w-full bg-gray-50 p-3 rounded-lg space-y-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-calendar-alt text-primary"></i>
+                    <span className="text-sm">In office since: <span className="font-medium">{government.leader?.inOfficeSince || "2020"}</span></span>
                   </div>
-                ))}
+                  
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-briefcase text-primary"></i>
+                    <span className="text-sm">Previous role: <span className="font-medium">{government.leader?.previousRole || "Governor"}</span></span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
