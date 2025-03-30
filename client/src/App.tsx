@@ -14,7 +14,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/country" component={CountryPage} />
+      <Route path="/country">
+        {(params) => <CountryPage />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -32,6 +34,23 @@ function App() {
         // Verify we have countries loaded by fetching all countries
         const countries = await apiRequest<Country[]>('GET', '/api/countries', undefined);
         console.log(`Loaded ${countries.length} countries`);
+        
+        // Log some debug information about the current URL
+        console.log("Current URL:", window.location.href);
+        console.log("URL Search Params:", window.location.search);
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        console.log("Country code from URL params:", code);
+        
+        if (code) {
+          // Try to verify this code exists in our data
+          try {
+            const country = await apiRequest<Country>('GET', `/api/countries/code/${code}`, undefined);
+            console.log("Found country for code:", country.name);
+          } catch (err) {
+            console.error("Could not find country for code:", code, err);
+          }
+        }
       } catch (error) {
         console.error("Failed to initialize data:", error);
       }

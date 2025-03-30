@@ -96,11 +96,21 @@ export class MemStorage implements IStorage {
   }
 
   async getCountryByCode(code: string): Promise<Country | undefined> {
+    if (!code) {
+      console.log(`Storage: No code provided for country lookup`);
+      return undefined;
+    }
+    
     console.log(`Storage: Searching for country with code ${code}`);
     console.log(`Storage: Number of countries in storage: ${this.countries.size}`);
     
+    // Make case-insensitive comparison for better matching
+    const upperCode = code.toUpperCase();
+    
     const country = Array.from(this.countries.values()).find(
-      (country) => country.alpha2Code === code || country.alpha3Code === code
+      (country) => 
+        (country.alpha2Code && country.alpha2Code.toUpperCase() === upperCode) || 
+        (country.alpha3Code && country.alpha3Code.toUpperCase() === upperCode)
     );
     
     if (country) {
@@ -108,11 +118,13 @@ export class MemStorage implements IStorage {
     } else {
       console.log(`Storage: No country found with code ${code}`);
       
-      // Log all available country codes for debugging
-      const allCodes = Array.from(this.countries.values()).map(
-        c => `${c.name}: ${c.alpha2Code}, ${c.alpha3Code}`
-      );
-      console.log(`Storage: Available country codes: ${allCodes.join('; ')}`);
+      // Only log a sample of available country codes to avoid overflow
+      const sampleCodes = Array.from(this.countries.values())
+        .slice(0, 10)
+        .map(c => `${c.name}: ${c.alpha2Code}, ${c.alpha3Code}`);
+      
+      console.log(`Storage: Sample of available country codes: ${sampleCodes.join('; ')}`);
+      console.log(`Storage: Total countries available: ${this.countries.size}`);
     }
     
     return country;

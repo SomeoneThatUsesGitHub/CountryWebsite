@@ -69,6 +69,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch countries" });
     }
   });
+  
+  // Debug route to get all available country codes
+  app.get("/api/countries/debug/codes", async (req, res) => {
+    try {
+      const countries = await storage.getAllCountries();
+      const codes = countries.map(c => ({ 
+        name: c.name, 
+        alpha2Code: c.alpha2Code, 
+        alpha3Code: c.alpha3Code 
+      }));
+      res.json(codes);
+    } catch (error) {
+      console.error("Error fetching country codes:", error);
+      res.status(500).json({ message: "Failed to fetch country codes" });
+    }
+  });
 
   // Get countries by region
   app.get("/api/countries/region/:region", async (req, res) => {

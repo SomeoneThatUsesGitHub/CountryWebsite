@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Country, TimelineEvent } from '@/types';
+import { Country, TimelineEvent } from '@shared/schema';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
 import InteractiveTimeline from '@/components/country/InteractiveTimeline';
@@ -14,16 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const CountryPage: React.FC = () => {
   const [location] = useLocation();
-  // Extract alpha3Code from URL path or query parameter
+  // Extract alpha3Code from URL query parameter
   let code = '';
   
-  // Check if we're using a query parameter (e.g., /country?code=USA)
-  if (location.includes('?')) {
-    const urlParams = new URLSearchParams(location.split('?')[1] || '');
-    code = urlParams.get('code') || '';
-  }
+  // Use window.location.search to get query parameters directly
+  const urlParams = new URLSearchParams(window.location.search);
+  code = urlParams.get('code') || '';
   
   console.log("Country code from URL:", code);
+  console.log("Current location:", location);
+  console.log("Window search params:", window.location.search);
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch country data

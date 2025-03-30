@@ -11,8 +11,10 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
   const [_, setLocation] = useLocation();
 
   const handleClick = () => {
-    console.log(`Navigating to country: ${country.name}, code: ${country.alpha3Code}`);
-    setLocation(`/country?code=${country.alpha3Code}`);
+    const countryCode = country.alpha3Code || '';
+    console.log(`Navigating to country: ${country.name}, code: ${countryCode}`);
+    // Use wouter navigation but use the full URL including query params
+    setLocation(`/country?code=${countryCode}`);
   };
 
   // Fallback values for missing data
