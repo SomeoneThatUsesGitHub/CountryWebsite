@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home";
 import CountryPage from "@/pages/country";
+import AdminPage from "@/pages/admin";
 import Header from "@/components/layout/Header";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/country">
         {(params) => <CountryPage />}
       </Route>
+      <Route path="/admin" component={AdminPage} />
       <Route component={NotFound} />
     </Switch>
   );

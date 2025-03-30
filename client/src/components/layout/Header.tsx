@@ -70,6 +70,18 @@ const Header: React.FC = () => {
           >
             About
           </a>
+          <a 
+            href="#" 
+            className={`font-medium hover:text-primary transition-colors ${
+              location === '/admin' ? 'text-primary' : 'text-gray-600'
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavigation('/admin');
+            }}
+          >
+            Admin
+          </a>
         </nav>
         
         <button 
@@ -125,6 +137,18 @@ const Header: React.FC = () => {
               }}
             >
               About
+            </a>
+            <a 
+              href="#" 
+              className={`py-3 font-medium hover:text-primary transition-colors ${
+                location === '/admin' ? 'text-primary' : 'text-gray-600'
+              }`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('/admin');
+              }}
+            >
+              Admin
             </a>
           </nav>
         </div>

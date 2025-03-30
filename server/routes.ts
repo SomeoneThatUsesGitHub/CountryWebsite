@@ -3,7 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import axios from "axios";
 import { z } from "zod";
-import { insertTimelineEventSchema, insertPoliticalLeaderSchema, insertEconomicDataSchema } from "@shared/schema";
+import { 
+  insertTimelineEventSchema, 
+  insertPoliticalLeaderSchema, 
+  insertEconomicDataSchema,
+  insertCountrySchema 
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize data fetching for countries
@@ -223,6 +228,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error(`Error creating economic data:`, error);
       res.status(400).json({ message: error.message || "Failed to create economic data" });
+    }
+  });
+
+  // Get a specific country by ID
+  app.get("/api/countries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const country = await storage.getCountryById(id);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      res.json(country);
+    } catch (error) {
+      console.error(`Error fetching country with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to fetch country" });
+    }
+  });
+
+  // Update a country
+  app.patch("/api/countries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const country = await storage.getCountryById(id);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Create a validation schema that allows partial updates
+      const updateCountrySchema = insertCountrySchema.partial();
+      
+      // Validate the request body
+      const validatedData = updateCountrySchema.parse(req.body);
+      
+      // Handle the countryInfo object separately if it exists
+      let countryInfoUpdate = undefined;
+      if (req.body.countryInfo) {
+        countryInfoUpdate = req.body.countryInfo;
+        delete validatedData.countryInfo; // Remove from validatedData to avoid double updating
+      }
+      
+      // If countryInfo exists in the data but isn't in the update, preserve it
+      if (country.countryInfo && !countryInfoUpdate) {
+        countryInfoUpdate = country.countryInfo;
+      }
+      
+      // Include countryInfo in the update if we have it
+      const updateData = countryInfoUpdate 
+        ? { ...validatedData, countryInfo: countryInfoUpdate } 
+        : validatedData;
+      
+      // Update the country
+      const updatedCountry = await storage.updateCountry(id, updateData);
+      
+      if (!updatedCountry) {
+        return res.status(500).json({ message: "Failed to update country" });
+      }
+      
+      res.json(updatedCountry);
+    } catch (error: any) {
+      console.error(`Error updating country:`, error);
+      res.status(400).json({ message: error.message || "Failed to update country" });
     }
   });
 
