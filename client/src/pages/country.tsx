@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'wouter';
+import { useLocation } from 'wouter';
 import { Country, TimelineEvent } from '@/types';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
@@ -13,7 +13,9 @@ import Economy from '@/components/country/Economy';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const CountryPage: React.FC = () => {
-  const { code } = useParams<{ code: string }>();
+  const [location] = useLocation();
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const code = urlParams.get('code') || '';
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch country data

@@ -11,7 +11,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
   const [_, setLocation] = useLocation();
 
   const handleClick = () => {
-    setLocation(`/country/${country.alpha3Code}`);
+    setLocation(`/country?code=${country.alpha3Code}`);
   };
 
   // Fallback values for missing data
