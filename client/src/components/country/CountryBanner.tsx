@@ -16,7 +16,7 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
 
   return (
     <div 
-      className="relative bg-cover bg-center h-80 md:h-96" 
+      className="relative bg-cover bg-center h-64 md:h-72" 
       style={{ backgroundImage: `url(${country.flagUrl})` }}
     >
       {/* Gradient overlay */}

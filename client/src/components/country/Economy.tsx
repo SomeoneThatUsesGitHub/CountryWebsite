@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { EconomicData, Industry, EconomicChallenge } from '@/types';
 import { formatNumber } from '@/lib/helpers';
+import InflationGame from './InflationGame';
 
 interface EconomyProps {
   countryName: string;
@@ -192,20 +193,11 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
           ))}
         </div>
         
-        <div className="mt-6">
-          <h4 className="font-semibold mb-2">Recent Economic Reforms</h4>
-          <ul className="list-disc list-inside space-y-2 text-gray-600">
-            {reforms.map((reform, index) => (
-              <motion.li 
-                key={index}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.5 + (index * 0.1) }}
-              >
-                {reform}
-              </motion.li>
-            ))}
-          </ul>
+        <div className="mt-8">
+          <InflationGame 
+            countryName={countryName}
+            currentInflation={inflation}
+          />
         </div>
       </motion.div>
     </div>

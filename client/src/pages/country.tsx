@@ -4,7 +4,7 @@ import { useParams } from 'wouter';
 import { Country, TimelineEvent } from '@/types';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
-import Timeline from '@/components/country/Timeline';
+import InteractiveTimeline from '@/components/country/InteractiveTimeline';
 import { PopulationChart, GDPChart, ReligionChart, generateSamplePopulationData, generateSampleGDPData, generateSampleReligionData } from '@/components/country/ChartDisplay';
 import EthnicityChart, { generateSampleEthnicGroups } from '@/components/country/EthnicityChart';
 import PoliticalSystem from '@/components/country/PoliticalSystem';
@@ -104,8 +104,8 @@ const CountryPage: React.FC = () => {
         {activeTab === 'overview' && (
           <div>
             <h2 className="text-2xl font-bold mb-6">Political Timeline</h2>
-            <div className="max-w-4xl">
-              <Timeline events={timelineEvents} />
+            <div className="max-w-5xl">
+              <InteractiveTimeline events={timelineEvents} />
             </div>
           </div>
         )}
