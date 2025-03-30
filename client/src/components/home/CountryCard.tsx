@@ -11,6 +11,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
   const [_, setLocation] = useLocation();
 
   const handleClick = () => {
+    console.log(`Navigating to country: ${country.name}, code: ${country.alpha3Code}`);
     setLocation(`/country?code=${country.alpha3Code}`);
   };
 

@@ -8,6 +8,7 @@ import CountryPage from "@/pages/country";
 import Header from "@/components/layout/Header";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
+import { Country } from "@shared/schema";
 
 function Router() {
   return (
@@ -24,7 +25,13 @@ function App() {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await apiRequest('GET', '/api/initialize', undefined);
+        console.log("Initializing country data...");
+        const result = await apiRequest('GET', '/api/initialize', undefined);
+        console.log("Data initialization completed:", result);
+        
+        // Verify we have countries loaded by fetching all countries
+        const countries = await apiRequest<Country[]>('GET', '/api/countries', undefined);
+        console.log(`Loaded ${countries.length} countries`);
       } catch (error) {
         console.error("Failed to initialize data:", error);
       }

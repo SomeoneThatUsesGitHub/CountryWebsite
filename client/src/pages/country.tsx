@@ -14,13 +14,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const CountryPage: React.FC = () => {
   const [location] = useLocation();
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
-  const code = urlParams.get('code') || '';
+  // Extract alpha3Code from URL path or query parameter
+  let code = '';
+  
+  // Check if we're using a query parameter (e.g., /country?code=USA)
+  if (location.includes('?')) {
+    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    code = urlParams.get('code') || '';
+  }
+  
+  console.log("Country code from URL:", code);
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch country data
   const { data: country, isLoading, error } = useQuery<Country>({
     queryKey: [`/api/countries/code/${code}`],
+    enabled: code.length > 0, // Only run query if code exists
   });
 
   // Sample timeline events for demonstration

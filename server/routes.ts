@@ -86,12 +86,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/countries/code/:code", async (req, res) => {
     try {
       const { code } = req.params;
+      console.log(`Finding country with code: ${code}`);
+      
       const country = await storage.getCountryByCode(code);
       
       if (!country) {
+        console.log(`Country with code ${code} not found`);
         return res.status(404).json({ message: "Country not found" });
       }
       
+      console.log(`Found country: ${country.name}`);
       res.json(country);
     } catch (error) {
       console.error(`Error fetching country with code ${req.params.code}:`, error);

@@ -96,9 +96,26 @@ export class MemStorage implements IStorage {
   }
 
   async getCountryByCode(code: string): Promise<Country | undefined> {
-    return Array.from(this.countries.values()).find(
+    console.log(`Storage: Searching for country with code ${code}`);
+    console.log(`Storage: Number of countries in storage: ${this.countries.size}`);
+    
+    const country = Array.from(this.countries.values()).find(
       (country) => country.alpha2Code === code || country.alpha3Code === code
     );
+    
+    if (country) {
+      console.log(`Storage: Found country ${country.name} with code ${code}`);
+    } else {
+      console.log(`Storage: No country found with code ${code}`);
+      
+      // Log all available country codes for debugging
+      const allCodes = Array.from(this.countries.values()).map(
+        c => `${c.name}: ${c.alpha2Code}, ${c.alpha3Code}`
+      );
+      console.log(`Storage: Available country codes: ${allCodes.join('; ')}`);
+    }
+    
+    return country;
   }
 
   async getCountryById(id: number): Promise<Country | undefined> {
