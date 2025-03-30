@@ -154,33 +154,31 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
               <h4 className="font-bold text-lg mb-3">Ruling Party</h4>
               
               <div className="flex flex-col h-full">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                    {government.rulingParty?.logo ? (
-                      <img 
-                        src={government.rulingParty.logo} 
-                        alt="Party logo" 
-                        className="max-w-full max-h-full p-1"
-                      />
-                    ) : (
-                      <i className="fas fa-landmark text-gray-400 text-2xl"></i>
-                    )}
+                <div className="flex flex-col items-center mb-5">
+                  <div className="w-24 h-24 bg-primary/5 rounded-full border-4 border-primary/10 flex items-center justify-center mb-3 overflow-hidden">
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Emblem_of_the_Democratic_Party.svg/1200px-Emblem_of_the_Democratic_Party.svg.png" 
+                      alt="Party logo" 
+                      className="max-w-full max-h-full p-2"
+                    />
                   </div>
                   
-                  <div>
-                    <h5 className="font-bold">{government.rulingParty?.name}</h5>
-                    <p className="text-sm text-gray-500">{government.rulingParty?.ideology}</p>
+                  <div className="text-center">
+                    <h5 className="font-bold text-lg">{government.rulingParty?.name}</h5>
+                    <p className="text-sm text-gray-600 bg-primary/5 px-3 py-1 rounded-full inline-block mt-1">
+                      {government.rulingParty?.ideology}
+                    </p>
                   </div>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <i className="fas fa-user text-gray-400"></i>
+                    <i className="fas fa-user text-primary"></i>
                     <span className="text-sm">Leader: <span className="font-medium">{government.rulingParty?.leader}</span></span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <i className="fas fa-calendar-alt text-gray-400"></i>
+                    <i className="fas fa-calendar-alt text-primary"></i>
                     <span className="text-sm">In power since: <span className="font-medium">{government.rulingParty?.inPowerSince}</span></span>
                   </div>
                 </div>

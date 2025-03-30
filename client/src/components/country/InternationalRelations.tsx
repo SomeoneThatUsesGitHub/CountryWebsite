@@ -169,60 +169,79 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
         ))}
       </div>
       
-      {/* Diplomatic Activity */}
-      <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-        <h4 className="font-semibold mb-4 flex items-center">
-          <i className="fas fa-globe text-primary mr-2"></i>
-          Recent Diplomatic Activity
+      {/* Historical Laws */}
+      <div className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-5 rounded-lg shadow-sm">
+        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
+          <i className="fas fa-gavel text-primary mr-2"></i>
+          Historical Laws
         </h4>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { event: 'Trade Summit', date: '2023-04-15', countries: ['United States', 'China', 'Japan'], icon: 'fa-handshake' },
-            { event: 'Climate Change Conference', date: '2023-02-10', countries: ['Germany', 'France', 'United Kingdom'], icon: 'fa-leaf' },
-            { event: 'Cultural Exchange Program', date: '2023-01-22', countries: ['Brazil', 'Argentina'], icon: 'fa-theater-masks' }
-          ].map((activity, index) => (
-            <div key={index} className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-b-0">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center">
-                <i className={`fas ${activity.icon} text-primary`}></i>
-              </div>
-              
-              <div className="flex-grow">
-                <h5 className="font-medium">{activity.event}</h5>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(activity.date).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {activity.countries.map(country => (
-                    <span key={country} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                      {country}
-                    </span>
-                  ))}
+            { 
+              name: 'Constitutional Reform', 
+              year: '2010', 
+              description: 'Major revision of the constitution that strengthened democratic institutions and expanded civil liberties.', 
+              icon: 'fa-landmark'
+            },
+            { 
+              name: 'Environmental Protection Act', 
+              year: '2015', 
+              description: 'Landmark legislation establishing strict environmental standards and conservation regulations.', 
+              icon: 'fa-tree'
+            },
+            { 
+              name: 'Digital Rights Law', 
+              year: '2018', 
+              description: 'Comprehensive legislation protecting digital privacy and regulating tech companies.', 
+              icon: 'fa-shield-alt'
+            }
+          ].map((law, index) => (
+            <motion.div 
+              key={index} 
+              className="bg-white rounded-lg overflow-hidden shadow-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 + (index * 0.1) }}
+            >
+              <div className="p-3 bg-primary/10 border-b border-primary/20">
+                <div className="flex items-center gap-2">
+                  <i className={`fas ${law.icon} text-primary`}></i>
+                  <h5 className="font-semibold">{law.name}</h5>
                 </div>
+                <p className="text-xs text-gray-600 mt-1">Enacted in {law.year}</p>
               </div>
-            </div>
+              <div className="p-3">
+                <p className="text-sm text-gray-600">{law.description}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
       
       {/* International Organizations */}
-      <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg shadow-sm">
-        <h4 className="font-semibold mb-3">International Organizations</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {['United Nations', 'World Trade Organization', 'G20', 'NATO', 'World Health Organization'].map((org, index) => (
-            <div key={org} className="bg-white p-3 rounded-lg text-center shadow-sm">
-              <i className={`fas ${
-                org === 'United Nations' ? 'fa-globe-americas' :
-                org === 'World Trade Organization' ? 'fa-balance-scale' :
-                org === 'G20' ? 'fa-users' :
-                org === 'NATO' ? 'fa-shield-alt' :
-                'fa-heartbeat'
-              } text-gray-500 mb-2`}></i>
-              <p className="text-sm font-medium">{org}</p>
-            </div>
+      <div className="mt-6 bg-white p-5 rounded-lg shadow-sm border border-primary/10">
+        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
+          <i className="fas fa-globe-americas text-primary mr-2"></i>
+          International Organizations Membership
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {[
+            { name: 'United Nations', icon: 'fa-globe-americas', color: 'bg-blue-50 text-blue-600 border-blue-200' },
+            { name: 'World Trade Organization', icon: 'fa-balance-scale', color: 'bg-green-50 text-green-600 border-green-200' },
+            { name: 'G20', icon: 'fa-users', color: 'bg-purple-50 text-purple-600 border-purple-200' },
+            { name: 'NATO', icon: 'fa-shield-alt', color: 'bg-red-50 text-red-600 border-red-200' },
+            { name: 'World Health Organization', icon: 'fa-heartbeat', color: 'bg-teal-50 text-teal-600 border-teal-200' }
+          ].map((org, index) => (
+            <motion.div 
+              key={org.name}
+              className={`flex items-center gap-2 p-3 rounded-lg border ${org.color}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 + (index * 0.1) }}
+            >
+              <i className={`fas ${org.icon} text-lg`}></i>
+              <p className="text-sm font-medium">{org.name}</p>
+            </motion.div>
           ))}
         </div>
       </div>
