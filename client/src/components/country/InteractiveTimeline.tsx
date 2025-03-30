@@ -159,24 +159,16 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         <h3 className="font-bold text-lg mb-3">Did You Know?</h3>
-        <p className="text-gray-600 mb-4">
-          Political events can have long-lasting impacts on a country's development. 
-          Elections, legislation, and international agreements shape the future direction of a nation.
-        </p>
-        
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium mb-2">Test Your Knowledge</h4>
-          <div className="space-y-2">
-            <button className="w-full text-left p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
-              Which type of event typically occurs every 4-5 years in democracies?
-            </button>
-            <button className="w-full text-left p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
-              What's the purpose of international agreements between countries?
-            </button>
-            <button className="w-full text-left p-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
-              How can citizens influence political decisions between elections?
-            </button>
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <i className="fas fa-lightbulb text-primary text-xl"></i>
           </div>
+          <p className="text-gray-600">
+            Political events can have long-lasting impacts on a country's development. 
+            Elections, legislation, and international agreements shape the future direction of a nation.
+            Understanding these key historical moments helps citizens comprehend how their country evolved
+            and the forces that shaped its current political landscape.
+          </p>
         </div>
       </motion.div>
     </div>

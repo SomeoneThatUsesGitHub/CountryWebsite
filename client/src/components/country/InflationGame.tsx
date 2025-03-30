@@ -217,8 +217,11 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-bold mb-4">Inflation Management Simulation</h3>
+    <div className="bg-gradient-to-br from-blue-600/10 via-primary/5 to-purple-600/10 p-6 rounded-lg shadow-sm border-2 border-primary/20">
+      <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-primary">
+        <i className="fas fa-gamepad"></i>
+        Inflation Management Simulation
+      </h3>
       <p className="text-gray-600 mb-6">
         Take control of {countryName}'s economy as the economic policy chief. 
         Can you maintain healthy inflation while balancing growth and employment?
@@ -249,7 +252,10 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
         <div>
           {/* Economic Indicators Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 p-3 rounded-lg text-center">
+            <div className="bg-white p-3 rounded-lg text-center shadow-sm border-t-4 border-blue-500">
+              <div className="flex justify-center mb-1">
+                <i className="fas fa-percentage text-blue-500"></i>
+              </div>
               <h5 className="text-sm text-gray-500 mb-1">Inflation</h5>
               <p className={`text-2xl font-bold ${getInflationColor(simulation.inflation)}`}>
                 {simulation.inflation}%
@@ -257,7 +263,10 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
               <p className="text-xs text-gray-500">Target: 2-3%</p>
             </div>
             
-            <div className="bg-gray-50 p-3 rounded-lg text-center">
+            <div className="bg-white p-3 rounded-lg text-center shadow-sm border-t-4 border-green-500">
+              <div className="flex justify-center mb-1">
+                <i className="fas fa-chart-line text-green-500"></i>
+              </div>
               <h5 className="text-sm text-gray-500 mb-1">Growth</h5>
               <p className={`text-2xl font-bold ${getGrowthColor(simulation.growth)}`}>
                 {simulation.growth}%
@@ -265,7 +274,10 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
               <p className="text-xs text-gray-500">Target: 2-4%</p>
             </div>
             
-            <div className="bg-gray-50 p-3 rounded-lg text-center">
+            <div className="bg-white p-3 rounded-lg text-center shadow-sm border-t-4 border-red-500">
+              <div className="flex justify-center mb-1">
+                <i className="fas fa-user-tie text-red-500"></i>
+              </div>
               <h5 className="text-sm text-gray-500 mb-1">Unemployment</h5>
               <p className={`text-2xl font-bold ${getUnemploymentColor(simulation.unemployment)}`}>
                 {simulation.unemployment}%
@@ -273,7 +285,10 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
               <p className="text-xs text-gray-500">Target: &lt;5%</p>
             </div>
             
-            <div className="bg-gray-50 p-3 rounded-lg text-center">
+            <div className="bg-white p-3 rounded-lg text-center shadow-sm border-t-4 border-purple-500">
+              <div className="flex justify-center mb-1">
+                <i className="fas fa-thumbs-up text-purple-500"></i>
+              </div>
               <h5 className="text-sm text-gray-500 mb-1">Public Opinion</h5>
               <p className={`text-2xl font-bold ${getSatisfactionColor(simulation.satisfaction)}`}>
                 {simulation.satisfaction}%
@@ -297,10 +312,17 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
           {/* Policy Controls */}
           {!gameOver && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h5 className="font-medium">Interest Rate</h5>
-                  <span className="text-sm font-bold">{simulation.interestRate}%</span>
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                    <i className="fas fa-university text-blue-500"></i>
+                  </div>
+                  <div className="flex-grow">
+                    <h5 className="font-medium">Interest Rate</h5>
+                  </div>
+                  <span className="text-sm font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                    {simulation.interestRate}%
+                  </span>
                 </div>
                 <input 
                   type="range" 
@@ -309,21 +331,29 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
                   step="0.5" 
                   value={simulation.interestRate}
                   onChange={(e) => handleInterestRateChange(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(simulation.interestRate - 1) * 25}%, #dbeafe ${(simulation.interestRate - 1) * 25}%, #dbeafe 100%)`
+                  }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Low</span>
                   <span>High</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-2 bg-blue-50 p-2 rounded">
                   Higher rates reduce inflation but slow growth.
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h5 className="font-medium">Government Spending</h5>
-                  <span className="text-sm font-bold">
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                    <i className="fas fa-money-bill-wave text-green-500"></i>
+                  </div>
+                  <div className="flex-grow">
+                    <h5 className="font-medium">Government Spending</h5>
+                  </div>
+                  <span className="text-sm font-bold text-green-700 bg-green-50 px-2 py-1 rounded-full">
                     {simulation.govSpending < 3 ? 'Low' : simulation.govSpending === 3 ? 'Moderate' : 'High'}
                   </span>
                 </div>
@@ -334,21 +364,29 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
                   step="0.5" 
                   value={simulation.govSpending}
                   onChange={(e) => handleGovSpendingChange(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-green-100 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${(simulation.govSpending - 1) * 25}%, #dcfce7 ${(simulation.govSpending - 1) * 25}%, #dcfce7 100%)`
+                  }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Low</span>
                   <span>High</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-2 bg-green-50 p-2 rounded">
                   Higher spending stimulates growth but may increase inflation.
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h5 className="font-medium">Taxation</h5>
-                  <span className="text-sm font-bold">
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-amber-100">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mr-2">
+                    <i className="fas fa-hand-holding-usd text-amber-500"></i>
+                  </div>
+                  <div className="flex-grow">
+                    <h5 className="font-medium">Taxation</h5>
+                  </div>
+                  <span className="text-sm font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
                     {simulation.taxRate < 3 ? 'Low' : simulation.taxRate === 3 ? 'Moderate' : 'High'}
                   </span>
                 </div>
@@ -359,13 +397,16 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
                   step="0.5" 
                   value={simulation.taxRate}
                   onChange={(e) => handleTaxRateChange(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-amber-100 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${(simulation.taxRate - 1) * 25}%, #fef3c7 ${(simulation.taxRate - 1) * 25}%, #fef3c7 100%)`
+                  }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Low</span>
                   <span>High</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-2 bg-amber-50 p-2 rounded">
                   Higher taxes can reduce inflation but may slow growth.
                 </p>
               </div>
@@ -373,14 +414,14 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
           )}
           
           {/* Game Controls */}
-          <div className="flex justify-between">
+          <div className="flex justify-between bg-white p-3 rounded-lg shadow-sm border border-primary/20">
             <div className="flex gap-3">
               {!gameOver && (
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium ${
+                  className={`px-4 py-2 rounded-lg font-medium shadow-sm ${
                     isRunning 
-                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' 
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200' 
+                      : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
                   } transition-colors`}
                   onClick={() => setIsRunning(!isRunning)}
                 >
@@ -394,7 +435,7 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
               
               {!isRunning && (
                 <button
-                  className="px-4 py-2 rounded-lg font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                  className="px-4 py-2 rounded-lg font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors shadow-sm border border-blue-200"
                   onClick={resetGame}
                 >
                   <i className="fas fa-redo mr-1"></i> Reset
@@ -403,22 +444,22 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
             </div>
             
             {!gameOver && isRunning && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Speed:</span>
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg">
+                <span className="text-sm text-gray-600 font-medium">Speed:</span>
                 <button 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${simSpeed === 3000 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${simSpeed === 3000 ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                   onClick={() => setSimSpeed(3000)}
                 >
                   1x
                 </button>
                 <button 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${simSpeed === 2000 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${simSpeed === 2000 ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                   onClick={() => setSimSpeed(2000)}
                 >
                   2x
                 </button>
                 <button 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${simSpeed === 1000 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${simSpeed === 1000 ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                   onClick={() => setSimSpeed(1000)}
                 >
                   3x
@@ -430,15 +471,18 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
           {/* Game Over Screen */}
           {gameOver && (
             <motion.div 
-              className="mt-6 p-4 bg-gray-50 rounded-lg text-center"
+              className="mt-6 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg text-center shadow-sm border-2 border-primary/30"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <h4 className="font-bold text-xl mb-2">Simulation Complete</h4>
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                <i className="fas fa-trophy text-primary text-2xl"></i>
+              </div>
+              <h4 className="font-bold text-xl mb-2 text-primary">Simulation Complete</h4>
               <p className="mb-4">{message}</p>
               <button
-                className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
                 onClick={resetGame}
               >
                 Try Again
@@ -447,17 +491,24 @@ const InflationGame: React.FC<InflationGameProps> = ({ countryName, currentInfla
           )}
           
           {/* Educational Info */}
-          <div className="mt-6 bg-blue-50 p-4 rounded-lg text-left">
-            <h4 className="font-medium mb-2">About Inflation Management:</h4>
-            <p className="text-sm text-gray-600 mb-2">
-              Inflation occurs when prices rise across the economy. Central banks like the Federal Reserve 
-              use interest rates as their primary tool to control inflation. Higher interest rates make borrowing 
-              more expensive, which slows spending and cools the economy.
-            </p>
-            <p className="text-sm text-gray-600">
-              However, controlling inflation often involves tradeoffs with other economic goals like growth and 
-              employment - this is known as the "policy trilemma" in economics.
-            </p>
+          <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg text-left shadow-sm border border-blue-100">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-lightbulb text-blue-500"></i>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2 text-blue-700">About Inflation Management:</h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  Inflation occurs when prices rise across the economy. Central banks like the Federal Reserve 
+                  use interest rates as their primary tool to control inflation. Higher interest rates make borrowing 
+                  more expensive, which slows spending and cools the economy.
+                </p>
+                <p className="text-sm text-gray-600">
+                  However, controlling inflation often involves tradeoffs with other economic goals like growth and 
+                  employment - this is known as the "policy trilemma" in economics.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
