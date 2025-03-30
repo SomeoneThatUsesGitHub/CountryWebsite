@@ -1,0 +1,101 @@
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// User schema - keep for authentication if needed later
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+// Country schema
+export const countries = pgTable("countries", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  alpha2Code: text("alpha2Code").notNull().unique(),
+  alpha3Code: text("alpha3Code").notNull().unique(),
+  capital: text("capital"),
+  region: text("region").notNull(),
+  subregion: text("subregion"),
+  population: integer("population"),
+  area: integer("area"),
+  flagUrl: text("flagUrl"),
+  coatOfArmsUrl: text("coatOfArmsUrl"),
+  mapUrl: text("mapUrl"),
+  independent: boolean("independent"),
+  unMember: boolean("unMember"),
+  currencies: jsonb("currencies"),
+  languages: jsonb("languages"),
+  borders: jsonb("borders"),
+  timezones: jsonb("timezones"),
+  startOfWeek: text("startOfWeek"),
+  capitalInfo: jsonb("capitalInfo"),
+  postalCode: jsonb("postalCode"),
+  flag: text("flag"), // emoji flag
+  countryInfo: jsonb("countryInfo"), // For additional country data
+});
+
+// Timeline Events schema
+export const timelineEvents = pgTable("timelineEvents", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  date: timestamp("date").notNull(),
+  eventType: text("eventType").notNull(), // e.g., "election", "protest", "agreement"
+  icon: text("icon"), // Font Awesome icon name
+});
+
+// Political Leaders schema
+export const politicalLeaders = pgTable("politicalLeaders", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  name: text("name").notNull(),
+  title: text("title").notNull(), // e.g., "President", "Prime Minister"
+  party: text("party"),
+  imageUrl: text("imageUrl"),
+  startDate: timestamp("startDate"),
+  ideologies: jsonb("ideologies"), // array of ideologies
+});
+
+// Economic Data schema
+export const economicData = pgTable("economicData", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  gdp: integer("gdp"), // in billions USD
+  gdpPerCapita: integer("gdpPerCapita"),
+  gdpGrowth: text("gdpGrowth"),
+  inflation: text("inflation"),
+  mainIndustries: jsonb("mainIndustries"), // array of industries with percentages
+  tradingPartners: jsonb("tradingPartners"), // array of countries
+  challenges: jsonb("challenges"), // array of economic challenges
+  reforms: jsonb("reforms"), // array of economic reforms
+});
+
+// Insert schemas
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export const insertCountrySchema = createInsertSchema(countries);
+export const insertTimelineEventSchema = createInsertSchema(timelineEvents);
+export const insertPoliticalLeaderSchema = createInsertSchema(politicalLeaders);
+export const insertEconomicDataSchema = createInsertSchema(economicData);
+
+// Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type Country = typeof countries.$inferSelect;
+
+export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
+export type TimelineEvent = typeof timelineEvents.$inferSelect;
+
+export type InsertPoliticalLeader = z.infer<typeof insertPoliticalLeaderSchema>;
+export type PoliticalLeader = typeof politicalLeaders.$inferSelect;
+
+export type InsertEconomicData = z.infer<typeof insertEconomicDataSchema>;
+export type EconomicData = typeof economicData.$inferSelect;
