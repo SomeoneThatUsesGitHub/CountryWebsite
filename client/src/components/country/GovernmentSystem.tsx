@@ -27,14 +27,12 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
   });
   
   // Fetch political system for the country
-  const { data: politicalSystem, isLoading: systemLoading, isError: systemError } = useQuery<PoliticalSystem>({
+  const { data: politicalSystem, isLoading: systemLoading } = useQuery<PoliticalSystem>({
     queryKey: [`/api/countries/${countryId}/political-system`],
     enabled: !!countryId,
-    retry: 1, // Only retry once to avoid infinite retries on 404
-    retryDelay: 1000,
   });
 
-  const isLoading = leadersLoading || partiesLoading || (systemLoading && !systemError);
+  const isLoading = leadersLoading || partiesLoading || systemLoading;
   
   // Check if country has an unstable political situation
   const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation || false;
@@ -48,17 +46,23 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
   }
 
   if (leaders.length === 0 && parties.length === 0) {
-    return (
-      <div className="space-y-8">
-        {/* Display warning even if no other political info is available */}
-        {hasUnstablePoliticalSituation && (
+    // If country has unstable political situation, show only the warning
+    if (hasUnstablePoliticalSituation) {
+      return (
+        <div className="space-y-8">
           <Alert variant="destructive" className="bg-red-50 border-red-300 text-red-800 mb-6">
             <AlertTriangle className="h-5 w-5" />
             <AlertDescription className="ml-2">
-              This country is currently experiencing political instability. The information below may change frequently.
+              This country is currently experiencing political instability. Detailed information about leadership and political parties is not available at this time.
             </AlertDescription>
           </Alert>
-        )}
+        </div>
+      );
+    }
+    
+    // If country is stable but has no political info, show the default message
+    return (
+      <div className="space-y-8">
         <div className="flex flex-col justify-center items-center h-48 space-y-2">
           <p className="text-muted-foreground text-center">No political leadership or party information available</p>
         </div>
