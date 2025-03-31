@@ -77,8 +77,8 @@ export function getEventDotColor(eventType: string): string {
 
 // Get event icon based on event type or custom icon
 export function getEventIcon(eventType: string, customIcon?: string | null): string {
-  // If a custom icon is provided, use it directly with fontawesome prefix
-  if (customIcon) {
+  // If a custom icon is provided and it's not "none", use it directly with fontawesome prefix
+  if (customIcon && customIcon !== "none") {
     return `fa-${customIcon}`;
   }
   

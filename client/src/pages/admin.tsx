@@ -510,7 +510,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
         description: '',
         date: new Date().toISOString().split('T')[0],
         eventType: 'Political',
-        icon: null,
+        icon: 'none',
       });
       setEditingEvent(null);
       
@@ -651,7 +651,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                         <SelectValue placeholder="Select an icon" />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
-                        <SelectItem value="">No icon</SelectItem>
+                        <SelectItem value="none">No icon</SelectItem>
                         <SelectItem value="crown">👑 Crown</SelectItem>
                         <SelectItem value="landmark">🏛️ Landmark</SelectItem>
                         <SelectItem value="gavel">⚖️ Gavel</SelectItem>
@@ -712,7 +712,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                   description: '',
                   date: new Date().toISOString().split('T')[0],
                   eventType: 'Political',
-                  icon: null,
+                  icon: 'none',
                 });
               }}>
                 Cancel
