@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
@@ -32,7 +32,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { formatDate } from '@/lib/helpers';
+import { formatDate, getEventBadgeColor, getEventDotColor } from '@/lib/helpers';
 import { toast } from '@/hooks/use-toast';
 import { Pencil, AlertTriangle, Check, Ban } from 'lucide-react';
 
@@ -452,15 +452,6 @@ const timelineEventSchema = z.object({
 
 const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [editingEvent, setEditingEvent] = useState<TimelineEventFormValues | null>(null);
-  
-  // Helper function to strip HTML tags from text
-  const stripHtmlTags = (html: string) => {
-    if (!html) return '';
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || '';
-  };
   
   // Fetch timeline events for the selected country
   const { data: timelineEvents, isLoading: eventsLoading, refetch: refetchEvents } = useQuery<TimelineEvent[]>({
@@ -490,31 +481,21 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   // Handle form submission
   const onSubmit = async (data: TimelineEventFormValues) => {
     try {
-      if (editingEvent?.id) {
-        // Update existing event (if we had an API for this)
-        // await apiRequest('PATCH', `/api/countries/${countryId}/timeline/${editingEvent.id}`, data);
-        toast({
-          title: 'Not Implemented',
-          description: 'Updating existing timeline events is not yet implemented in the API.',
-          variant: 'destructive',
-        });
-      } else {
-        // Create new event with the date as a string (no conversion needed)
-        await apiRequest('POST', `/api/countries/${countryId}/timeline`, {
-          ...data,
-          countryId,
-          // Keep date as string to allow free-form date entry
-          date: data.date,
-        });
-        
-        // Refetch timeline events
-        refetchEvents();
-        
-        toast({
-          title: 'Event Added',
-          description: 'The timeline event has been successfully added.',
-        });
-      }
+      // Create new event with the date as a string (no conversion needed)
+      await apiRequest('POST', `/api/countries/${countryId}/timeline`, {
+        ...data,
+        countryId,
+        // Keep date as string to allow free-form date entry
+        date: data.date,
+      });
+      
+      // Refetch timeline events
+      refetchEvents();
+      
+      toast({
+        title: 'Event Added',
+        description: 'The timeline event has been successfully added.',
+      });
       
       // Reset form
       form.reset({
@@ -522,9 +503,8 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
         description: '',
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         eventType: 'Political',
-        icon: 'none',
+        icon: null,
       });
-      setEditingEvent(null);
       
     } catch (error) {
       console.error('Failed to save timeline event:', error);
@@ -534,48 +514,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
         variant: 'destructive',
       });
     }
-  };
-  
-  // Handle edit button click
-  const handleEdit = (event: TimelineEvent) => {
-    // Process the date properly regardless of format
-    const dateStr = (() => {
-      if (!event.date) return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      
-      // Convert date to string if it's not already
-      const dateString = typeof event.date === 'string' 
-        ? event.date 
-        : new Date(event.date as Date).toISOString();
-        
-      // If it's a formatted string without time part, use as is
-      if (!dateString.includes('T') && !dateString.includes(':')) {
-        return dateString;
-      }
-      
-      // Otherwise try to parse it into a date and format
-      try {
-        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      } catch (e) {
-        return dateString;
-      }
-    })();
-    
-    setEditingEvent({
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      date: dateStr, 
-      eventType: event.eventType,
-      icon: event.icon,
-    });
-    
-    form.reset({
-      title: event.title,
-      description: event.description,
-      date: dateStr,
-      eventType: event.eventType,
-      icon: event.icon,
-    });
   };
   
   // Handle delete button click
@@ -655,25 +593,88 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                       value={field.value}
                       onValueChange={field.onChange}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select event type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Political">Political</SelectItem>
-                        <SelectItem value="Economic">Economic</SelectItem>
-                        <SelectItem value="Social">Social</SelectItem>
-                        <SelectItem value="Cultural">Cultural</SelectItem>
-                        <SelectItem value="Military">Military</SelectItem>
-                        <SelectItem value="Diplomatic">Diplomatic</SelectItem>
-                        <SelectItem value="Legal">Legal</SelectItem>
-                        <SelectItem value="Religious">Religious</SelectItem>
-                        <SelectItem value="Scientific">Scientific</SelectItem>
-                        <SelectItem value="Environmental">Environmental</SelectItem>
-                        <SelectItem value="Technological">Technological</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="Political">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-blue-500"></span>
+                            Political
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Economic">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-emerald-500"></span>
+                            Economic
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Social">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-violet-500"></span>
+                            Social
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Cultural">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-fuchsia-500"></span>
+                            Cultural
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Military">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-red-500"></span>
+                            Military
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Diplomatic">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-cyan-500"></span>
+                            Diplomatic
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Legal">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-purple-500"></span>
+                            Legal
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Religious">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-amber-500"></span>
+                            Religious
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Scientific">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-teal-500"></span>
+                            Scientific
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Environmental">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-green-500"></span>
+                            Environmental
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Technological">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-indigo-500"></span>
+                            Technological
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Other">
+                          <div className="flex items-center">
+                            <span className="w-3 h-3 mr-2 rounded-full bg-gray-500"></span>
+                            Other
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
+                  <FormDescription>
+                    Select the type of historical event - this determines how it will be displayed in the timeline
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -685,34 +686,107 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
             name="icon"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Icon</FormLabel>
+                <FormLabel>Choose an Icon</FormLabel>
                 <FormControl>
-                  <Select
-                    value={field.value || 'none'}
-                    onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an icon" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="star">Star</SelectItem>
-                      <SelectItem value="flag">Flag</SelectItem>
-                      <SelectItem value="landmark">Landmark</SelectItem>
-                      <SelectItem value="crown">Crown</SelectItem>
-                      <SelectItem value="building">Building</SelectItem>
-                      <SelectItem value="coins">Coins</SelectItem>
-                      <SelectItem value="scale">Scale</SelectItem>
-                      <SelectItem value="scroll">Scroll</SelectItem>
-                      <SelectItem value="sword">Sword</SelectItem>
-                      <SelectItem value="shield">Shield</SelectItem>
-                      <SelectItem value="book">Book</SelectItem>
-                      <SelectItem value="users">Users</SelectItem>
-                      <SelectItem value="globe">Globe</SelectItem>
-                      <SelectItem value="map">Map</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-3">
+                    <Select
+                      value={field.value || 'none'}
+                      onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select an icon" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="grid grid-cols-3 gap-2 p-2">
+                          <SelectItem value="none" className="flex items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            None
+                          </SelectItem>
+                          <SelectItem value="star" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">⭐</div>
+                            <div className="text-xs">Star</div>
+                          </SelectItem>
+                          <SelectItem value="flag" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🚩</div>
+                            <div className="text-xs">Flag</div>
+                          </SelectItem>
+                          <SelectItem value="landmark" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🏛️</div>
+                            <div className="text-xs">Landmark</div>
+                          </SelectItem>
+                          <SelectItem value="crown" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">👑</div>
+                            <div className="text-xs">Crown</div>
+                          </SelectItem>
+                          <SelectItem value="building" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🏢</div>
+                            <div className="text-xs">Building</div>
+                          </SelectItem>
+                          <SelectItem value="coins" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">💰</div>
+                            <div className="text-xs">Coins</div>
+                          </SelectItem>
+                          <SelectItem value="scale" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">⚖️</div>
+                            <div className="text-xs">Scale</div>
+                          </SelectItem>
+                          <SelectItem value="scroll" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">📜</div>
+                            <div className="text-xs">Scroll</div>
+                          </SelectItem>
+                          <SelectItem value="sword" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">⚔️</div>
+                            <div className="text-xs">Sword</div>
+                          </SelectItem>
+                          <SelectItem value="shield" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🛡️</div>
+                            <div className="text-xs">Shield</div>
+                          </SelectItem>
+                          <SelectItem value="book" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">📚</div>
+                            <div className="text-xs">Book</div>
+                          </SelectItem>
+                          <SelectItem value="users" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">👥</div>
+                            <div className="text-xs">Users</div>
+                          </SelectItem>
+                          <SelectItem value="globe" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🌐</div>
+                            <div className="text-xs">Globe</div>
+                          </SelectItem>
+                          <SelectItem value="map" className="flex flex-col items-center justify-center p-2 border rounded-md hover:bg-gray-100">
+                            <div className="text-xl mb-1">🗺️</div>
+                            <div className="text-xs">Map</div>
+                          </SelectItem>
+                        </div>
+                      </SelectContent>
+                    </Select>
+                    
+                    {field.value && (
+                      <div className="flex items-center p-2 bg-gray-50 rounded-md">
+                        <div className="mr-2 text-2xl">
+                          {field.value === 'star' && '⭐'}
+                          {field.value === 'flag' && '🚩'}
+                          {field.value === 'landmark' && '🏛️'}
+                          {field.value === 'crown' && '👑'}
+                          {field.value === 'building' && '🏢'}
+                          {field.value === 'coins' && '💰'}
+                          {field.value === 'scale' && '⚖️'}
+                          {field.value === 'scroll' && '📜'}
+                          {field.value === 'sword' && '⚔️'}
+                          {field.value === 'shield' && '🛡️'}
+                          {field.value === 'book' && '📚'}
+                          {field.value === 'users' && '👥'}
+                          {field.value === 'globe' && '🌐'}
+                          {field.value === 'map' && '🗺️'}
+                        </div>
+                        <div className="text-sm">Selected icon: <span className="font-semibold">{field.value}</span></div>
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
+                <FormDescription>
+                  Choose an icon that best represents this event
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -747,7 +821,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
           
           <div className="flex justify-end">
             <Button type="submit">
-              {editingEvent ? 'Update Event' : 'Add Event'}
+              Add Event
             </Button>
           </div>
         </form>
@@ -768,12 +842,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                   <div className="flex justify-between">
                     <CardTitle>{event.title}</CardTitle>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(event)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <Pencil size={18} />
-                      </button>
+
                       <button
                         onClick={() => handleDeleteEvent(event.id)}
                         className="text-red-500 hover:text-red-700"
@@ -784,7 +853,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                   </div>
                   <CardDescription>
                     <span className="font-medium">{typeof event.date === 'string' ? event.date : formatDate(event.date as Date)}</span>
-                    <span className="ml-2 text-xs px-2 py-1 rounded-full bg-primary/10">{event.eventType}</span>
+                    <span className={`ml-2 text-xs px-2 py-1 rounded-full ${getEventBadgeColor(event.eventType)}`}>{event.eventType}</span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
