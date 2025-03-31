@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TimelineEvent } from '@/types';
-import { formatDate, getEventBadgeColor, getEventDotColor, getEventIcon } from '@/lib/helpers';
+import { formatDate, getEventBadgeColor, getEventDotColor, getEventIcon, extractKeyword } from '@/lib/helpers';
 
 interface InteractiveTimelineProps {
   events: TimelineEvent[];
@@ -90,25 +90,13 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
               
               <p className="text-gray-600">{event.description}</p>
               
-              {/* Adding relevant tags at the bottom for context without expanding */}
+              {/* AI-powered keyword extraction for context */}
               <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                {event.eventType === 'Election' && (
-                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium">Democratic Process</span>
-                )}
-                {event.eventType === 'Legislation' && (
-                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs font-medium">Policy Change</span>
-                )}
-                {event.eventType === 'Agreement' && (
-                  <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-xs font-medium">International Relations</span>
-                )}
-                {event.eventType === 'Protest' && (
-                  <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md text-xs font-medium">Civil Action</span>
-                )}
-                {event.eventType === 'War' && (
-                  <span className="bg-red-50 text-red-700 px-2 py-1 rounded-md text-xs font-medium">Military Conflict</span>
-                )}
-                {event.eventType === 'Treaty' && (
-                  <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-medium">Diplomatic Agreement</span>
+                {/* Extract keyword from the description */}
+                {event.description && extractKeyword(event.description) && (
+                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium capitalize">
+                    {extractKeyword(event.description)}
+                  </span>
                 )}
               </div>
             </div>

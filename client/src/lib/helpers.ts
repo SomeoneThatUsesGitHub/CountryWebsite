@@ -22,11 +22,22 @@ export function formatNumber(num: number): string {
 
 // Format date to readable string
 export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // If it's already a formatted string without a time component, just return it
+  if (typeof date === 'string' && !date.includes('T') && !date.includes(':')) {
+    return date;
+  }
+  
+  try {
+    // Try to create a date object and format it
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    // If parsing fails, return the original string
+    return typeof date === 'string' ? date : String(date);
+  }
 }
 
 // Get event badge color based on event type
@@ -120,4 +131,56 @@ export function getChartColors(index: number): string {
   ];
   
   return colors[index % colors.length];
+}
+
+// Extract a keyword from the event description
+export function extractKeyword(description: string): string {
+  // Skip if description is too short
+  if (!description || description.length < 5) {
+    return '';
+  }
+  
+  // List of common political keywords to look for
+  const politicalKeywords = [
+    'democracy', 'constitution', 'parliament', 'election', 'vote', 'referendum',
+    'president', 'prime minister', 'congress', 'senate', 'court', 'supreme court',
+    'amendment', 'treaty', 'law', 'legislation', 'reform', 'policy', 'regulation',
+    'protest', 'opposition', 'coup', 'revolution', 'war', 'conflict', 'peace',
+    'rights', 'freedom', 'independence', 'sovereignty', 'monarchy', 'republic',
+    'sanction', 'diplomatic', 'alliance', 'trade', 'economy', 'crisis', 'scandal',
+    'corruption', 'impeachment', 'resignation', 'assassination', 'military',
+    'minister', 'parliament', 'dictator', 'authoritarian', 'democratic', 'liberal',
+    'conservative', 'socialist', 'communist', 'capitalist', 'nationalist', 'populist',
+    'progressive', 'radical', 'moderate', 'bilateral', 'multilateral'
+  ];
+  
+  // Convert to lowercase for comparison
+  const lowerDesc = description.toLowerCase();
+  
+  // Find keywords that appear in the description
+  const foundKeywords = politicalKeywords.filter(keyword => 
+    lowerDesc.includes(keyword)
+  );
+  
+  if (foundKeywords.length > 0) {
+    // Return the longest keyword match (likely more specific)
+    return foundKeywords.sort((a, b) => b.length - a.length)[0];
+  }
+  
+  // If no keywords were found, extract important nouns (simplified)
+  const words = lowerDesc.split(/\s+/);
+  
+  // Skip common words and find the most significant word
+  const commonWords = ['the', 'a', 'an', 'and', 'but', 'or', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'of', 'that', 'this', 'is', 'are', 'was', 'were'];
+  const significantWords = words.filter(word => 
+    word.length > 3 && !commonWords.includes(word)
+  );
+  
+  if (significantWords.length > 0) {
+    // Get a word from the middle of the description as it's often more meaningful
+    const middleIndex = Math.floor(significantWords.length / 2);
+    return significantWords[middleIndex];
+  }
+  
+  return '';
 }

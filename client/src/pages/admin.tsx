@@ -27,6 +27,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { formatDate } from '@/lib/helpers';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -530,7 +531,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
       id: event.id,
       title: event.title,
       description: event.description,
-      date: typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0],
+      date: typeof event.date === 'string' && !event.date.includes('T') ? event.date : (typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0]),
       eventType: event.eventType,
       icon: event.icon,
     });
@@ -538,7 +539,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
     form.reset({
       title: event.title,
       description: event.description,
-      date: typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0],
+      date: typeof event.date === 'string' && !event.date.includes('T') ? event.date : (typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0]),
       eventType: event.eventType,
       icon: event.icon,
     });
@@ -599,8 +600,14 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input 
+                      {...field} 
+                      placeholder="e.g., May 1991, Jan 5 2020, 1776, etc."
+                    />
                   </FormControl>
+                  <FormDescription>
+                    Enter the date in any format you prefer (year, month/year, or full date)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -737,7 +744,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               <div key={event.id} className="p-4 flex flex-col md:flex-row md:justify-between gap-2">
                 <div>
                   <p className="font-semibold">{event.title}</p>
-                  <p className="text-sm text-gray-500">{new Date(event.date).toLocaleDateString()} - {event.eventType}</p>
+                  <p className="text-sm text-gray-500">{formatDate(event.date)} - {event.eventType}</p>
                   <p className="mt-1">{event.description}</p>
                 </div>
                 <div className="flex gap-2 md:self-center">
