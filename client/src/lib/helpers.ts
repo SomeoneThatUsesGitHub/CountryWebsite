@@ -133,29 +133,76 @@ export function getChartColors(index: number): string {
   return colors[index % colors.length];
 }
 
-// Extract a keyword from the event description
+// Extract meaningful tags (up to 3 words) from the event description
 export function extractKeyword(description: string): string {
   // Skip if description is too short
   if (!description || description.length < 5) {
     return '';
   }
   
-  // List of common political keywords to look for
-  const politicalKeywords = [
-    'democracy', 'constitution', 'parliament', 'election', 'vote', 'referendum',
-    'president', 'prime minister', 'congress', 'senate', 'court', 'supreme court',
-    'amendment', 'treaty', 'law', 'legislation', 'reform', 'policy', 'regulation',
-    'protest', 'opposition', 'coup', 'revolution', 'war', 'conflict', 'peace',
-    'rights', 'freedom', 'independence', 'sovereignty', 'monarchy', 'republic',
-    'sanction', 'diplomatic', 'alliance', 'trade', 'economy', 'crisis', 'scandal',
-    'corruption', 'impeachment', 'resignation', 'assassination', 'military',
-    'minister', 'parliament', 'dictator', 'authoritarian', 'democratic', 'liberal',
-    'conservative', 'socialist', 'communist', 'capitalist', 'nationalist', 'populist',
-    'progressive', 'radical', 'moderate', 'bilateral', 'multilateral'
-  ];
-  
   // Convert to lowercase for comparison
   const lowerDesc = description.toLowerCase();
+  
+  // Multi-word political phrases to detect (these take precedence as they're more specific)
+  const politicalPhrases = [
+    'constitutional reform', 'presidential election', 'parliamentary election', 'civil war',
+    'peace treaty', 'economic crisis', 'military coup', 'political scandal', 'diplomatic relations',
+    'civil rights', 'human rights', 'democratic transition', 'independence referendum',
+    'coalition government', 'political uprising', 'foreign intervention', 'trade agreement', 
+    'political assassination', 'government collapse', 'constitutional crisis', 'military rule', 
+    'political protest', 'economic sanctions', 'foreign policy', 'national security', 
+    'territorial dispute', 'government formation', 'peaceful transition', 'economic reform',
+    'military conflict', 'policy change', 'social reform', 'international agreement'
+  ];
+  
+  // Check for multi-word phrases first
+  for (const phrase of politicalPhrases) {
+    if (lowerDesc.includes(phrase)) {
+      return phrase; // Return the first found multi-word phrase
+    }
+  }
+  
+  // Context patterns to identify the type of event
+  const contextPatterns = [
+    { pattern: /(democracy|democratic).*(establish|introduc|implement|creat|form)/, tag: 'democratic formation' },
+    { pattern: /(parliament|congress).*(dissolv|disband)/, tag: 'parliament dissolved' },
+    { pattern: /(president|prime minister|chancellor).*(elected|appointed|became)/, tag: 'leader elected' },
+    { pattern: /(president|prime minister|chancellor).*(resign|step down|ousted)/, tag: 'leader resigned' },
+    { pattern: /(war|conflict).*(start|begin|broke out|launched)/, tag: 'conflict began' },
+    { pattern: /(war|conflict|hostilities).*(end|cease|concluded|armistice)/, tag: 'conflict ended' },
+    { pattern: /(treaty|agreement|accord).*(sign|ratif|conclude)/, tag: 'treaty signed' },
+    { pattern: /(independence|sovereign).*(gain|declar|achiev)/, tag: 'independence gained' },
+    { pattern: /(revolt|rebellion|uprising).*(suppress|crush|defeat)/, tag: 'uprising suppressed' },
+    { pattern: /(constitution|constitutional).*(adopt|ratif|approv)/, tag: 'constitution adopted' },
+    { pattern: /(economic|economy).*(reform|overhaul|transform)/, tag: 'economic reform' },
+    { pattern: /(crisis|recession|depression).*(financial|economic)/, tag: 'economic crisis' },
+    { pattern: /(join|accession).*(alliance|union|treaty|organization)/, tag: 'alliance joined' },
+    { pattern: /(law|bill|legislation).*(pass|approv|enact)/, tag: 'law passed' },
+    { pattern: /(vote|referendum).*(held|conduct|took place)/, tag: 'vote held' },
+    { pattern: /(military).*(coup|takeover|overthrow)/, tag: 'military coup' },
+    { pattern: /(assassinate|killed|murdered).*(leader|president|minister)/, tag: 'leader assassinated' },
+    { pattern: /(protest|demonstration|rally).*(against|oppose)/, tag: 'public protest' },
+    { pattern: /(disaster|catastrophe|calamity).*(natural|environmental)/, tag: 'natural disaster' },
+    { pattern: /(establish|form|create).*(government|administration)/, tag: 'government formed' }
+  ];
+  
+  // Test each context pattern against the description
+  for (const { pattern, tag } of contextPatterns) {
+    if (pattern.test(lowerDesc)) {
+      return tag;
+    }
+  }
+  
+  // List of common political keywords to look for (single words, as backup)
+  const politicalKeywords = [
+    'democracy', 'constitution', 'parliament', 'election', 'referendum',
+    'treaty', 'legislation', 'reform', 'protest', 'opposition', 
+    'revolution', 'war', 'conflict', 'peace', 'rights', 'freedom', 
+    'independence', 'sovereignty', 'monarchy', 'republic', 'sanction', 
+    'diplomatic', 'alliance', 'trade', 'economy', 'crisis', 'scandal',
+    'corruption', 'impeachment', 'military', 'authoritarian', 'liberal',
+    'conservative', 'socialist', 'nationalist', 'populist', 'bilateral'
+  ];
   
   // Find keywords that appear in the description
   const foundKeywords = politicalKeywords.filter(keyword => 
@@ -163,24 +210,47 @@ export function extractKeyword(description: string): string {
   );
   
   if (foundKeywords.length > 0) {
-    // Return the longest keyword match (likely more specific)
-    return foundKeywords.sort((a, b) => b.length - a.length)[0];
+    // Get the most relevant keyword
+    const primaryKeyword = foundKeywords.sort((a, b) => b.length - a.length)[0];
+    
+    // Find adjectives that might describe this keyword
+    const descriptors = [
+      'major', 'significant', 'historic', 'controversial', 'peaceful', 'violent',
+      'gradual', 'sudden', 'successful', 'failed', 'disputed', 'unanimous',
+      'international', 'domestic', 'radical', 'moderate', 'unprecedented'
+    ];
+    
+    // Find descriptors in the text
+    const foundDescriptors = descriptors.filter(d => lowerDesc.includes(d));
+    
+    // If we have a descriptor, combine it with the keyword
+    if (foundDescriptors.length > 0) {
+      return `${foundDescriptors[0]} ${primaryKeyword}`;
+    }
+    
+    return primaryKeyword;
   }
   
-  // If no keywords were found, extract important nouns (simplified)
+  // If no specific political contexts were found, try to extract key topics
   const words = lowerDesc.split(/\s+/);
   
-  // Skip common words and find the most significant word
-  const commonWords = ['the', 'a', 'an', 'and', 'but', 'or', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'of', 'that', 'this', 'is', 'are', 'was', 'were'];
+  // Skip common words and find significant words
+  const commonWords = ['the', 'a', 'an', 'and', 'but', 'or', 'in', 'on', 'at', 'to', 'for', 
+    'with', 'by', 'of', 'that', 'this', 'is', 'are', 'was', 'were', 'had', 'has', 'have', 
+    'been', 'would', 'could', 'should', 'will', 'shall', 'may', 'might', 'must'];
+  
   const significantWords = words.filter(word => 
     word.length > 3 && !commonWords.includes(word)
   );
   
-  if (significantWords.length > 0) {
-    // Get a word from the middle of the description as it's often more meaningful
-    const middleIndex = Math.floor(significantWords.length / 2);
-    return significantWords[middleIndex];
+  if (significantWords.length >= 2) {
+    // Try to find a meaningful two-word combination
+    const firstWord = significantWords[0];
+    const secondWord = significantWords[Math.min(1, significantWords.length - 1)];
+    return `${firstWord} ${secondWord}`;
+  } else if (significantWords.length > 0) {
+    return significantWords[0];
   }
   
-  return '';
+  return 'historical event';
 }

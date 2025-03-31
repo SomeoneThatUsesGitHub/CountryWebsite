@@ -90,11 +90,11 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
               
               <p className="text-gray-600">{event.description}</p>
               
-              {/* AI-powered keyword extraction for context */}
+              {/* AI-powered contextual analysis for tags */}
               <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                {/* Extract keyword from the description */}
                 {event.description && extractKeyword(event.description) && (
-                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium capitalize">
+                  <span className={`${getEventBadgeColor(event.eventType)} px-3 py-1.5 rounded-full text-xs font-medium shadow-sm transition-transform duration-300 hover:scale-105 capitalize flex items-center gap-1.5`}>
+                    <i className={`fas fa-tag text-xs opacity-70`}></i>
                     {extractKeyword(event.description)}
                   </span>
                 )}
