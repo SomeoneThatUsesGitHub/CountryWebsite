@@ -71,7 +71,7 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                 flex items-center justify-center text-white z-10 transition-transform 
                 hover:scale-110`}
             >
-              <i className={`fas ${getEventIcon(event.eventType)}`}></i>
+              <i className={`fas ${getEventIcon(event.eventType, event.icon)}`}></i>
             </div>
             
             <div className="bg-white p-5 rounded-lg shadow-sm relative hover:shadow-md transition-shadow">

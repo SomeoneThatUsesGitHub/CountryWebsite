@@ -544,6 +544,31 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
     });
   };
   
+  // Handle delete button click
+  const handleDeleteEvent = async (eventId: number) => {
+    if (confirm("Are you sure you want to delete this timeline event?")) {
+      try {
+        // Send delete request to the API
+        await apiRequest('DELETE', `/api/countries/${countryId}/timeline/${eventId}`);
+        
+        // Refetch timeline events
+        refetchEvents();
+        
+        toast({
+          title: 'Event Deleted',
+          description: 'The timeline event has been successfully deleted.',
+        });
+      } catch (error) {
+        console.error('Failed to delete timeline event:', error);
+        toast({
+          title: 'Error',
+          description: 'There was an error deleting the timeline event.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Timeline Events</h2>
@@ -686,6 +711,14 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                 <div className="flex gap-2 md:self-center">
                   <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(event)}>
                     Edit
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => handleDeleteEvent(event.id)}
+                  >
+                    Delete
                   </Button>
                 </div>
               </div>

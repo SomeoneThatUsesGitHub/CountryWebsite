@@ -61,9 +61,16 @@ export function getEventDotColor(eventType: string): string {
   return colorMap[eventType.toLowerCase()] || colorMap.default;
 }
 
-// Get event icon based on event type
-export function getEventIcon(eventType: string): string {
+// Get event icon based on event type or custom icon
+export function getEventIcon(eventType: string, customIcon?: string | null): string {
+  // If a custom icon is provided, use it directly with fontawesome prefix
+  if (customIcon) {
+    return `fa-${customIcon}`;
+  }
+  
+  // Otherwise, use the event type map
   const iconMap: Record<string, string> = {
+    'political': 'fa-landmark',
     'election': 'fa-landmark',
     'protest': 'fa-exclamation-triangle',
     'agreement': 'fa-file-signature',
@@ -71,6 +78,12 @@ export function getEventIcon(eventType: string): string {
     'legislation': 'fa-gavel',
     'referendum': 'fa-vote-yea',
     'scandal': 'fa-newspaper',
+    'economic': 'fa-chart-line',
+    'social': 'fa-users',
+    'cultural': 'fa-theater-masks',
+    'disaster': 'fa-bolt',
+    'war': 'fa-fighter-jet',
+    'treaty': 'fa-handshake',
     'default': 'fa-calendar-day'
   };
   
