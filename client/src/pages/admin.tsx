@@ -23,6 +23,8 @@ import {
   Statistic,
   EconomicData
 } from '@shared/schema';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -723,14 +725,30 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col space-y-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    {...field} 
-                    rows={3}
-                  />
+                  <div className="min-h-[200px]">
+                    <ReactQuill
+                      theme="snow"
+                      value={field.value}
+                      onChange={field.onChange}
+                      modules={{
+                        toolbar: [
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                          ['blockquote', 'link'],
+                          [{ 'header': 1 }, { 'header': 2 }],
+                          [{ 'color': [] }, { 'background': [] }]
+                        ]
+                      }}
+                      className="h-40"
+                    />
+                  </div>
                 </FormControl>
+                <FormDescription>
+                  Use formatting tools to make the content more engaging. You can add bold, italic, lists, and more.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -771,7 +789,17 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                 <div>
                   <p className="font-semibold">{event.title}</p>
                   <p className="text-sm text-gray-500">{formatDate(event.date)} - {event.eventType}</p>
-                  <p className="mt-1">{event.description}</p>
+                  <div className="mt-1 line-clamp-3">
+                    {/* Truncate HTML output for the list view */}
+                    <div 
+                      className="text-sm rich-text-content" 
+                      dangerouslySetInnerHTML={{ 
+                        __html: event.description.length > 150 
+                          ? event.description.substring(0, 150) + '...' 
+                          : event.description 
+                      }} 
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2 md:self-center">
                   <Button 

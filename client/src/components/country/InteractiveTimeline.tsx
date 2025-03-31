@@ -218,7 +218,10 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
           </div>
           {/* Scrollable content area */}
           <div className="overflow-y-auto pr-2 my-4 flex-grow">
-            <p className="text-gray-700 text-base leading-relaxed px-1">{selectedEvent?.description}</p>
+            <div 
+              className="text-gray-700 text-base leading-relaxed px-1 rich-text-content"
+              dangerouslySetInnerHTML={{ __html: selectedEvent?.description || '' }}
+            />
           </div>
         </DialogContent>
       </Dialog>
