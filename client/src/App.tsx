@@ -6,7 +6,6 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home";
 import CountryPage from "@/pages/country";
 import AdminPage from "@/pages/admin";
-import SampleLeadersPage from "@/pages/add-sample-leaders";
 import Header from "@/components/layout/Header";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
@@ -20,7 +19,6 @@ function Router() {
         {(params) => <CountryPage />}
       </Route>
       <Route path="/admin" component={AdminPage} />
-      <Route path="/add-sample-leaders" component={SampleLeadersPage} />
       <Route component={NotFound} />
     </Switch>
   );
