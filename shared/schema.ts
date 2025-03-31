@@ -42,7 +42,7 @@ export const timelineEvents = pgTable("timelineEvents", {
   countryId: integer("countryId").notNull().references(() => countries.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  date: timestamp("date").notNull(),
+  date: text("date").notNull(), // Using text to allow any date format
   eventType: text("eventType").notNull(), // e.g., "election", "protest", "agreement"
   icon: text("icon"), // Font Awesome icon name
   tags: jsonb("tags"), // array of tags

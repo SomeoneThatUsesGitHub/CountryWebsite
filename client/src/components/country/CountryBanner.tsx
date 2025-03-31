@@ -54,6 +54,11 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
               <i className="fas fa-flag"></i>
               <span>{country.countryInfo?.governmentForm || 'Republic'}</span>
             </div>
+            
+            <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center gap-2">
+              <i className="fas fa-map"></i>
+              <span>{country.area ? `${formatNumber(country.area)} km²` : 'No size data'}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -107,24 +107,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific country by code
+  // Get country by code
   app.get("/api/countries/code/:code", async (req, res) => {
     try {
       const { code } = req.params;
-      console.log(`Finding country with code: ${code}`);
-      
+      console.log("Finding country with code:", code);
       const country = await storage.getCountryByCode(code);
       
       if (!country) {
-        console.log(`Country with code ${code} not found`);
         return res.status(404).json({ message: "Country not found" });
       }
       
-      console.log(`Found country: ${country.name}`);
+      console.log("Found country:", country.name);
       res.json(country);
     } catch (error) {
       console.error(`Error fetching country with code ${req.params.code}:`, error);
-      res.status(500).json({ message: "Failed to fetch country" });
+      res.status(500).json({ message: "Failed to fetch country by code" });
+    }
+  });
+
+  // Get country by ID
+  app.get("/api/countries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const country = await storage.getCountryById(id);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      res.json(country);
+    } catch (error) {
+      console.error(`Error fetching country with id ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to fetch country by id" });
     }
   });
 
@@ -149,11 +164,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      // Convert date string to Date object if it's a string
+      // Use date as a string without conversion
       const data = {
         ...req.body,
         countryId,
-        date: req.body.date ? new Date(req.body.date) : null,
+        date: req.body.date || null,
       };
       
       const validatedData = insertTimelineEventSchema.parse(data);
@@ -187,11 +202,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      // Convert date string to Date object if it's a string
+      // Format the data
       const data = {
         ...req.body,
         countryId,
         startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+        ideologies: req.body.ideologies || [],
       };
       
       const validatedData = insertPoliticalLeaderSchema.parse(data);
@@ -204,24 +220,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Economic data routes
-  app.get("/api/countries/:countryId/economy", async (req, res) => {
+  // Political system routes
+  app.get("/api/countries/:countryId/political-system", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
-      const economicData = await storage.getEconomicDataByCountryId(countryId);
+      const system = await storage.getPoliticalSystemByCountryId(countryId);
       
-      if (!economicData) {
-        return res.status(404).json({ message: "Economic data not found for this country" });
+      if (!system) {
+        return res.status(404).json({ message: "Political system not found" });
       }
       
-      res.json(economicData);
+      res.json(system);
     } catch (error) {
-      console.error(`Error fetching economic data for country ${req.params.countryId}:`, error);
-      res.status(500).json({ message: "Failed to fetch economic data" });
+      console.error(`Error fetching political system for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch political system" });
     }
   });
 
-  app.post("/api/countries/:countryId/economy", async (req, res) => {
+  app.post("/api/countries/:countryId/political-system", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
       const country = await storage.getCountryById(countryId);
@@ -230,78 +246,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertEconomicDataSchema.parse({
-        ...req.body,
-        countryId,
-      });
+      // Check if political system already exists
+      const existingSystem = await storage.getPoliticalSystemByCountryId(countryId);
       
-      const economicData = await storage.createEconomicData(validatedData);
-      res.status(201).json(economicData);
-    } catch (error: any) {
-      console.error(`Error creating economic data:`, error);
-      res.status(400).json({ message: error.message || "Failed to create economic data" });
-    }
-  });
-
-  app.patch("/api/countries/:countryId/economy/:id", async (req, res) => {
-    try {
-      const countryId = parseInt(req.params.countryId);
-      const id = parseInt(req.params.id);
-      
-      const economicData = await storage.getEconomicDataByCountryId(countryId);
-      
-      if (!economicData || economicData.id !== id) {
-        return res.status(404).json({ message: "Economic data not found" });
+      if (existingSystem) {
+        return res.status(400).json({ message: "Political system already exists for this country. Use PUT to update." });
       }
       
-      // Create a validation schema that allows partial updates
-      const updateEconomicDataSchema = insertEconomicDataSchema.partial();
-      
-      // Validate the request body
-      const validatedData = updateEconomicDataSchema.parse(req.body);
-      
-      // Update the economic data
-      const updatedData = await storage.updateEconomicData(id, validatedData);
-      
-      if (!updatedData) {
-        return res.status(500).json({ message: "Failed to update economic data" });
-      }
-      
-      res.json(updatedData);
-    } catch (error: any) {
-      console.error(`Error updating economic data:`, error);
-      res.status(400).json({ message: error.message || "Failed to update economic data" });
-    }
-  });
-
-  // Timeline event update and delete routes
-  app.patch("/api/countries/:countryId/timeline/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const countryId = parseInt(req.params.countryId);
-      
-      const events = await storage.getTimelineEventsByCountryId(countryId);
-      const event = events.find(e => e.id === id);
-      
-      if (!event) {
-        return res.status(404).json({ message: "Timeline event not found" });
-      }
-      
-      // Create a validation schema that allows partial updates
-      const updateTimelineEventSchema = insertTimelineEventSchema.partial();
-      
-      // Prepare data with date conversion if needed
+      // Prepare data
       const data = {
         ...req.body,
-        date: req.body.date ? new Date(req.body.date) : undefined,
+        countryId,
+        freedomIndex: req.body.freedomIndex ? parseInt(req.body.freedomIndex) : null,
+        governmentBranches: req.body.governmentBranches || [],
+        democraticPrinciples: req.body.democraticPrinciples || [],
+        internationalRelations: req.body.internationalRelations || [],
+        laws: req.body.laws || [],
+        organizations: req.body.organizations || [],
       };
       
-      // Validate the request body
-      const validatedData = updateTimelineEventSchema.parse(data);
+      const validatedData = insertPoliticalSystemSchema.parse(data);
+      
+      const system = await storage.createPoliticalSystem(validatedData);
+      res.status(201).json(system);
+    } catch (error: any) {
+      console.error(`Error creating political system:`, error);
+      res.status(400).json({ message: error.message || "Failed to create political system" });
+    }
+  });
+
+  app.patch("/api/countries/:countryId/timeline/:id", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const eventId = parseInt(req.params.id);
+      
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Get existing event to verify ownership
+      const existingEvent = await storage.getTimelineEventsByCountryId(countryId);
+      const event = existingEvent.find(e => e.id === eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Timeline event not found for this country" });
+      }
+      
+      // Format the data for update
+      const data = {
+        ...req.body,
+        countryId,
+        // Use date as a string without conversion
+        date: req.body.date || undefined,
+      };
       
       // Update the timeline event
-      const updatedEvent = await storage.updateTimelineEvent(id, validatedData);
-      
+      const updatedEvent = await storage.updateTimelineEvent(eventId, data);
       if (!updatedEvent) {
         return res.status(500).json({ message: "Failed to update timeline event" });
       }
@@ -312,22 +314,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to update timeline event" });
     }
   });
-  
+
   app.delete("/api/countries/:countryId/timeline/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const eventId = parseInt(req.params.id);
       
-      const events = await storage.getTimelineEventsByCountryId(countryId);
-      const event = events.find(e => e.id === id);
-      
-      if (!event) {
-        return res.status(404).json({ message: "Timeline event not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const success = await storage.deleteTimelineEvent(id);
+      // Get existing event to verify ownership
+      const existingEvent = await storage.getTimelineEventsByCountryId(countryId);
+      const event = existingEvent.find(e => e.id === eventId);
       
-      if (!success) {
+      if (!event) {
+        return res.status(404).json({ message: "Timeline event not found for this country" });
+      }
+      
+      // Delete the timeline event
+      const deleted = await storage.deleteTimelineEvent(eventId);
+      if (!deleted) {
         return res.status(500).json({ message: "Failed to delete timeline event" });
       }
       
@@ -338,34 +347,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Political leader update and delete routes
+  // PATCH for updating political leaders
   app.patch("/api/countries/:countryId/leaders/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const leaderId = parseInt(req.params.id);
       
-      const leaders = await storage.getPoliticalLeadersByCountryId(countryId);
-      const leader = leaders.find(l => l.id === id);
-      
-      if (!leader) {
-        return res.status(404).json({ message: "Political leader not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      // Create a validation schema that allows partial updates
-      const updatePoliticalLeaderSchema = insertPoliticalLeaderSchema.partial();
+      // Get existing leader to verify ownership
+      const existingLeaders = await storage.getPoliticalLeadersByCountryId(countryId);
+      const leader = existingLeaders.find(l => l.id === leaderId);
       
-      // Prepare data with date conversion if needed
+      if (!leader) {
+        return res.status(404).json({ message: "Political leader not found for this country" });
+      }
+      
+      // Format the data for update
       const data = {
         ...req.body,
+        countryId,
         startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        ideologies: req.body.ideologies || undefined,
       };
       
-      // Validate the request body
-      const validatedData = updatePoliticalLeaderSchema.parse(data);
-      
       // Update the political leader
-      const updatedLeader = await storage.updatePoliticalLeader(id, validatedData);
-      
+      const updatedLeader = await storage.updatePoliticalLeader(leaderId, data);
       if (!updatedLeader) {
         return res.status(500).json({ message: "Failed to update political leader" });
       }
@@ -376,22 +387,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to update political leader" });
     }
   });
-  
+
+  // DELETE for political leaders
   app.delete("/api/countries/:countryId/leaders/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const leaderId = parseInt(req.params.id);
       
-      const leaders = await storage.getPoliticalLeadersByCountryId(countryId);
-      const leader = leaders.find(l => l.id === id);
-      
-      if (!leader) {
-        return res.status(404).json({ message: "Political leader not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const success = await storage.deletePoliticalLeader(id);
+      // Get existing leader to verify ownership
+      const existingLeaders = await storage.getPoliticalLeadersByCountryId(countryId);
+      const leader = existingLeaders.find(l => l.id === leaderId);
       
-      if (!success) {
+      if (!leader) {
+        return res.status(404).json({ message: "Political leader not found for this country" });
+      }
+      
+      // Delete the political leader
+      const deleted = await storage.deletePoliticalLeader(leaderId);
+      if (!deleted) {
         return res.status(500).json({ message: "Failed to delete political leader" });
       }
       
@@ -402,65 +421,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Political system routes
-  app.get("/api/countries/:countryId/political-system", async (req, res) => {
+  // PATCH for updating political system
+  app.patch("/api/countries/:countryId/political-system", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
-      const politicalSystem = await storage.getPoliticalSystemByCountryId(countryId);
       
-      if (!politicalSystem) {
-        return res.status(404).json({ message: "Political system not found for this country" });
-      }
-      
-      res.json(politicalSystem);
-    } catch (error) {
-      console.error(`Error fetching political system for country ${req.params.countryId}:`, error);
-      res.status(500).json({ message: "Failed to fetch political system" });
-    }
-  });
-  
-  app.post("/api/countries/:countryId/political-system", async (req, res) => {
-    try {
-      const countryId = parseInt(req.params.countryId);
+      // Fetch the country
       const country = await storage.getCountryById(countryId);
-      
       if (!country) {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertPoliticalSystemSchema.parse({
-        ...req.body,
-        countryId,
-      });
+      // Get existing system
+      const existingSystem = await storage.getPoliticalSystemByCountryId(countryId);
       
-      const politicalSystem = await storage.createPoliticalSystem(validatedData);
-      res.status(201).json(politicalSystem);
-    } catch (error: any) {
-      console.error(`Error creating political system:`, error);
-      res.status(400).json({ message: error.message || "Failed to create political system" });
-    }
-  });
-  
-  app.patch("/api/countries/:countryId/political-system/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const countryId = parseInt(req.params.countryId);
-      
-      const politicalSystem = await storage.getPoliticalSystemByCountryId(countryId);
-      
-      if (!politicalSystem || politicalSystem.id !== id) {
-        return res.status(404).json({ message: "Political system not found" });
+      if (!existingSystem) {
+        return res.status(404).json({ message: "Political system not found for this country" });
       }
       
-      // Create a validation schema that allows partial updates
-      const updatePoliticalSystemSchema = insertPoliticalSystemSchema.partial();
-      
-      // Validate the request body
-      const validatedData = updatePoliticalSystemSchema.parse(req.body);
+      // Format the data for update
+      const data = {
+        ...req.body,
+        countryId,
+        freedomIndex: req.body.freedomIndex ? parseInt(req.body.freedomIndex) : undefined,
+        governmentBranches: req.body.governmentBranches || undefined,
+        democraticPrinciples: req.body.democraticPrinciples || undefined,
+        internationalRelations: req.body.internationalRelations || undefined,
+        laws: req.body.laws || undefined,
+        organizations: req.body.organizations || undefined,
+      };
       
       // Update the political system
-      const updatedSystem = await storage.updatePoliticalSystem(id, validatedData);
-      
+      const updatedSystem = await storage.updatePoliticalSystem(existingSystem.id, data);
       if (!updatedSystem) {
         return res.status(500).json({ message: "Failed to update political system" });
       }
@@ -473,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // International relations routes
-  app.get("/api/countries/:countryId/international-relations", async (req, res) => {
+  app.get("/api/countries/:countryId/relations", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
       const relations = await storage.getInternationalRelationsByCountryId(countryId);
@@ -483,8 +475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch international relations" });
     }
   });
-  
-  app.post("/api/countries/:countryId/international-relations", async (req, res) => {
+
+  app.post("/api/countries/:countryId/relations", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
       const country = await storage.getCountryById(countryId);
@@ -493,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      // Convert date string to Date object if it's a string
+      // Format the data
       const data = {
         ...req.body,
         countryId,
@@ -509,31 +501,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to create international relation" });
     }
   });
-  
-  app.patch("/api/countries/:countryId/international-relations/:id", async (req, res) => {
+
+  // PATCH for updating international relations
+  app.patch("/api/countries/:countryId/relations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const relationId = parseInt(req.params.id);
       
-      const relations = await storage.getInternationalRelationsByCountryId(countryId);
-      const relation = relations.find(r => r.id === id);
-      
-      if (!relation) {
-        return res.status(404).json({ message: "International relation not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const updateInternationalRelationSchema = insertInternationalRelationSchema.partial();
+      // Get existing relation to verify ownership
+      const existingRelations = await storage.getInternationalRelationsByCountryId(countryId);
+      const relation = existingRelations.find(r => r.id === relationId);
       
-      // Prepare data with date conversion if needed
+      if (!relation) {
+        return res.status(404).json({ message: "International relation not found for this country" });
+      }
+      
+      // Format the data for update
       const data = {
         ...req.body,
+        countryId,
         startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
       };
       
-      const validatedData = updateInternationalRelationSchema.parse(data);
-      
-      const updatedRelation = await storage.updateInternationalRelation(id, validatedData);
-      
+      // Update the international relation
+      const updatedRelation = await storage.updateInternationalRelation(relationId, data);
       if (!updatedRelation) {
         return res.status(500).json({ message: "Failed to update international relation" });
       }
@@ -544,22 +541,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to update international relation" });
     }
   });
-  
-  app.delete("/api/countries/:countryId/international-relations/:id", async (req, res) => {
+
+  // DELETE for international relations
+  app.delete("/api/countries/:countryId/relations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const relationId = parseInt(req.params.id);
       
-      const relations = await storage.getInternationalRelationsByCountryId(countryId);
-      const relation = relations.find(r => r.id === id);
-      
-      if (!relation) {
-        return res.status(404).json({ message: "International relation not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const success = await storage.deleteInternationalRelation(id);
+      // Get existing relation to verify ownership
+      const existingRelations = await storage.getInternationalRelationsByCountryId(countryId);
+      const relation = existingRelations.find(r => r.id === relationId);
       
-      if (!success) {
+      if (!relation) {
+        return res.status(404).json({ message: "International relation not found for this country" });
+      }
+      
+      // Delete the international relation
+      const deleted = await storage.deleteInternationalRelation(relationId);
+      if (!deleted) {
         return res.status(500).json({ message: "Failed to delete international relation" });
       }
       
@@ -581,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch historical laws" });
     }
   });
-  
+
   app.post("/api/countries/:countryId/laws", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
@@ -591,11 +596,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      // Convert date string to Date object if it's a string
+      // Format the data
       const data = {
         ...req.body,
         countryId,
-        date: req.body.date ? new Date(req.body.date) : null,
+        // Use date as a string without conversion
+        date: req.body.date || null,
       };
       
       const validatedData = insertHistoricalLawSchema.parse(data);
@@ -607,31 +613,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to create historical law" });
     }
   });
-  
+
+  // PATCH for updating historical laws
   app.patch("/api/countries/:countryId/laws/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const lawId = parseInt(req.params.id);
       
-      const laws = await storage.getHistoricalLawsByCountryId(countryId);
-      const law = laws.find(l => l.id === id);
-      
-      if (!law) {
-        return res.status(404).json({ message: "Historical law not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const updateHistoricalLawSchema = insertHistoricalLawSchema.partial();
+      // Get existing law to verify ownership
+      const existingLaws = await storage.getHistoricalLawsByCountryId(countryId);
+      const law = existingLaws.find(l => l.id === lawId);
       
-      // Prepare data with date conversion if needed
+      if (!law) {
+        return res.status(404).json({ message: "Historical law not found for this country" });
+      }
+      
+      // Format the data for update
       const data = {
         ...req.body,
-        date: req.body.date ? new Date(req.body.date) : undefined,
+        countryId,
+        // Use date as a string without conversion
+        date: req.body.date || undefined,
       };
       
-      const validatedData = updateHistoricalLawSchema.parse(data);
-      
-      const updatedLaw = await storage.updateHistoricalLaw(id, validatedData);
-      
+      // Update the historical law
+      const updatedLaw = await storage.updateHistoricalLaw(lawId, data);
       if (!updatedLaw) {
         return res.status(500).json({ message: "Failed to update historical law" });
       }
@@ -642,22 +654,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to update historical law" });
     }
   });
-  
+
+  // DELETE for historical laws
   app.delete("/api/countries/:countryId/laws/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const lawId = parseInt(req.params.id);
       
-      const laws = await storage.getHistoricalLawsByCountryId(countryId);
-      const law = laws.find(l => l.id === id);
-      
-      if (!law) {
-        return res.status(404).json({ message: "Historical law not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const success = await storage.deleteHistoricalLaw(id);
+      // Get existing law to verify ownership
+      const existingLaws = await storage.getHistoricalLawsByCountryId(countryId);
+      const law = existingLaws.find(l => l.id === lawId);
       
-      if (!success) {
+      if (!law) {
+        return res.status(404).json({ message: "Historical law not found for this country" });
+      }
+      
+      // Delete the historical law
+      const deleted = await storage.deleteHistoricalLaw(lawId);
+      if (!deleted) {
         return res.status(500).json({ message: "Failed to delete historical law" });
       }
       
@@ -679,7 +699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch statistics" });
     }
   });
-  
+
   app.post("/api/countries/:countryId/statistics", async (req, res) => {
     try {
       const countryId = parseInt(req.params.countryId);
@@ -689,10 +709,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertStatisticSchema.parse({
+      // Format the data
+      const data = {
         ...req.body,
         countryId,
-      });
+        year: req.body.year ? parseInt(req.body.year) : null,
+        data: req.body.data || [],
+      };
+      
+      const validatedData = insertStatisticSchema.parse(data);
       
       const statistic = await storage.createStatistic(validatedData);
       res.status(201).json(statistic);
@@ -701,24 +726,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to create statistic" });
     }
   });
-  
+
+  // PATCH for updating statistics
   app.patch("/api/countries/:countryId/statistics/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const statisticId = parseInt(req.params.id);
       
-      const statistics = await storage.getStatisticsByCountryId(countryId);
-      const statistic = statistics.find(s => s.id === id);
-      
-      if (!statistic) {
-        return res.status(404).json({ message: "Statistic not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const updateStatisticSchema = insertStatisticSchema.partial();
-      const validatedData = updateStatisticSchema.parse(req.body);
+      // Get existing statistic to verify ownership
+      const existingStatistics = await storage.getStatisticsByCountryId(countryId);
+      const statistic = existingStatistics.find(s => s.id === statisticId);
       
-      const updatedStatistic = await storage.updateStatistic(id, validatedData);
+      if (!statistic) {
+        return res.status(404).json({ message: "Statistic not found for this country" });
+      }
       
+      // Format the data for update
+      const data = {
+        ...req.body,
+        countryId,
+        year: req.body.year ? parseInt(req.body.year) : undefined,
+        data: req.body.data || undefined,
+      };
+      
+      // Update the statistic
+      const updatedStatistic = await storage.updateStatistic(statisticId, data);
       if (!updatedStatistic) {
         return res.status(500).json({ message: "Failed to update statistic" });
       }
@@ -729,22 +767,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: error.message || "Failed to update statistic" });
     }
   });
-  
+
+  // DELETE for statistics
   app.delete("/api/countries/:countryId/statistics/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
       const countryId = parseInt(req.params.countryId);
+      const statisticId = parseInt(req.params.id);
       
-      const statistics = await storage.getStatisticsByCountryId(countryId);
-      const statistic = statistics.find(s => s.id === id);
-      
-      if (!statistic) {
-        return res.status(404).json({ message: "Statistic not found" });
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
       }
       
-      const success = await storage.deleteStatistic(id);
+      // Get existing statistic to verify ownership
+      const existingStatistics = await storage.getStatisticsByCountryId(countryId);
+      const statistic = existingStatistics.find(s => s.id === statisticId);
       
-      if (!success) {
+      if (!statistic) {
+        return res.status(404).json({ message: "Statistic not found for this country" });
+      }
+      
+      // Delete the statistic
+      const deleted = await storage.deleteStatistic(statisticId);
+      if (!deleted) {
         return res.status(500).json({ message: "Failed to delete statistic" });
       }
       
@@ -755,72 +801,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific country by ID
-  app.get("/api/countries/:id", async (req, res) => {
+  // Economic data routes
+  app.get("/api/countries/:countryId/economy", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const country = await storage.getCountryById(id);
+      const countryId = parseInt(req.params.countryId);
+      const economy = await storage.getEconomicDataByCountryId(countryId);
       
-      if (!country) {
-        return res.status(404).json({ message: "Country not found" });
+      if (!economy) {
+        return res.status(404).json({ message: "Economic data not found" });
       }
       
-      res.json(country);
+      res.json(economy);
     } catch (error) {
-      console.error(`Error fetching country with ID ${req.params.id}:`, error);
-      res.status(500).json({ message: "Failed to fetch country" });
+      console.error(`Error fetching economic data for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch economic data" });
     }
   });
 
-  // Update a country
-  app.patch("/api/countries/:id", async (req, res) => {
+  app.post("/api/countries/:countryId/economy", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const country = await storage.getCountryById(id);
+      const countryId = parseInt(req.params.countryId);
+      const country = await storage.getCountryById(countryId);
       
       if (!country) {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      // Create a validation schema that allows partial updates
-      const updateCountrySchema = insertCountrySchema.partial();
+      // Check if economic data already exists
+      const existingEconomy = await storage.getEconomicDataByCountryId(countryId);
       
-      // Validate the request body
-      const validatedData = updateCountrySchema.parse(req.body);
-      
-      // Handle the countryInfo object separately if it exists
-      let countryInfoUpdate = undefined;
-      if (req.body.countryInfo) {
-        countryInfoUpdate = req.body.countryInfo;
-        delete validatedData.countryInfo; // Remove from validatedData to avoid double updating
+      if (existingEconomy) {
+        return res.status(400).json({ message: "Economic data already exists for this country. Use PATCH to update." });
       }
       
-      // If countryInfo exists in the data but isn't in the update, preserve it
-      if (country.countryInfo && !countryInfoUpdate) {
-        countryInfoUpdate = country.countryInfo;
-      }
+      // Format the data
+      const data = {
+        ...req.body,
+        countryId,
+        gdp: req.body.gdp ? parseInt(req.body.gdp) : null,
+        gdpPerCapita: req.body.gdpPerCapita ? parseInt(req.body.gdpPerCapita) : null,
+        mainIndustries: req.body.mainIndustries || [],
+        tradingPartners: req.body.tradingPartners || [],
+        challenges: req.body.challenges || [],
+        reforms: req.body.reforms || [],
+        initiatives: req.body.initiatives || [],
+      };
       
-      // Include countryInfo in the update if we have it
-      const updateData = countryInfoUpdate 
-        ? { ...validatedData, countryInfo: countryInfoUpdate } 
-        : validatedData;
+      const validatedData = insertEconomicDataSchema.parse(data);
       
-      // Update the country
-      const updatedCountry = await storage.updateCountry(id, updateData);
-      
-      if (!updatedCountry) {
-        return res.status(500).json({ message: "Failed to update country" });
-      }
-      
-      res.json(updatedCountry);
+      const economy = await storage.createEconomicData(validatedData);
+      res.status(201).json(economy);
     } catch (error: any) {
-      console.error(`Error updating country:`, error);
-      res.status(400).json({ message: error.message || "Failed to update country" });
+      console.error(`Error creating economic data:`, error);
+      res.status(400).json({ message: error.message || "Failed to create economic data" });
     }
   });
 
-  // Create HTTP server
-  const httpServer = createServer(app);
-  
-  return httpServer;
+  // PATCH for updating economic data
+  app.patch("/api/countries/:countryId/economy", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      
+      // Fetch the country
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Get existing economic data
+      const existingEconomy = await storage.getEconomicDataByCountryId(countryId);
+      
+      if (!existingEconomy) {
+        return res.status(404).json({ message: "Economic data not found for this country" });
+      }
+      
+      // Format the data for update
+      const data = {
+        ...req.body,
+        countryId,
+        gdp: req.body.gdp ? parseInt(req.body.gdp) : undefined,
+        gdpPerCapita: req.body.gdpPerCapita ? parseInt(req.body.gdpPerCapita) : undefined,
+        mainIndustries: req.body.mainIndustries || undefined,
+        tradingPartners: req.body.tradingPartners || undefined,
+        challenges: req.body.challenges || undefined,
+        reforms: req.body.reforms || undefined,
+        initiatives: req.body.initiatives || undefined,
+      };
+      
+      // Update the economic data
+      const updatedEconomy = await storage.updateEconomicData(existingEconomy.id, data);
+      if (!updatedEconomy) {
+        return res.status(500).json({ message: "Failed to update economic data" });
+      }
+      
+      res.json(updatedEconomy);
+    } catch (error: any) {
+      console.error(`Error updating economic data:`, error);
+      res.status(400).json({ message: error.message || "Failed to update economic data" });
+    }
+  });
+
+  return createServer(app);
 }
