@@ -641,12 +641,44 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Icon (Optional)</FormLabel>
+                  <FormLabel>Icon</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value || ''} />
+                    <Select
+                      value={field.value || ''}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an icon" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        <SelectItem value="">No icon</SelectItem>
+                        <SelectItem value="crown">👑 Crown</SelectItem>
+                        <SelectItem value="landmark">🏛️ Landmark</SelectItem>
+                        <SelectItem value="gavel">⚖️ Gavel</SelectItem>
+                        <SelectItem value="university">🏫 University</SelectItem>
+                        <SelectItem value="handshake">🤝 Handshake</SelectItem>
+                        <SelectItem value="file-signature">📝 File Signature</SelectItem>
+                        <SelectItem value="users">👥 Users</SelectItem>
+                        <SelectItem value="flag">🚩 Flag</SelectItem>
+                        <SelectItem value="calendar-day">📅 Calendar</SelectItem>
+                        <SelectItem value="chart-line">📈 Chart</SelectItem>
+                        <SelectItem value="balance-scale">⚖️ Balance Scale</SelectItem>
+                        <SelectItem value="newspaper">📰 Newspaper</SelectItem>
+                        <SelectItem value="vote-yea">🗳️ Vote</SelectItem>
+                        <SelectItem value="coins">💰 Coins</SelectItem>
+                        <SelectItem value="building">🏢 Building</SelectItem>
+                        <SelectItem value="exclamation-triangle">⚠️ Warning</SelectItem>
+                        <SelectItem value="user-shield">🛡️ User Shield</SelectItem>
+                        <SelectItem value="theater-masks">🎭 Theater Masks</SelectItem>
+                        <SelectItem value="dove">🕊️ Dove</SelectItem>
+                        <SelectItem value="fighter-jet">✈️ Fighter Jet</SelectItem>
+                        <SelectItem value="bolt">⚡ Lightning</SelectItem>
+                        <SelectItem value="fire">🔥 Fire</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormDescription>
-                    Icon name from icon library (e.g., 'crown', 'users')
+                    Choose an icon that represents this event
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -709,9 +741,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                   <p className="mt-1">{event.description}</p>
                 </div>
                 <div className="flex gap-2 md:self-center">
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(event)}>
-                    Edit
-                  </Button>
                   <Button 
                     type="button" 
                     variant="destructive" 

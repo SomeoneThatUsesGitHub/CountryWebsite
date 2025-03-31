@@ -32,6 +32,7 @@ export function formatDate(date: string | Date): string {
 // Get event badge color based on event type
 export function getEventBadgeColor(eventType: string): string {
   const colorMap: Record<string, string> = {
+    'political': 'bg-blue-100 text-blue-800',
     'election': 'bg-blue-100 text-blue-800',
     'protest': 'bg-red-100 text-red-800',
     'agreement': 'bg-green-100 text-green-800',
@@ -39,23 +40,36 @@ export function getEventBadgeColor(eventType: string): string {
     'legislation': 'bg-purple-100 text-purple-800',
     'referendum': 'bg-indigo-100 text-indigo-800',
     'scandal': 'bg-pink-100 text-pink-800',
+    'economic': 'bg-emerald-100 text-emerald-800',
+    'social': 'bg-violet-100 text-violet-800',
+    'cultural': 'bg-fuchsia-100 text-fuchsia-800',
+    'disaster': 'bg-orange-100 text-orange-800',
+    'war': 'bg-rose-100 text-rose-800',
+    'treaty': 'bg-cyan-100 text-cyan-800',
     'default': 'bg-gray-100 text-gray-800'
   };
   
   return colorMap[eventType.toLowerCase()] || colorMap.default;
 }
 
-// Get event icon color based on event type
+// Get event dot color based on event type with enhanced low-poly visual style
 export function getEventDotColor(eventType: string): string {
   const colorMap: Record<string, string> = {
-    'election': 'bg-primary',
-    'protest': 'bg-red-500',
-    'agreement': 'bg-green-500',
-    'conflict': 'bg-amber-500',
-    'legislation': 'bg-purple-500',
-    'referendum': 'bg-indigo-500',
-    'scandal': 'bg-pink-500',
-    'default': 'bg-gray-500'
+    'political': 'bg-gradient-to-br from-blue-500 to-blue-700 shadow-md',
+    'election': 'bg-gradient-to-br from-blue-500 to-blue-700 shadow-md',
+    'protest': 'bg-gradient-to-br from-red-500 to-red-700 shadow-md',
+    'agreement': 'bg-gradient-to-br from-green-500 to-green-700 shadow-md',
+    'conflict': 'bg-gradient-to-br from-amber-500 to-amber-700 shadow-md',
+    'legislation': 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-md',
+    'referendum': 'bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-md',
+    'scandal': 'bg-gradient-to-br from-pink-500 to-pink-700 shadow-md',
+    'economic': 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-md',
+    'social': 'bg-gradient-to-br from-violet-500 to-violet-700 shadow-md',
+    'cultural': 'bg-gradient-to-br from-fuchsia-500 to-fuchsia-700 shadow-md',
+    'disaster': 'bg-gradient-to-br from-orange-500 to-orange-700 shadow-md',
+    'war': 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-md',
+    'treaty': 'bg-gradient-to-br from-cyan-500 to-cyan-700 shadow-md',
+    'default': 'bg-gradient-to-br from-gray-500 to-gray-700 shadow-md'
   };
   
   return colorMap[eventType.toLowerCase()] || colorMap.default;

@@ -67,16 +67,18 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
             <div 
-              className={`timeline-dot absolute left-0 w-10 h-10 rounded-full ${getEventDotColor(event.eventType)} 
-                flex items-center justify-center text-white z-10 transition-transform 
-                hover:scale-110`}
+              className={`timeline-dot absolute left-0 w-10 h-10 ${getEventDotColor(event.eventType)} 
+                flex items-center justify-center text-white z-10 transition-all duration-300
+                hover:scale-110 hover:rotate-12 transform`}
+              style={{clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)"}}
             >
               <i className={`fas ${getEventIcon(event.eventType, event.icon)}`}></i>
             </div>
             
-            <div className="bg-white p-5 rounded-lg shadow-sm relative hover:shadow-md transition-shadow">
+            <div className="bg-white p-5 rounded-lg shadow-sm relative transition-all duration-300 
+                transform hover:-translate-y-1 hover:shadow-md">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-gray-500">{formatDate(event.date)}</span>
+                <span className="text-sm text-gray-500 font-medium">{formatDate(event.date)}</span>
                 <span className={`${getEventBadgeColor(event.eventType)} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
                   {event.eventType}
                 </span>
