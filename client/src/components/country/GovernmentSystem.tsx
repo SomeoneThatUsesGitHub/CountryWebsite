@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PoliticalLeader, PoliticalParty, PoliticalSystem } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
-import { format } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Progress } from '@/components/ui/progress';
+import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { PoliticalLeader, PoliticalParty, PoliticalSystem } from '@shared/schema';
 
 interface GovernmentSystemProps {
   countryId: number;
@@ -15,36 +15,52 @@ interface GovernmentSystemProps {
 
 const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
   // Fetch political leaders for the country
-  const { data: leaders = [], isLoading: leadersLoading } = useQuery<PoliticalLeader[]>({
+  const { 
+    data: leaders = [], 
+    isLoading: leadersLoading,
+    isSuccess: leadersSuccess
+  } = useQuery<PoliticalLeader[]>({
     queryKey: [`/api/countries/${countryId}/leaders`],
     enabled: !!countryId,
   });
 
   // Fetch political parties for the country
-  const { data: parties = [], isLoading: partiesLoading } = useQuery<PoliticalParty[]>({
+  const { 
+    data: parties = [], 
+    isLoading: partiesLoading,
+    isSuccess: partiesSuccess
+  } = useQuery<PoliticalParty[]>({
     queryKey: [`/api/countries/${countryId}/parties`],
     enabled: !!countryId,
   });
   
-  // Fetch political system for the country
+  // Attempt to fetch political system for the country
   const { 
-    data: politicalSystem, 
+    data: politicalSystem,
     isLoading: systemLoading,
-    isError: systemError,
-    error: systemErrorData
+    isError: systemError 
   } = useQuery<PoliticalSystem>({
     queryKey: [`/api/countries/${countryId}/political-system`],
     enabled: !!countryId,
-    retry: false, // Don't retry on 404
-    onError: (error) => {
-      console.log('Error fetching political system:', error);
-    }
+    retry: 0 // Don't retry on 404
   });
 
-  const isLoading = leadersLoading || partiesLoading || (systemLoading && !systemError);
+  // Only show loading indicator when actively loading and no errors have occurred
+  const isLoading = (leadersLoading || partiesLoading || systemLoading) && !systemError;
   
-  // Check if country has an unstable political situation
-  const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation || false;
+  // All data has loaded but no content exists
+  const hasNoData = 
+    !isLoading && 
+    leadersSuccess && partiesSuccess && 
+    leaders.length === 0 && parties.length === 0 && 
+    (systemError || !politicalSystem);
+
+  // Check if country has an unstable political situation - this needs special handling because it's important
+  // We need to handle three cases:
+  // 1. System exists and has unstable situation flag set to true
+  // 2. System exists but unstable situation flag is false or missing
+  // 3. System doesn't exist (handle as stable, since unstable requires explicit opt-in)
+  const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation === true;
 
   if (isLoading) {
     return (
@@ -54,8 +70,9 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
     );
   }
 
-  if (leaders.length === 0 && parties.length === 0) {
-    // If country has unstable political situation, show only the warning
+  // Handle the case where there's no meaningful data to display
+  if (hasNoData) {
+    // For unstable countries, show only the warning alert
     if (hasUnstablePoliticalSituation) {
       return (
         <div className="space-y-8">
@@ -69,7 +86,7 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
       );
     }
     
-    // If country is stable but has no political info, show the default message
+    // For stable countries with no data, show the default message
     return (
       <div className="space-y-8">
         <div className="flex flex-col justify-center items-center h-48 space-y-2">
@@ -85,14 +102,14 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
     : 0;
 
   // Sort parties by seats in descending order
-  const sortedParties = [...parties].sort((a, b) => (b.seats || -1) - (a.seats || -1));
+  const sortedParties = [...parties].sort((a, b) => (b.seats || 0) - (a.seats || 0));
   
   // Find ruling party
   const rulingParty = parties.find(party => party.isRuling);
 
   return (
     <div className="space-y-12 pb-8">
-      {/* Unstable political situation alert */}
+      {/* Unstable political situation alert - shown when there IS actual data */}
       {hasUnstablePoliticalSituation && (
         <Alert variant="destructive" className="bg-red-50 border-red-300 text-red-800 mb-6">
           <AlertTriangle className="h-5 w-5" />
