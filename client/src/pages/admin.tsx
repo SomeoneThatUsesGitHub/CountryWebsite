@@ -488,10 +488,11 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
           variant: 'destructive',
         });
       } else {
-        // Create new event
+        // Create new event and convert string date to Date object
         await apiRequest('POST', `/api/countries/${countryId}/timeline`, {
           ...data,
           countryId,
+          date: new Date(data.date), // Convert string to Date object
         });
         
         // Refetch timeline events
@@ -721,14 +722,111 @@ const politicalLeaderSchema = z.object({
   ideologies: z.array(z.string()).default([]),
 });
 
+// Political System Form Values
+interface PoliticalSystemFormValues {
+  id?: number;
+  type: string;
+  details: string | null;
+  freedomIndex: number | null;
+  electionSystem: string | null;
+  governmentBranches: any;
+  democraticPrinciples: any;
+  internationalRelations: any;
+  laws: any;
+  organizations: any;
+}
+
+const politicalSystemSchema = z.object({
+  id: z.number().optional(),
+  type: z.string().min(1, 'System type is required'),
+  details: z.string().nullable(),
+  freedomIndex: z.number().min(0).max(100).nullable(),
+  electionSystem: z.string().nullable(),
+  governmentBranches: z.any(),
+  democraticPrinciples: z.any(),
+  internationalRelations: z.any(),
+  laws: z.any(),
+  organizations: z.any(),
+});
+
+// International Relation Form Values
+interface RelationFormValues {
+  id?: number;
+  partnerCountry: string;
+  relationType: string;
+  startDate: string | null;
+  details: string | null;
+  relationStrength: string | null;
+}
+
+const relationSchema = z.object({
+  id: z.number().optional(),
+  partnerCountry: z.string().min(1, 'Partner country is required'),
+  relationType: z.string().min(1, 'Relation type is required'),
+  startDate: z.string().nullable(),
+  details: z.string().nullable(),
+  relationStrength: z.string().nullable(),
+});
+
+// Historical Law Form Values
+interface LawFormValues {
+  id?: number;
+  title: string;
+  date: string | null;
+  status: string | null;
+  description: string | null;
+  category: string | null;
+}
+
+const lawSchema = z.object({
+  id: z.number().optional(),
+  title: z.string().min(1, 'Law title is required'),
+  date: z.string().nullable(),
+  status: z.string().nullable(),
+  description: z.string().nullable(),
+  category: z.string().nullable(),
+});
+
 const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
+  // Political Leaders state
   const [leaders, setLeaders] = useState<PoliticalLeader[]>([]);
   const [editingLeader, setEditingLeader] = useState<PoliticalLeaderFormValues | null>(null);
   const [ideologyInput, setIdeologyInput] = useState('');
   
+  // Political System state
+  const [politicalSystem, setPoliticalSystem] = useState<PoliticalSystem | null>(null);
+  const [democraticPrincipleInput, setDemocraticPrincipleInput] = useState('');
+  const [organizationInput, setOrganizationInput] = useState('');
+  
+  // International Relations state
+  const [relations, setRelations] = useState<InternationalRelation[]>([]);
+  const [editingRelation, setEditingRelation] = useState<RelationFormValues | null>(null);
+  
+  // Historical Laws state
+  const [laws, setLaws] = useState<HistoricalLaw[]>([]);
+  const [editingLaw, setEditingLaw] = useState<LawFormValues | null>(null);
+  
   // Fetch political leaders for the selected country
   const { data: politicalLeaders, isLoading: leadersLoading, refetch: refetchLeaders } = useQuery<PoliticalLeader[]>({
     queryKey: [`/api/countries/${countryId}/leaders`],
+    enabled: countryId !== null,
+  });
+  
+  // Fetch political system for the selected country
+  const { data: fetchedPoliticalSystem, isLoading: politicalSystemLoading, refetch: refetchPoliticalSystem } = useQuery<PoliticalSystem>({
+    queryKey: [`/api/countries/${countryId}/political-system`],
+    enabled: countryId !== null,
+  });
+  
+  // Fetch international relations for the selected country
+  const { data: fetchedRelations, isLoading: relationsLoading, refetch: refetchRelations } = useQuery<InternationalRelation[]>({
+    queryKey: [`/api/countries/${countryId}/relations`],
+    enabled: countryId !== null,
+  });
+  
+  // Fetch historical laws for the selected country
+  const { data: fetchedLaws, isLoading: lawsLoading, refetch: refetchLaws } = useQuery<HistoricalLaw[]>({
+    queryKey: [`/api/countries/${countryId}/laws`],
     enabled: countryId !== null,
   });
   
@@ -745,12 +843,107 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
     },
   });
   
+  // Create form for political system
+  const systemForm = useForm<PoliticalSystemFormValues>({
+    resolver: zodResolver(politicalSystemSchema),
+    defaultValues: {
+      type: '',
+      details: null,
+      freedomIndex: null,
+      electionSystem: null,
+      governmentBranches: {},
+      democraticPrinciples: [],
+      internationalRelations: {},
+      laws: {},
+      organizations: [],
+    },
+  });
+  
+  // Create form for international relations
+  const relationForm = useForm<RelationFormValues>({
+    resolver: zodResolver(relationSchema),
+    defaultValues: {
+      partnerCountry: '',
+      relationType: '',
+      startDate: null,
+      details: null,
+      relationStrength: null,
+    },
+  });
+  
+  // Create form for historical laws
+  const lawForm = useForm<LawFormValues>({
+    resolver: zodResolver(lawSchema),
+    defaultValues: {
+      title: '',
+      date: null,
+      status: null,
+      description: null,
+      category: null,
+    },
+  });
+
   // Update leaders when data is fetched
   React.useEffect(() => {
     if (politicalLeaders) {
       setLeaders(politicalLeaders);
     }
   }, [politicalLeaders]);
+  
+  // Update political system when fetched
+  React.useEffect(() => {
+    if (fetchedPoliticalSystem) {
+      setPoliticalSystem(fetchedPoliticalSystem);
+      
+      // Parse JSON fields
+      const governmentBranches = typeof fetchedPoliticalSystem.governmentBranches === 'string' 
+        ? JSON.parse(fetchedPoliticalSystem.governmentBranches as string)
+        : (fetchedPoliticalSystem.governmentBranches || {});
+      
+      const democraticPrinciples = typeof fetchedPoliticalSystem.democraticPrinciples === 'string'
+        ? JSON.parse(fetchedPoliticalSystem.democraticPrinciples as string)
+        : (fetchedPoliticalSystem.democraticPrinciples || []);
+      
+      const internationalRelations = typeof fetchedPoliticalSystem.internationalRelations === 'string'
+        ? JSON.parse(fetchedPoliticalSystem.internationalRelations as string)
+        : (fetchedPoliticalSystem.internationalRelations || {});
+      
+      const laws = typeof fetchedPoliticalSystem.laws === 'string'
+        ? JSON.parse(fetchedPoliticalSystem.laws as string)
+        : (fetchedPoliticalSystem.laws || {});
+        
+      const organizations = typeof fetchedPoliticalSystem.organizations === 'string'
+        ? JSON.parse(fetchedPoliticalSystem.organizations as string)
+        : (fetchedPoliticalSystem.organizations || []);
+      
+      systemForm.reset({
+        id: fetchedPoliticalSystem.id,
+        type: fetchedPoliticalSystem.type,
+        details: fetchedPoliticalSystem.details,
+        freedomIndex: fetchedPoliticalSystem.freedomIndex,
+        electionSystem: fetchedPoliticalSystem.electionSystem,
+        governmentBranches,
+        democraticPrinciples,
+        internationalRelations,
+        laws,
+        organizations,
+      });
+    }
+  }, [fetchedPoliticalSystem, systemForm]);
+  
+  // Update international relations when fetched
+  React.useEffect(() => {
+    if (fetchedRelations) {
+      setRelations(fetchedRelations);
+    }
+  }, [fetchedRelations]);
+  
+  // Update historical laws when fetched
+  React.useEffect(() => {
+    if (fetchedLaws) {
+      setLaws(fetchedLaws);
+    }
+  }, [fetchedLaws]);
   
   // Handle form submission
   const onSubmit = async (data: PoliticalLeaderFormValues) => {
@@ -768,6 +961,7 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
         await apiRequest('POST', `/api/countries/${countryId}/leaders`, {
           ...data,
           countryId,
+          startDate: data.startDate ? new Date(data.startDate) : null, // Convert string to Date object if present
         });
         
         // Refetch political leaders
