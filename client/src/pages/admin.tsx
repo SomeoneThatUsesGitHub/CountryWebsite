@@ -426,7 +426,30 @@ const AdminPage: React.FC = () => {
               
               {/* Statistics Tab */}
               <TabsContent value="statistics">
-                <OldStatisticsEditor countryId={selectedCountry.id} />
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Statistics Editor Options</CardTitle>
+                      <CardDescription>Choose which statistics editor you'd like to use</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Tabs defaultValue="new">
+                        <TabsList className="grid grid-cols-2 mb-4">
+                          <TabsTrigger value="new">New Editor (Recommended)</TabsTrigger>
+                          <TabsTrigger value="old">Old Editor</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="new">
+                          <StatisticsEditor countryId={selectedCountry.id} />
+                        </TabsContent>
+                        
+                        <TabsContent value="old">
+                          <OldStatisticsEditor countryId={selectedCountry.id} />
+                        </TabsContent>
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
               
               {/* Political System Tab */}
