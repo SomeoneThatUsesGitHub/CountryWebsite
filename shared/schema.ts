@@ -81,6 +81,7 @@ export const internationalRelations = pgTable("internationalRelations", {
   id: serial("id").primaryKey(),
   countryId: integer("countryId").notNull().references(() => countries.id),
   partnerCountry: text("partnerCountry").notNull(),
+  countryCode: text("countryCode"), // ISO 3166-1 alpha-2 code (e.g., "DE" for Germany)
   relationType: text("relationType").notNull(), // Economic, Military, Cultural, etc.
   relationStrength: text("relationStrength"), // Strong, Moderate, Weak
   details: text("details"),
