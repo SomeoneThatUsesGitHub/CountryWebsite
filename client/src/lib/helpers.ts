@@ -133,12 +133,15 @@ export function getChartColors(index: number): string {
   return colors[index % colors.length];
 }
 
-// Extract meaningful tags (up to 3 words) from the event description
-export function extractKeyword(description: string): string {
+// Extract up to 3 meaningful tags from the event description
+export function extractKeyword(description: string): string[] {
   // Skip if description is too short
   if (!description || description.length < 5) {
-    return '';
+    return [];
   }
+  
+  // Tags array to hold our results (max 3 tags)
+  const tags: string[] = [];
   
   // Convert to lowercase for comparison
   const lowerDesc = description.toLowerCase();
@@ -155,10 +158,16 @@ export function extractKeyword(description: string): string {
     'military conflict', 'policy change', 'social reform', 'international agreement'
   ];
   
-  // Check for multi-word phrases first
-  for (const phrase of politicalPhrases) {
-    if (lowerDesc.includes(phrase)) {
-      return phrase; // Return the first found multi-word phrase
+  // Check for multi-word phrases first (add up to 2 phrases if found)
+  const foundPhrases = politicalPhrases.filter(phrase => lowerDesc.includes(phrase));
+  if (foundPhrases.length > 0) {
+    // Sort by length to get most specific phrases first
+    const sortedPhrases = foundPhrases.sort((a, b) => b.length - a.length);
+    tags.push(sortedPhrases[0]);
+    
+    // Add second phrase if it's different enough (not a subset of the first)
+    if (sortedPhrases.length > 1 && !sortedPhrases[0].includes(sortedPhrases[1]) && !sortedPhrases[1].includes(sortedPhrases[0])) {
+      tags.push(sortedPhrases[1]);
     }
   }
   
@@ -188,8 +197,10 @@ export function extractKeyword(description: string): string {
   
   // Test each context pattern against the description
   for (const { pattern, tag } of contextPatterns) {
-    if (pattern.test(lowerDesc)) {
-      return tag;
+    if (pattern.test(lowerDesc) && !tags.includes(tag)) {
+      tags.push(tag);
+      // Stop if we have 3 tags
+      if (tags.length >= 3) break;
     }
   }
   
@@ -204,53 +215,79 @@ export function extractKeyword(description: string): string {
     'conservative', 'socialist', 'nationalist', 'populist', 'bilateral'
   ];
   
-  // Find keywords that appear in the description
-  const foundKeywords = politicalKeywords.filter(keyword => 
-    lowerDesc.includes(keyword)
-  );
-  
-  if (foundKeywords.length > 0) {
-    // Get the most relevant keyword
-    const primaryKeyword = foundKeywords.sort((a, b) => b.length - a.length)[0];
+  // Only proceed if we need more tags
+  if (tags.length < 3) {
+    // Find keywords that appear in the description
+    const foundKeywords = politicalKeywords.filter(keyword => 
+      lowerDesc.includes(keyword) && 
+      // Ensure the keyword isn't already part of existing tags
+      !tags.some(tag => tag.includes(keyword))
+    );
     
-    // Find adjectives that might describe this keyword
-    const descriptors = [
-      'major', 'significant', 'historic', 'controversial', 'peaceful', 'violent',
-      'gradual', 'sudden', 'successful', 'failed', 'disputed', 'unanimous',
-      'international', 'domestic', 'radical', 'moderate', 'unprecedented'
-    ];
-    
-    // Find descriptors in the text
-    const foundDescriptors = descriptors.filter(d => lowerDesc.includes(d));
-    
-    // If we have a descriptor, combine it with the keyword
-    if (foundDescriptors.length > 0) {
-      return `${foundDescriptors[0]} ${primaryKeyword}`;
+    if (foundKeywords.length > 0) {
+      // Find descriptors that might enhance the keywords
+      const descriptors = [
+        'major', 'significant', 'historic', 'controversial', 'peaceful', 'violent',
+        'gradual', 'sudden', 'successful', 'failed', 'disputed', 'unanimous',
+        'international', 'domestic', 'radical', 'moderate', 'unprecedented'
+      ];
+      
+      // Find descriptors in the text
+      const foundDescriptors = descriptors.filter(d => lowerDesc.includes(d));
+      
+      // Get the most relevant keyword
+      const primaryKeyword = foundKeywords[0];
+      
+      // If we have a descriptor, combine it with the keyword
+      if (foundDescriptors.length > 0) {
+        tags.push(`${foundDescriptors[0]} ${primaryKeyword}`);
+      } else {
+        tags.push(primaryKeyword);
+      }
+      
+      // Add a second keyword if available and we still need tags
+      if (foundKeywords.length > 1 && tags.length < 3) {
+        tags.push(foundKeywords[1]);
+      }
     }
+  }
+  
+  // If we still need tags, try to extract key topics from significant words
+  if (tags.length < 3) {
+    const words = lowerDesc.split(/\s+/);
     
-    return primaryKeyword;
+    // Skip common words and find significant words
+    const commonWords = ['the', 'a', 'an', 'and', 'but', 'or', 'in', 'on', 'at', 'to', 'for', 
+      'with', 'by', 'of', 'that', 'this', 'is', 'are', 'was', 'were', 'had', 'has', 'have', 
+      'been', 'would', 'could', 'should', 'will', 'shall', 'may', 'might', 'must'];
+    
+    const significantWords = words.filter(word => 
+      word.length > 3 && !commonWords.includes(word) &&
+      // Ensure word isn't already part of existing tags
+      !tags.some(tag => tag.includes(word))
+    );
+    
+    if (significantWords.length >= 2 && tags.length < 3) {
+      // Try to find a meaningful two-word combination
+      const firstWord = significantWords[0];
+      const secondWord = significantWords[1];
+      const twoWordTag = `${firstWord} ${secondWord}`;
+      
+      // Only add if it's not too similar to existing tags
+      if (!tags.some(tag => tag.includes(firstWord) || tag.includes(secondWord))) {
+        tags.push(twoWordTag);
+      }
+    } else if (significantWords.length > 0 && tags.length < 3) {
+      // Add a significant word if we still need tags
+      tags.push(significantWords[0]);
+    }
   }
   
-  // If no specific political contexts were found, try to extract key topics
-  const words = lowerDesc.split(/\s+/);
-  
-  // Skip common words and find significant words
-  const commonWords = ['the', 'a', 'an', 'and', 'but', 'or', 'in', 'on', 'at', 'to', 'for', 
-    'with', 'by', 'of', 'that', 'this', 'is', 'are', 'was', 'were', 'had', 'has', 'have', 
-    'been', 'would', 'could', 'should', 'will', 'shall', 'may', 'might', 'must'];
-  
-  const significantWords = words.filter(word => 
-    word.length > 3 && !commonWords.includes(word)
-  );
-  
-  if (significantWords.length >= 2) {
-    // Try to find a meaningful two-word combination
-    const firstWord = significantWords[0];
-    const secondWord = significantWords[Math.min(1, significantWords.length - 1)];
-    return `${firstWord} ${secondWord}`;
-  } else if (significantWords.length > 0) {
-    return significantWords[0];
+  // If we somehow have no tags, add a default one
+  if (tags.length === 0) {
+    tags.push('historical event');
   }
   
-  return 'historical event';
+  // Return unique tags (up to 3)
+  return Array.from(new Set(tags)).slice(0, 3);
 }

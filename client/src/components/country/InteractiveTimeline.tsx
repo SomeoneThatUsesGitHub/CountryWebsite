@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TimelineEvent } from '@/types';
 import { formatDate, getEventBadgeColor, getEventDotColor, getEventIcon, extractKeyword } from '@/lib/helpers';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface InteractiveTimelineProps {
   events: TimelineEvent[];
@@ -9,6 +12,7 @@ interface InteractiveTimelineProps {
 
 const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => {
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   
   // Get unique event types
   const eventTypes = Array.from(new Set(events.map(event => event.eventType)));
@@ -22,6 +26,22 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
   const filteredEvents = filterType 
     ? sortedEvents.filter(event => event.eventType === filterType)
     : sortedEvents;
+
+  // Determine if description is long enough to need the "read more" button on mobile
+  const isDescriptionLong = (desc: string) => {
+    return desc && desc.length > 150;
+  };
+  
+  // Truncated description for mobile view
+  const getTruncatedDescription = (desc: string) => {
+    if (!desc || !isDescriptionLong(desc)) return desc;
+    return `${desc.substring(0, 147)}...`;
+  };
+  
+  // Check if we're on a mobile device
+  const isMobile = () => {
+    return window.innerWidth < 768;
+  };
 
   return (
     <div className="space-y-6">
@@ -88,16 +108,36 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                 {event.title}
               </h3>
               
-              <p className="text-gray-600">{event.description}</p>
+              {/* Description with read more functionality on mobile */}
+              <div className="text-gray-600">
+                {isMobile() && isDescriptionLong(event.description) ? (
+                  <>
+                    <p>{getTruncatedDescription(event.description)}</p>
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="mt-1 p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      Read more
+                    </Button>
+                  </>
+                ) : (
+                  <p>{event.description}</p>
+                )}
+              </div>
               
               {/* AI-powered contextual analysis for tags */}
               <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                {event.description && extractKeyword(event.description) && (
-                  <span className={`${getEventBadgeColor(event.eventType)} px-3 py-1.5 rounded-full text-xs font-medium shadow-sm transition-transform duration-300 hover:scale-105 capitalize flex items-center gap-1.5`}>
+                {event.description && extractKeyword(event.description).map((tag, tagIndex) => (
+                  <span 
+                    key={`${event.id}-tag-${tagIndex}`}
+                    className={`${getEventBadgeColor(event.eventType)} px-3 py-1.5 rounded-full text-xs font-medium shadow-sm transition-transform duration-300 hover:scale-105 capitalize flex items-center gap-1.5`}
+                  >
                     <i className={`fas fa-tag text-xs opacity-70`}></i>
-                    {extractKeyword(event.description)}
+                    {tag}
                   </span>
-                )}
+                ))}
               </div>
             </div>
           </motion.div>
@@ -109,6 +149,38 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
           No timeline events found for this filter. Try another category or view all events.
         </div>
       )}
+
+      {/* Modal for reading full text on mobile */}
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedEvent?.title}</DialogTitle>
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-gray-500 text-sm">{selectedEvent?.date ? formatDate(selectedEvent.date) : ''}</p>
+            <p className="text-gray-700">{selectedEvent?.description}</p>
+            
+            {/* Display tags in modal too */}
+            {selectedEvent?.description && (
+              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                {extractKeyword(selectedEvent.description).map((tag, tagIndex) => (
+                  <span 
+                    key={`modal-tag-${tagIndex}`}
+                    className={`${getEventBadgeColor(selectedEvent.eventType || '')} px-3 py-1.5 rounded-full text-xs font-medium capitalize flex items-center gap-1.5`}
+                  >
+                    <i className={`fas fa-tag text-xs opacity-70`}></i>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
