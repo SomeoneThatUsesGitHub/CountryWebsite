@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Country, TimelineEvent } from '@shared/schema';
+import { Country as CountrySchema, TimelineEvent as TimelineEventSchema, PoliticalSystem, EconomicData as EconomicDataSchema } from '@shared/schema';
+import { Country, TimelineEvent, EconomicData } from '@/types';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
 import InteractiveTimeline from '@/components/country/InteractiveTimeline';
@@ -43,13 +44,39 @@ const CountryPage: React.FC = () => {
     queryKey: [`/api/countries/${country?.id}/statistics`],
     enabled: !!country?.id, // Only run query if country ID exists
   });
+  
+  // Fetch political system data for the country
+  const { data: politicalSystem, isLoading: politicalSystemLoading } = useQuery<PoliticalSystem | undefined>({
+    queryKey: [`/api/countries/${country?.id}/political-system`],
+    enabled: !!country?.id, // Only run query if country ID exists
+  });
+  
+  // Fetch economic data for the country
+  const { data: rawEconomicData, isLoading: economicDataLoading } = useQuery<EconomicDataSchema | undefined>({
+    queryKey: [`/api/countries/${country?.id}/economy`],
+    enabled: !!country?.id, // Only run query if country ID exists
+  });
+  
+  // Convert the raw economic data to the format expected by the Economy component
+  const economicData: EconomicData | undefined = rawEconomicData ? {
+    id: rawEconomicData.id,
+    countryId: rawEconomicData.countryId,
+    gdp: rawEconomicData.gdp ?? undefined,
+    gdpPerCapita: rawEconomicData.gdpPerCapita ?? undefined,
+    gdpGrowth: rawEconomicData.gdpGrowth ?? undefined,
+    inflation: rawEconomicData.inflation ?? undefined,
+    mainIndustries: Array.isArray(rawEconomicData.mainIndustries) ? rawEconomicData.mainIndustries : [],
+    tradingPartners: Array.isArray(rawEconomicData.tradingPartners) ? rawEconomicData.tradingPartners : [],
+    challenges: Array.isArray(rawEconomicData.challenges) ? rawEconomicData.challenges : [],
+    reforms: Array.isArray(rawEconomicData.reforms) ? rawEconomicData.reforms : []
+  } : undefined;
 
   useEffect(() => {
     // Scroll to top when navigating to a new country
     window.scrollTo(0, 0);
   }, [code]);
 
-  if (countryLoading || eventsLoading || statisticsLoading) {
+  if (countryLoading || eventsLoading || statisticsLoading || politicalSystemLoading || economicDataLoading) {
     return (
       <div>
         <Skeleton className="h-80 w-full" />
@@ -115,7 +142,15 @@ const CountryPage: React.FC = () => {
         {activeTab === 'political-system' && (
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
-            <GovernmentSystem countryName={country.name} />
+            <GovernmentSystem 
+              countryName={country.name} 
+              governmentData={{
+                type: (politicalSystem?.type as "Democracy" | "Republic" | "Monarchy" | "Authoritarian" | "Totalitarian" | "Other") || "Democracy",
+                details: politicalSystem?.details || 'Federal constitutional republic with a strong democratic tradition',
+                freedomIndex: politicalSystem?.freedomIndex || 50,
+                electionSystem: politicalSystem?.electionSystem || 'Representative democracy with general elections every 4 years'
+              }}
+            />
             <div className="mt-8">
               <InternationalRelations countryName={country.name} />
             </div>
@@ -128,46 +163,17 @@ const CountryPage: React.FC = () => {
             <h2 className="text-2xl font-bold mb-8">Economy</h2>
             <Economy 
               countryName={country.name}
-              economicData={{
-                id: 1,
+              economicData={economicData || {
+                id: 0,
                 countryId: country.id,
-                gdp: 250,
-                gdpPerCapita: 8500,
-                gdpGrowth: "3.5%",
-                inflation: "4.2%",
-                mainIndustries: [
-                  { name: "Services", percentage: 55 },
-                  { name: "Industry", percentage: 25 },
-                  { name: "Agriculture", percentage: 15 },
-                  { name: "Other", percentage: 5 }
-                ],
-                tradingPartners: [
-                  "United States", "China", "Germany", "Japan", "United Kingdom"
-                ],
-                challenges: [
-                  { 
-                    title: "Infrastructure", 
-                    description: "Need for improved transportation and utilities",
-                    icon: "fa-road"
-                  },
-                  { 
-                    title: "Diversification", 
-                    description: "Reliance on limited sectors",
-                    icon: "fa-chart-pie"
-                  },
-                  { 
-                    title: "Sustainability", 
-                    description: "Balancing growth with environmental concerns",
-                    icon: "fa-leaf"
-                  }
-                ],
-                reforms: [
-                  "Digital economy initiatives",
-                  "Green energy investment",
-                  "Educational reforms",
-                  "Tax system modernization",
-                  "Public-private partnerships"
-                ]
+                gdp: 0,
+                gdpPerCapita: 0,
+                gdpGrowth: "0%",
+                inflation: "0%",
+                mainIndustries: [],
+                tradingPartners: [],
+                challenges: [],
+                reforms: []
               }}
             />
           </div>

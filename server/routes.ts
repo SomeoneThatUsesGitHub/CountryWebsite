@@ -555,6 +555,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Political system routes
+  app.get("/api/countries/:countryId/political-system", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const politicalSystem = await storage.getPoliticalSystemByCountryId(countryId);
+      
+      if (!politicalSystem) {
+        return res.status(404).json({ message: "Political system not found" });
+      }
+      
+      res.json(politicalSystem);
+    } catch (error) {
+      console.error(`Error fetching political system for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch political system" });
+    }
+  });
+  
+  app.post("/api/countries/:countryId/political-system", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const country = await storage.getCountryById(countryId);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      const data = {
+        ...req.body,
+        countryId,
+      };
+      
+      const validatedData = insertPoliticalSystemSchema.parse(data);
+      
+      const politicalSystem = await storage.createPoliticalSystem(validatedData);
+      res.status(201).json(politicalSystem);
+    } catch (error: any) {
+      console.error(`Error creating political system:`, error);
+      res.status(400).json({ message: error.message || "Failed to create political system" });
+    }
+  });
+  
+  app.patch("/api/countries/:countryId/political-system/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const countryId = parseInt(req.params.countryId);
+      
+      // Check if country exists
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Check if political system exists
+      const existingSystem = await storage.getPoliticalSystemByCountryId(countryId);
+      if (!existingSystem || existingSystem.id !== id) {
+        return res.status(404).json({ message: "Political system not found for this country" });
+      }
+      
+      const updatedSystem = await storage.updatePoliticalSystem(id, req.body);
+      if (!updatedSystem) {
+        return res.status(500).json({ message: "Failed to update political system" });
+      }
+      
+      res.json(updatedSystem);
+    } catch (error: any) {
+      console.error(`Error updating political system:`, error);
+      res.status(400).json({ message: error.message || "Failed to update political system" });
+    }
+  });
+
+  // Economy routes
+  app.get("/api/countries/:countryId/economy", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const economicData = await storage.getEconomicDataByCountryId(countryId);
+      
+      if (!economicData) {
+        return res.status(404).json({ message: "Economic data not found" });
+      }
+      
+      res.json(economicData);
+    } catch (error) {
+      console.error(`Error fetching economic data for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch economic data" });
+    }
+  });
+  
+  app.post("/api/countries/:countryId/economy", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const country = await storage.getCountryById(countryId);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      const data = {
+        ...req.body,
+        countryId,
+      };
+      
+      const validatedData = insertEconomicDataSchema.parse(data);
+      
+      const economicData = await storage.createEconomicData(validatedData);
+      res.status(201).json(economicData);
+    } catch (error: any) {
+      console.error(`Error creating economic data:`, error);
+      res.status(400).json({ message: error.message || "Failed to create economic data" });
+    }
+  });
+  
+  app.patch("/api/countries/:countryId/economy/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const countryId = parseInt(req.params.countryId);
+      
+      // Check if country exists
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Check if economic data exists
+      const existingData = await storage.getEconomicDataByCountryId(countryId);
+      if (!existingData || existingData.id !== id) {
+        return res.status(404).json({ message: "Economic data not found for this country" });
+      }
+      
+      const updatedData = await storage.updateEconomicData(id, req.body);
+      if (!updatedData) {
+        return res.status(500).json({ message: "Failed to update economic data" });
+      }
+      
+      res.json(updatedData);
+    } catch (error: any) {
+      console.error(`Error updating economic data:`, error);
+      res.status(400).json({ message: error.message || "Failed to update economic data" });
+    }
+  });
+
   // International relations routes
   app.get("/api/countries/:countryId/relations", async (req, res) => {
     try {
