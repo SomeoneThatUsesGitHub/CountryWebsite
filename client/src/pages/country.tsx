@@ -143,7 +143,8 @@ const CountryPage: React.FC = () => {
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
             <GovernmentSystem 
-              countryName={country.name} 
+              countryName={country.name}
+              countryId={country.id}
               governmentData={{
                 type: (politicalSystem?.type as "Democracy" | "Republic" | "Monarchy" | "Authoritarian" | "Totalitarian" | "Other") || "Democracy",
                 details: politicalSystem?.details || 'Federal constitutional republic with a strong democratic tradition',
