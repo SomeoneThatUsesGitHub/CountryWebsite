@@ -143,6 +143,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update country by ID
+  app.patch("/api/countries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const country = await storage.getCountryById(id);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Update the country
+      const updatedCountry = await storage.updateCountry(id, req.body);
+      if (!updatedCountry) {
+        return res.status(500).json({ message: "Failed to update country" });
+      }
+      
+      res.json(updatedCountry);
+    } catch (error: any) {
+      console.error(`Error updating country with id ${req.params.id}:`, error);
+      res.status(400).json({ message: error.message || "Failed to update country" });
+    }
+  });
+
   // Timeline events routes
   app.get("/api/countries/:countryId/timeline", async (req, res) => {
     try {
