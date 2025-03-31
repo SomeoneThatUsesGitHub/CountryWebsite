@@ -14,7 +14,7 @@
 
 /* Rich text editor content styling */
 .rich-text-content {
-  @apply text-gray-700 leading-relaxed;
+  @apply text-gray-700 leading-relaxed break-words whitespace-normal max-w-full;
 }
 
 .rich-text-content h1 {
@@ -55,6 +55,11 @@
 
 .rich-text-content em, .rich-text-content i {
   @apply italic;
+}
+
+/* Fix for overflowing content in timeline cards */
+.timeline-item .rich-text-content * {
+  @apply max-w-full overflow-hidden text-ellipsis;
 }
 
 /* Add some spacing between quill editor and other form elements */

@@ -44,6 +44,16 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
     ? sortedEvents.filter(event => event.eventType === filterType)
     : sortedEvents;
 
+  // Strip HTML tags from text
+  const stripHtmlTags = (html: string) => {
+    // Create a temporary div element
+    const tempDiv = document.createElement('div');
+    // Set the HTML content
+    tempDiv.innerHTML = html;
+    // Return the text content
+    return tempDiv.textContent || tempDiv.innerText || '';
+  };
+
   // Determine if description is long enough to need the "read more" button
   // More strict limit for mobile, more lenient for desktop
   const isDescriptionLong = (desc: string) => {
@@ -57,16 +67,6 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
       : plainText.length > 300; // Higher threshold for desktop
   };
   
-  // Strip HTML tags from text
-  const stripHtmlTags = (html: string) => {
-    // Create a temporary div element
-    const tempDiv = document.createElement('div');
-    // Set the HTML content
-    tempDiv.innerHTML = html;
-    // Return the text content
-    return tempDiv.textContent || tempDiv.innerText || '';
-  };
-  
   // Truncated description
   const getTruncatedDescription = (desc: string) => {
     if (!desc) return '';
@@ -74,7 +74,7 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
     // Strip HTML tags for preview
     const plainText = stripHtmlTags(desc);
     
-    if (!isDescriptionLong(plainText)) return plainText;
+    if (!isDescriptionLong(desc)) return plainText;
     
     const limit = isMobileView ? 117 : 297;
     return `${plainText.substring(0, limit)}...`;
@@ -139,7 +139,7 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
             )}
             
             <div className="bg-white rounded-lg shadow-sm relative transition-all duration-300 
-                transform hover:-translate-y-1 hover:shadow-md border border-gray-100">
+                transform hover:-translate-y-1 hover:shadow-md border border-gray-100 overflow-hidden">
               
               {/* Mobile version - integrated icon in the card header */}
               {isMobileView && (
@@ -178,19 +178,19 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                 </h3>
                 
                 {/* Description with read more functionality on both mobile and desktop for long text */}
-                <div className="text-gray-600">
+                <div className="text-gray-600 w-full break-words">
                   {isDescriptionLong(event.description) ? (
-                    <>
+                    <div className="flex flex-col">
                       <p>{getTruncatedDescription(event.description)}</p>
                       <Button 
                         variant="link" 
                         size="sm" 
-                        className="mt-1 p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
+                        className="mt-1 p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium self-start"
                         onClick={() => setSelectedEvent(event)}
                       >
                         Read more
                       </Button>
-                    </>
+                    </div>
                   ) : (
                     <div
                       className="text-gray-600 rich-text-content"
