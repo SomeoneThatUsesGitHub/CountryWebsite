@@ -8,7 +8,6 @@ interface InteractiveTimelineProps {
 }
 
 const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => {
-  const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
   
   // Get unique event types
@@ -69,9 +68,8 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
           >
             <div 
               className={`timeline-dot absolute left-0 w-10 h-10 rounded-full ${getEventDotColor(event.eventType)} 
-                flex items-center justify-center text-white z-10 cursor-pointer transition-transform 
+                flex items-center justify-center text-white z-10 transition-transform 
                 hover:scale-110`}
-              onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
             >
               <i className={`fas ${getEventIcon(event.eventType)}`}></i>
             </div>
@@ -84,74 +82,43 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                 </span>
               </div>
               
-              <h3 className="font-bold text-lg mb-2 cursor-pointer flex items-center" onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}>
+              <h3 className="font-bold text-lg mb-2">
                 {event.title}
-                <i className={`fas fa-chevron-${expandedEvent === event.id ? 'up' : 'down'} ml-2 text-sm text-gray-400`}></i>
               </h3>
               
               <p className="text-gray-600">{event.description}</p>
               
-              {/* Expanded content when clicked */}
-              {expandedEvent === event.id && (
-                <motion.div 
-                  className="mt-4 pt-4 border-t border-gray-100"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-sm mb-2 text-gray-500">KEY FIGURES</h4>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <i className="fas fa-user text-blue-500"></i>
-                        </div>
-                        <span>Key Political Figure</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <i className="fas fa-landmark text-green-500"></i>
-                        </div>
-                        <span>Relevant Institution</span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-sm mb-2 text-gray-500">IMPACT</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <i className="fas fa-check-circle text-green-500"></i>
-                          <span className="text-sm">Positive outcome 1</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <i className="fas fa-check-circle text-green-500"></i>
-                          <span className="text-sm">Positive outcome 2</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <i className="fas fa-times-circle text-red-500"></i>
-                          <span className="text-sm">Negative consequence</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-between">
-                    <div className="flex items-center gap-2">
-                      <i className="fas fa-newspaper text-gray-400"></i>
-                      <span className="text-sm text-gray-500">News Sources</span>
-                    </div>
-                    <button className="text-primary text-sm hover:underline">
-                      Learn More
-                    </button>
-                  </div>
-                </motion.div>
-              )}
+              {/* Adding relevant tags at the bottom for context without expanding */}
+              <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
+                {event.eventType === 'Election' && (
+                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium">Democratic Process</span>
+                )}
+                {event.eventType === 'Legislation' && (
+                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs font-medium">Policy Change</span>
+                )}
+                {event.eventType === 'Agreement' && (
+                  <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-xs font-medium">International Relations</span>
+                )}
+                {event.eventType === 'Protest' && (
+                  <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md text-xs font-medium">Civil Action</span>
+                )}
+                {event.eventType === 'War' && (
+                  <span className="bg-red-50 text-red-700 px-2 py-1 rounded-md text-xs font-medium">Military Conflict</span>
+                )}
+                {event.eventType === 'Treaty' && (
+                  <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-medium">Diplomatic Agreement</span>
+                )}
+              </div>
             </div>
           </motion.div>
         ))}
       </div>
       
-
+      {filteredEvents.length === 0 && (
+        <div className="text-center py-10 text-gray-500">
+          No timeline events found for this filter. Try another category or view all events.
+        </div>
+      )}
     </div>
   );
 };
