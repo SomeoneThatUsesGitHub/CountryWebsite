@@ -83,7 +83,10 @@ const AdminPage: React.FC = () => {
   React.useEffect(() => {
     if (selectedCountry) {
       // Extract the government form from the countryInfo object
-      const governmentForm = selectedCountry.countryInfo?.governmentForm || null;
+      const countryInfo = selectedCountry.countryInfo || {};
+      const governmentForm = typeof countryInfo === 'object' && 'governmentForm' in countryInfo 
+        ? countryInfo.governmentForm 
+        : null;
       
       form.reset({
         id: selectedCountry.id,
@@ -489,11 +492,12 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
           variant: 'destructive',
         });
       } else {
-        // Create new event and convert string date to Date object
+        // Create new event with the date as a string (no conversion needed)
         await apiRequest('POST', `/api/countries/${countryId}/timeline`, {
           ...data,
           countryId,
-          date: new Date(data.date), // Convert string to Date object
+          // Keep date as string to allow free-form date entry
+          date: data.date,
         });
         
         // Refetch timeline events
@@ -509,7 +513,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
       form.reset({
         title: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         eventType: 'Political',
         icon: 'none',
       });
@@ -527,11 +531,30 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   
   // Handle edit button click
   const handleEdit = (event: TimelineEvent) => {
+    // Process the date properly regardless of format
+    const dateStr = (() => {
+      if (!event.date) return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      if (typeof event.date === 'string') {
+        // If it's a formatted string without time part, use as is
+        if (!event.date.includes('T') && !event.date.includes(':')) {
+          return event.date;
+        }
+        // Otherwise try to parse it into a date and format
+        try {
+          return new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (e) {
+          return event.date;
+        }
+      }
+      // If it's a Date object, format it
+      return new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    })();
+    
     setEditingEvent({
       id: event.id,
       title: event.title,
       description: event.description,
-      date: typeof event.date === 'string' && !event.date.includes('T') ? event.date : (typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0]),
+      date: dateStr, 
       eventType: event.eventType,
       icon: event.icon,
     });
@@ -539,7 +562,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
     form.reset({
       title: event.title,
       description: event.description,
-      date: typeof event.date === 'string' && !event.date.includes('T') ? event.date : (typeof event.date === 'string' ? event.date.split('T')[0] : new Date(event.date).toISOString().split('T')[0]),
+      date: dateStr,
       eventType: event.eventType,
       icon: event.icon,
     });
@@ -717,7 +740,7 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                 form.reset({
                   title: '',
                   description: '',
-                  date: new Date().toISOString().split('T')[0],
+                  date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                   eventType: 'Political',
                   icon: 'none',
                 });

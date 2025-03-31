@@ -44,15 +44,21 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
     ? sortedEvents.filter(event => event.eventType === filterType)
     : sortedEvents;
 
-  // Determine if description is long enough to need the "read more" button on mobile
+  // Determine if description is long enough to need the "read more" button
+  // More strict limit for mobile, more lenient for desktop
   const isDescriptionLong = (desc: string) => {
-    return desc && desc.length > 150;
+    if (!desc) return false;
+    return isMobileView 
+      ? desc.length > 120  // Lower threshold for mobile
+      : desc.length > 300; // Higher threshold for desktop
   };
   
-  // Truncated description for mobile view
+  // Truncated description
   const getTruncatedDescription = (desc: string) => {
     if (!desc || !isDescriptionLong(desc)) return desc;
-    return `${desc.substring(0, 147)}...`;
+    
+    const limit = isMobileView ? 117 : 297;
+    return `${desc.substring(0, limit)}...`;
   };
 
   return (
@@ -152,9 +158,9 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                   {event.title}
                 </h3>
                 
-                {/* Description with read more functionality on mobile */}
+                {/* Description with read more functionality on both mobile and desktop for long text */}
                 <div className="text-gray-600">
-                  {isMobileView && isDescriptionLong(event.description) ? (
+                  {isDescriptionLong(event.description) ? (
                     <>
                       <p>{getTruncatedDescription(event.description)}</p>
                       <Button 
@@ -182,17 +188,17 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
         </div>
       )}
 
-      {/* Modal for reading full text on mobile */}
+      {/* Modal for reading full text (for both mobile and desktop) */}
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{selectedEvent?.title}</DialogTitle>
             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogClose>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div 
                 className={`w-8 h-8 ${getEventDotColor(selectedEvent?.eventType || '')} 
@@ -207,6 +213,9 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                 </span>
               </div>
             </div>
+          </div>
+          {/* Scrollable content area */}
+          <div className="overflow-y-auto pr-1 my-2 flex-grow">
             <p className="text-gray-700">{selectedEvent?.description}</p>
           </div>
         </DialogContent>

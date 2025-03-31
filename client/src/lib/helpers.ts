@@ -20,22 +20,35 @@ export function formatNumber(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-// Format date to readable string
+// Format date to readable string - handles any type of date input format
 export function formatDate(date: string | Date): string {
-  // If it's already a formatted string without a time component, just return it
-  if (typeof date === 'string' && !date.includes('T') && !date.includes(':')) {
+  // If it's null or undefined, return empty string
+  if (!date) return '';
+  
+  // If it's already a string without time components and doesn't look like an ISO date, just return it as-is
+  if (typeof date === 'string' && 
+      !date.includes('T') && 
+      !date.includes(':') && 
+      !date.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return date;
   }
   
   try {
-    // Try to create a date object and format it
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // If it looks like a valid date, format it nicely
+    const dateObj = new Date(date);
+    // Check if the date is valid before formatting
+    if (!isNaN(dateObj.getTime())) {
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+    
+    // If it's not a valid date, return the original string
+    return typeof date === 'string' ? date : String(date);
   } catch (error) {
-    // If parsing fails, return the original string
+    // If any parsing error occurs, return the original string
     return typeof date === 'string' ? date : String(date);
   }
 }
