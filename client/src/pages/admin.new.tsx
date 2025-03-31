@@ -24,7 +24,6 @@ import {
   InternationalRelation,
   HistoricalLaw,
   Statistic,
-  EconomicData
 } from '@shared/schema';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -679,7 +678,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Political">Political</SelectItem>
-                        <SelectItem value="Economic">Economic</SelectItem>
                         <SelectItem value="Social">Social</SelectItem>
                         <SelectItem value="Cultural">Cultural</SelectItem>
                         <SelectItem value="Disaster">Disaster</SelectItem>
@@ -1073,7 +1071,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
 };
 
 
-  const [economicData, setEconomicData] = useState<EconomicData | null>(null);
   const [partnerInput, setPartnerInput] = useState('');
   const [industryName, setIndustryName] = useState('');
   const [industryPercentage, setIndustryPercentage] = useState<number>(0);
@@ -1090,13 +1087,11 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   const [initiativeIcon, setInitiativeIcon] = useState('');
   
   // Fetch economic data for the selected country
-  const { data: fetchedEconomicData, isLoading: economicDataLoading, refetch: refetchEconomicData } = useQuery<EconomicData>({
     queryKey: [`/api/countries/${countryId}/economy`],
     enabled: countryId !== null,
   });
   
   // Setup the form
-  const form = useForm<EconomicDataFormValues>({
     resolver: zodResolver(economicDataSchema),
     defaultValues: {
       gdp: null,
@@ -1114,34 +1109,18 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   
   // Update economic data when fetched
   React.useEffect(() => {
-    if (fetchedEconomicData) {
-      setEconomicData(fetchedEconomicData);
       
       // Parse JSON fields
-      const mainIndustries = typeof fetchedEconomicData.mainIndustries === 'string' 
-        ? JSON.parse(fetchedEconomicData.mainIndustries as string)
-        : (fetchedEconomicData.mainIndustries || []);
       
-      const tradingPartners = typeof fetchedEconomicData.tradingPartners === 'string'
-        ? JSON.parse(fetchedEconomicData.tradingPartners as string)
-        : (fetchedEconomicData.tradingPartners || []);
       
-      const challenges = typeof fetchedEconomicData.challenges === 'string'
-        ? JSON.parse(fetchedEconomicData.challenges as string)
-        : (fetchedEconomicData.challenges || []);
       
       // Handle both string array and object array formats for reforms
       let reforms = [];
-      if (fetchedEconomicData.reforms) {
-        if (typeof fetchedEconomicData.reforms === 'string') {
-          const parsed = JSON.parse(fetchedEconomicData.reforms as string);
           reforms = Array.isArray(parsed) 
             ? parsed.map(reform => typeof reform === 'string' 
               ? { text: reform, icon: 'fa-arrow-up' } 
               : reform)
             : [];
-        } else if (Array.isArray(fetchedEconomicData.reforms)) {
-          reforms = fetchedEconomicData.reforms.map(reform => 
             typeof reform === 'string' 
               ? { text: reform, icon: 'fa-arrow-up' } 
               : reform
@@ -1150,27 +1129,17 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
       }
       
       // Parse initiatives or set to empty array if not present
-      const initiatives = typeof fetchedEconomicData.initiatives === 'string'
-        ? JSON.parse(fetchedEconomicData.initiatives as string)
-        : (fetchedEconomicData.initiatives || []);
       
       form.reset({
-        gdp: fetchedEconomicData.gdp,
-        gdpPerCapita: fetchedEconomicData.gdpPerCapita,
-        gdpGrowth: fetchedEconomicData.gdpGrowth,
-        inflation: fetchedEconomicData.inflation,
         mainIndustries,
         tradingPartners,
         challenges,
         reforms,
         initiatives,
-        outlook: fetchedEconomicData.outlook,
       });
     }
-  }, [fetchedEconomicData, form]);
   
   // Handle form submission
-  const onSubmit = async (data: EconomicDataFormValues) => {
     try {
       if (economicData?.id) {
         // Update existing economic data
@@ -1180,7 +1149,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
         });
         
         toast({
-          title: 'Economic Data Updated',
           description: 'The economic data has been successfully updated.',
         });
       } else {
@@ -1191,13 +1159,11 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
         });
         
         toast({
-          title: 'Economic Data Added',
           description: 'The economic data has been successfully added.',
         });
       }
       
       // Refetch economic data
-      refetchEconomicData();
       
     } catch (error) {
       console.error('Failed to save economic data:', error);
@@ -1313,7 +1279,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Economic Data</h2>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border rounded-lg p-4 bg-gray-50">
@@ -1452,7 +1417,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               ))}
             </div>
             
-            <h3 className="text-lg font-medium">Economic Challenges</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <Input 
                 value={challengeTitle}
@@ -1493,7 +1457,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               ))}
             </div>
             
-            <h3 className="text-lg font-medium">Economic Reforms</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <Input 
                 value={reformText}
@@ -1528,7 +1491,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               ))}
             </div>
             
-            <h3 className="text-lg font-medium">Economic Initiatives</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <Input 
                 placeholder="Initiative text"
@@ -1568,7 +1530,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
               name="outlook"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Economic Outlook</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Describe the economic outlook for this country"
@@ -1585,7 +1546,6 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
           
           <div className="flex justify-end">
             <Button type="submit" disabled={economicDataLoading}>
-              {economicData ? 'Update Economic Data' : 'Save Economic Data'}
             </Button>
           </div>
         </form>
