@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { 
   Country, 
   TimelineEvent, 
@@ -34,6 +35,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/helpers';
 import { toast } from '@/hooks/use-toast';
+import { Pencil, AlertTriangle, Check, Ban } from 'lucide-react';
 
 // Helper function to strip HTML tags from text
 function stripHtmlTags(html: string) {
@@ -946,6 +948,7 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
   const [politicalSystem, setPoliticalSystem] = useState<PoliticalSystem | null>(null);
   const [democraticPrincipleInput, setDemocraticPrincipleInput] = useState('');
   const [organizationInput, setOrganizationInput] = useState('');
+  const [governmentTypeLabel, setGovernmentTypeLabel] = useState('Democracy');
   
   // International Relations state
   const [relations, setRelations] = useState<InternationalRelation[]>([]);
@@ -998,7 +1001,7 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
     defaultValues: {
       type: '',
       details: null,
-      freedomIndex: null,
+      freedomIndex: 50,
       electionSystem: null,
       governmentBranches: {},
       democraticPrinciples: [],
@@ -1007,6 +1010,72 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
       organizations: [],
     },
   });
+  
+  // Function to get government type label based on freedom index
+  const getGovernmentTypeLabel = (index: number | null) => {
+    if (index === null) return 'Unknown';
+    if (index >= 80) return 'Full Democracy';
+    if (index >= 60) return 'Flawed Democracy';
+    if (index >= 40) return 'Hybrid Regime';
+    if (index >= 20) return 'Authoritarian Regime';
+    return 'Totalitarian Regime';
+  };
+  
+  // Update government type label when freedom index changes
+  React.useEffect(() => {
+    const freedomIndex = systemForm.watch('freedomIndex');
+    setGovernmentTypeLabel(getGovernmentTypeLabel(freedomIndex));
+  }, [systemForm.watch('freedomIndex')]);
+  
+  // Handle political system form submission
+  const handlePoliticalSystemSubmit = async (data: PoliticalSystemFormValues) => {
+    try {
+      if (politicalSystem?.id) {
+        // Update existing political system
+        await apiRequest('PATCH', `/api/countries/${countryId}/political-system/${politicalSystem.id}`, {
+          ...data,
+          countryId,
+          governmentBranches: JSON.stringify(data.governmentBranches),
+          democraticPrinciples: JSON.stringify(data.democraticPrinciples),
+          internationalRelations: JSON.stringify(data.internationalRelations),
+          laws: JSON.stringify(data.laws),
+          organizations: JSON.stringify(data.organizations),
+        });
+        
+        toast({
+          title: 'Political System Updated',
+          description: 'The political system data has been successfully updated.',
+        });
+      } else {
+        // Create new political system
+        await apiRequest('POST', `/api/countries/${countryId}/political-system`, {
+          ...data,
+          countryId,
+          governmentBranches: JSON.stringify(data.governmentBranches),
+          democraticPrinciples: JSON.stringify(data.democraticPrinciples),
+          internationalRelations: JSON.stringify(data.internationalRelations),
+          laws: JSON.stringify(data.laws),
+          organizations: JSON.stringify(data.organizations),
+        });
+        
+        toast({
+          title: 'Political System Added',
+          description: 'The political system data has been successfully added.',
+        });
+      }
+      
+      // Refetch political system
+      refetchPoliticalSystem();
+      
+    } catch (error) {
+      console.error('Failed to save political system:', error);
+      toast({
+        title: 'Error',
+        description: 'There was an error saving the political system data.',
+        variant: 'destructive',
+      });
+    }
+  };
   
   // Create form for international relations
   const relationForm = useForm<RelationFormValues>({
@@ -1069,7 +1138,7 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
         id: fetchedPoliticalSystem.id,
         type: fetchedPoliticalSystem.type,
         details: fetchedPoliticalSystem.details,
-        freedomIndex: fetchedPoliticalSystem.freedomIndex,
+        freedomIndex: fetchedPoliticalSystem.freedomIndex || 50,
         electionSystem: fetchedPoliticalSystem.electionSystem,
         governmentBranches,
         democraticPrinciples,
@@ -1364,6 +1433,126 @@ const PoliticalSystemEditor: React.FC<{ countryId: number }> = ({ countryId }) =
             No political leaders found. Add your first leader above.
           </div>
         )}
+      </div>
+
+      {/* Political System Section */}
+      <div className="mt-10 pt-6 border-t">
+        <h2 className="text-xl font-semibold mb-4">Political System</h2>
+        
+        <Form {...systemForm}>
+          <form onSubmit={systemForm.handleSubmit(handlePoliticalSystemSubmit)} className="space-y-6 border rounded-lg p-4 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={systemForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Government Type</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      e.g., Presidential Republic, Constitutional Monarchy
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={systemForm.control}
+                name="electionSystem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Election System (Optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormDescription>
+                      e.g., Proportional Representation, First Past the Post
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Freedom Index Slider */}
+            <div className="space-y-4">
+              <FormField
+                control={systemForm.control}
+                name="freedomIndex"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="mb-2 flex justify-between items-center">
+                      <FormLabel>Freedom Index</FormLabel>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                            style={{
+                              backgroundColor: field.value !== null && field.value >= 75 
+                                ? 'rgba(34, 197, 94, 0.2)' 
+                                : field.value !== null && field.value >= 50 
+                                  ? 'rgba(249, 115, 22, 0.2)' 
+                                  : 'rgba(239, 68, 68, 0.2)',
+                              color: field.value !== null && field.value >= 75 
+                                ? 'rgb(21, 128, 61)' 
+                                : field.value !== null && field.value >= 50 
+                                  ? 'rgb(194, 65, 12)' 
+                                  : 'rgb(159, 18, 57)'
+                            }}>
+                        {field.value || 0} - {governmentTypeLabel}
+                      </span>
+                    </div>
+                    <FormControl>
+                      <Slider
+                        value={[field.value || 50]}
+                        max={100}
+                        step={1}
+                        onValueChange={(vals: number[]) => field.onChange(vals[0])}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      A measure of democratic freedoms and civil liberties (0-100)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="w-full flex justify-between text-xs text-muted-foreground px-2">
+                <span>Totalitarian</span>
+                <span>Authoritarian</span>
+                <span>Hybrid</span>
+                <span>Flawed Democracy</span>
+                <span>Full Democracy</span>
+              </div>
+            </div>
+
+            <FormField
+              control={systemForm.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Details (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      value={field.value || ''} 
+                      className="min-h-[120px]"
+                      placeholder="Add any additional details about the political system..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end">
+              <Button type="submit">
+                {politicalSystem?.id ? 'Update Political System' : 'Save Political System'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
