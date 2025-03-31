@@ -64,7 +64,19 @@ export interface EconomicData {
   mainIndustries?: Industry[];
   tradingPartners?: string[];
   challenges?: EconomicChallenge[];
-  reforms?: string[];
+  reforms?: EconomicReform[];
+  outlook?: string;
+  initiatives?: EconomicInitiative[];
+}
+
+export interface EconomicReform {
+  text: string;
+  icon: string;
+}
+
+export interface EconomicInitiative {
+  text: string;
+  icon: string;
 }
 
 export interface Industry {

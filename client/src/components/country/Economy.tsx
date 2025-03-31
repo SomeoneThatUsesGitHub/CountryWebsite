@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { EconomicData, Industry, EconomicChallenge } from '@/types';
+import { EconomicData, Industry, EconomicChallenge, EconomicReform, EconomicInitiative } from '@/types';
 import { formatNumber } from '@/lib/helpers';
 
 interface EconomyProps {
@@ -48,22 +48,21 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
   ];
   
   // Economic reforms
-  const reforms = economicData?.reforms || [
-    'Investment in renewable energy',
-    'Digital economy initiatives',
-    'Education and workforce development',
-    'Tax reform initiatives',
-    'Trade agreement expansions'
+  const reforms: EconomicReform[] = economicData?.reforms || [
+    { text: 'Investment in renewable energy', icon: 'fa-leaf' },
+    { text: 'Digital economy initiatives', icon: 'fa-laptop-code' },
+    { text: 'Education and workforce development', icon: 'fa-graduation-cap' },
+    { text: 'Tax reform initiatives', icon: 'fa-file-invoice-dollar' },
+    { text: 'Trade agreement expansions', icon: 'fa-handshake' }
   ];
   
-  // Reform icons
-  const reformIcons = [
-    'fa-leaf',
-    'fa-laptop-code',
-    'fa-graduation-cap',
-    'fa-file-invoice-dollar',
-    'fa-handshake'
-  ];
+  // Economic initiatives
+  const initiatives: EconomicInitiative[] = economicData?.initiatives || [];
+  
+  // Economic outlook
+  const outlook = economicData?.outlook || `${countryName}'s economic outlook remains positive with projected growth of ${gdpGrowth.replace('%', '')}% over the next year.
+  The government continues to implement structural reforms to address challenges and stimulate sustainable growth.
+  International financial institutions have commended recent policy measures aimed at stabilizing inflation and promoting investment.`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -218,22 +217,46 @@ const Economy: React.FC<EconomyProps> = ({ countryName, economicData }) => {
                 transition={{ duration: 0.3, delay: 0.4 + (index * 0.1) }}
               >
                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <i className={`fas ${reformIcons[index] || 'fa-arrow-up'} text-primary`}></i>
+                  <i className={`fas ${reform.icon} text-primary`}></i>
                 </div>
                 <div>
-                  <p className="text-sm">{reform}</p>
+                  <p className="text-sm">{reform.text}</p>
                 </div>
               </motion.div>
             ))}
           </div>
           
+          {initiatives.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-semibold mb-4 flex items-center">
+                <i className="fas fa-bullseye text-primary mr-2"></i>
+                Economic Initiatives
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {initiatives.map((initiative, index) => (
+                  <motion.div 
+                    key={index}
+                    className="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 + (index * 0.1) }}
+                  >
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className={`fas ${initiative.icon} text-green-600`}></i>
+                    </div>
+                    <div>
+                      <p className="text-sm">{initiative.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="mt-4 bg-white p-4 rounded-lg">
             <h5 className="font-medium text-sm mb-2">Economic Outlook</h5>
             <p className="text-sm text-gray-600">
-              {countryName}'s economic outlook remains positive with projected growth of {gdpGrowth.replace('%', '')}% over the next year.
-              The government continues to implement structural reforms to address challenges and stimulate sustainable growth.
-              International financial institutions have commended recent policy measures aimed at stabilizing inflation and 
-              promoting investment.
+              {outlook}
             </p>
           </div>
         </div>
