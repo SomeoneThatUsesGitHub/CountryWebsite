@@ -1,237 +1,295 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { InternationalRelation } from '@shared/schema';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { CalendarIcon, Trash2Icon } from 'lucide-react';
-
-import { Card, CardContent } from '@/components/ui/card';
+import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
+import { InternationalRelation } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, Edit, PlusCircle, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Schema for the form
 const relationSchema = z.object({
+  id: z.number().optional(),
   partnerCountry: z.string().min(1, 'Partner country is required'),
   relationType: z.string().min(1, 'Relation type is required'),
-  relationStrength: z.string().min(1, 'Strength is required'),
-  details: z.string().optional().nullable(),
-  startDate: z.date().nullable().optional(),
+  relationStrength: z.string().nullable(),
+  details: z.string().nullable(),
+  startDate: z.string().nullable().transform(val => val ? new Date(val) : null),
 });
 
 type RelationFormValues = z.infer<typeof relationSchema>;
 
-// Relation type options
-const relationTypes = [
-  'Ally',
-  'Economic Partner',
-  'Cultural Exchange',
-  'Dispute',
-  'Treaty',
-  'Military Cooperation',
-  'Diplomatic Relations',
-  'Historical Alliance',
-];
+// Helper function to get relation strength color
+const getRelationStrengthColor = (strength: string | null) => {
+  switch (strength) {
+    case 'Strong':
+      return 'bg-green-100 text-green-800 border-green-300';
+    case 'Moderate':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'Weak':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    case 'Tense':
+      return 'bg-orange-100 text-orange-800 border-orange-300';
+    case 'Hostile':
+      return 'bg-red-100 text-red-800 border-red-300';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
+};
 
-// Relation strength options
-const relationStrengths = [
-  'Strong',
-  'Moderate',
-  'Weak',
-  'Developing',
-  'Deteriorating',
-];
+// Helper function to get relation type color
+const getRelationTypeColor = (type: string) => {
+  switch (type) {
+    case 'Economic':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+    case 'Military':
+      return 'bg-red-100 text-red-800 border-red-300';
+    case 'Diplomatic':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'Cultural':
+      return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'Historical':
+      return 'bg-amber-100 text-amber-800 border-amber-300';
+    case 'Political':
+      return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+    case 'Environmental':
+      return 'bg-green-100 text-green-800 border-green-300';
+    case 'Scientific':
+      return 'bg-cyan-100 text-cyan-800 border-cyan-300';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
+};
 
 interface RelationsEditorProps {
   countryId: number;
 }
 
 const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
-  const [editingRelation, setEditingRelation] = useState<InternationalRelation | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedRelation, setSelectedRelation] = useState<InternationalRelation | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  // Fetch international relations for the country
+  // Custom query function that handles 404 responses properly
+  const customQueryFn = async () => {
+    try {
+      const response = await apiRequest<InternationalRelation[]>('GET', `/api/countries/${countryId}/relations`);
+      return response;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return [];
+      }
+      throw error;
+    }
+  };
+
+  // Fetch international relations for the selected country
   const {
-    data: relations = [],
-    isLoading: relationsLoading,
-    refetch: refetchRelations,
+    data: relations,
+    isLoading,
+    refetch
   } = useQuery<InternationalRelation[]>({
     queryKey: [`/api/countries/${countryId}/relations`],
-    enabled: !!countryId,
+    queryFn: customQueryFn,
+    enabled: Boolean(countryId),
+    staleTime: Infinity, // Prevent continuous refetching
+    gcTime: Infinity, // Prevent garbage collection
   });
 
-  // Form setup
   const form = useForm<RelationFormValues>({
     resolver: zodResolver(relationSchema),
     defaultValues: {
       partnerCountry: '',
-      relationType: 'Economic Partner',
+      relationType: 'Diplomatic',
       relationStrength: 'Moderate',
       details: '',
       startDate: null,
     },
   });
 
-  // Set form values when editing a relation
-  React.useEffect(() => {
-    if (editingRelation) {
+  // Reset form when changing between add/edit modes
+  useEffect(() => {
+    if (isEditing && selectedRelation) {
+      // Format the date to YYYY-MM-DD for the input
+      const formattedDate = selectedRelation.startDate 
+        ? new Date(selectedRelation.startDate).toISOString().split('T')[0]
+        : '';
+      
       form.reset({
-        partnerCountry: editingRelation.partnerCountry,
-        relationType: editingRelation.relationType,
-        relationStrength: editingRelation.relationStrength || 'Moderate',
-        details: editingRelation.details || '',
-        startDate: editingRelation.startDate ? new Date(editingRelation.startDate) : null,
+        id: selectedRelation.id,
+        partnerCountry: selectedRelation.partnerCountry,
+        relationType: selectedRelation.relationType,
+        relationStrength: selectedRelation.relationStrength,
+        details: selectedRelation.details,
+        startDate: formattedDate,
       });
-    }
-  }, [editingRelation, form]);
-
-  // Create relation mutation
-  const createRelationMutation = useMutation({
-    mutationFn: async (data: RelationFormValues) => {
-      return apiRequest<InternationalRelation>('POST', `/api/countries/${countryId}/relations`, data);
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'International relation created successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: [`/api/countries/${countryId}/relations`] });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create international relation',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Update relation mutation
-  const updateRelationMutation = useMutation({
-    mutationFn: async (data: { id: number; formData: RelationFormValues }) => {
-      return apiRequest<InternationalRelation>(
-        'PATCH',
-        `/api/countries/${countryId}/relations/${data.id}`,
-        data.formData
-      );
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'International relation updated successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: [`/api/countries/${countryId}/relations`] });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update international relation',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Delete relation mutation
-  const deleteRelationMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest('DELETE', `/api/countries/${countryId}/relations/${id}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'International relation deleted successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: [`/api/countries/${countryId}/relations`] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete international relation',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const onSubmit = async (data: RelationFormValues) => {
-    if (editingRelation) {
-      updateRelationMutation.mutate({ id: editingRelation.id, formData: data });
     } else {
-      createRelationMutation.mutate(data);
+      form.reset({
+        partnerCountry: '',
+        relationType: 'Diplomatic',
+        relationStrength: 'Moderate',
+        details: '',
+        startDate: null,
+      });
+    }
+  }, [isEditing, selectedRelation, form]);
+
+  // Get filtered relations based on activeFilter
+  const filteredRelations = activeFilter
+    ? relations?.filter(relation => relation.relationType === activeFilter)
+    : relations;
+
+  // Handle form submission
+  const onSubmit = async (data: RelationFormValues) => {
+    try {
+      if (isEditing && selectedRelation) {
+        // Update existing relation
+        await apiRequest('PATCH', `/api/countries/${countryId}/relations/${selectedRelation.id}`, {
+          ...data,
+          countryId,
+        });
+        
+        toast({
+          title: 'Relation Updated',
+          description: `International relation with ${data.partnerCountry} has been updated.`,
+        });
+      } else {
+        // Create new relation
+        await apiRequest('POST', `/api/countries/${countryId}/relations`, {
+          ...data,
+          countryId,
+        });
+        
+        toast({
+          title: 'Relation Added',
+          description: `International relation with ${data.partnerCountry} has been added.`,
+        });
+      }
+      
+      // Reset form and state
+      form.reset();
+      setIsEditing(false);
+      setSelectedRelation(null);
+      
+      // Invalidate cache to trigger refetch
+      queryClient.invalidateQueries({ queryKey: [`/api/countries/${countryId}/relations`] });
+      refetch();
+    } catch (error) {
+      console.error('Failed to save international relation:', error);
+      toast({
+        title: 'Error',
+        description: 'There was an error saving the international relation.',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleEdit = (relation: InternationalRelation) => {
-    setEditingRelation(relation);
+  // Handle edit button click
+  const handleEditRelation = (relation: InternationalRelation) => {
+    setSelectedRelation(relation);
+    setIsEditing(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this international relation?')) {
-      deleteRelationMutation.mutate(id);
+  // Handle delete button click
+  const handleDeleteRelation = async (relationId: number) => {
+    if (confirm('Are you sure you want to delete this international relation?')) {
+      try {
+        await apiRequest('DELETE', `/api/countries/${countryId}/relations/${relationId}`);
+        
+        toast({
+          title: 'Relation Deleted',
+          description: 'The international relation has been successfully deleted.',
+        });
+        
+        // Invalidate cache to trigger refetch
+        queryClient.invalidateQueries({ queryKey: [`/api/countries/${countryId}/relations`] });
+        refetch();
+      } catch (error) {
+        console.error('Failed to delete international relation:', error);
+        toast({
+          title: 'Error',
+          description: 'There was an error deleting the international relation.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
-  const resetForm = () => {
-    setEditingRelation(null);
-    form.reset({
-      partnerCountry: '',
-      relationType: 'Economic Partner',
-      relationStrength: 'Moderate',
-      details: '',
-      startDate: null,
-    });
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedRelation(null);
+    form.reset();
   };
 
-  // Colors for different relation types
-  const relationColors: Record<string, string> = {
-    'Ally': 'bg-blue-100 text-blue-800 border-blue-300',
-    'Economic Partner': 'bg-green-100 text-green-800 border-green-300',
-    'Cultural Exchange': 'bg-purple-100 text-purple-800 border-purple-300',
-    'Dispute': 'bg-red-100 text-red-800 border-red-300',
-    'Treaty': 'bg-amber-100 text-amber-800 border-amber-300',
-    'Military Cooperation': 'bg-indigo-100 text-indigo-800 border-indigo-300',
-    'Diplomatic Relations': 'bg-cyan-100 text-cyan-800 border-cyan-300',
-    'Historical Alliance': 'bg-rose-100 text-rose-800 border-rose-300',
-  };
+  // Get unique relation types for filter
+  const relationTypes = relations 
+    ? Array.from(new Set(relations.map(r => r.relationType))) 
+    : [];
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">International Relations</h3>
-        <p className="text-sm text-gray-500">
-          Add and manage international relations with other countries
-        </p>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            setIsEditing(false);
+            setSelectedRelation(null);
+            form.reset();
+          }}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add New Relation
+        </Button>
       </div>
-
+      
+      {/* Filter tabs */}
+      {relations && relations.length > 0 && (
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger 
+              value="all"
+              onClick={() => setActiveFilter(null)}
+            >
+              All
+            </TabsTrigger>
+            {relationTypes.map(type => (
+              <TabsTrigger 
+                key={type} 
+                value={type}
+                onClick={() => setActiveFilter(type)}
+              >
+                {type}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+      
+      {/* Relations Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 border rounded-lg p-4 bg-gray-50">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border rounded-lg p-4 bg-gray-50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -240,106 +298,94 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
                 <FormItem>
                   <FormLabel>Partner Country</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., United States, Germany" {...field} />
+                    <Input {...field} placeholder="e.g., United States" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="relationType"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Relation Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select relation type" />
+                        <SelectValue placeholder="Select type" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {relationTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        <SelectItem value="Economic">Economic</SelectItem>
+                        <SelectItem value="Military">Military</SelectItem>
+                        <SelectItem value="Diplomatic">Diplomatic</SelectItem>
+                        <SelectItem value="Cultural">Cultural</SelectItem>
+                        <SelectItem value="Historical">Historical</SelectItem>
+                        <SelectItem value="Political">Political</SelectItem>
+                        <SelectItem value="Environmental">Environmental</SelectItem>
+                        <SelectItem value="Scientific">Scientific</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="relationStrength"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Relation Strength</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
+                  <FormControl>
+                    <Select
+                      value={field.value || ''}
+                      onValueChange={(value) => field.onChange(value || null)}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select strength level" />
+                        <SelectValue placeholder="Select strength" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {relationStrengths.map((strength) => (
-                        <SelectItem key={strength} value={strength}>
-                          {strength}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        <SelectItem value="Strong">Strong</SelectItem>
+                        <SelectItem value="Moderate">Moderate</SelectItem>
+                        <SelectItem value="Weak">Weak</SelectItem>
+                        <SelectItem value="Tense">Tense</SelectItem>
+                        <SelectItem value="Hostile">Hostile</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="startDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value || undefined}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <FormItem>
+                  <FormLabel>Established Date</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date" 
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    When this relationship was established
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-
+          
           <FormField
             control={form.control}
             name="details"
@@ -347,102 +393,106 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
               <FormItem>
                 <FormLabel>Details</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Describe the relationship between the countries"
-                    className="h-24"
-                    {...field}
+                  <Textarea 
+                    {...field} 
+                    placeholder="Enter details about this international relationship"
                     value={field.value || ''}
+                    rows={3}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className="flex justify-end gap-2">
-            {editingRelation?.id && (
-              <Button type="button" variant="outline" onClick={resetForm}>
+          
+          <div className="flex justify-end space-x-2">
+            {isEditing && (
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={createRelationMutation.isPending || updateRelationMutation.isPending}>
-              {editingRelation?.id ? 'Update Relation' : 'Add Relation'}
+            <Button type="submit">
+              {isEditing ? 'Update Relation' : 'Add Relation'}
             </Button>
           </div>
         </form>
       </Form>
-
-      <Separator className="my-6" />
-
-      <h3 className="text-lg font-medium mb-4">Current International Relations</h3>
-
-      {relationsLoading ? (
-        <div className="text-center py-4">
-          <p>Loading relations...</p>
-        </div>
-      ) : relations.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {relations.map((relation) => (
-            <Card key={relation.id}>
-              <CardContent className="pt-6 pb-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-lg">{relation.partnerCountry}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full ${relationColors[relation.relationType] || 'bg-gray-100'}`}>
-                        {relation.relationType}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mb-2">
+      
+      {/* Relations List */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Existing Relations</h3>
+        
+        {isLoading ? (
+          <div className="flex justify-center p-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        ) : filteredRelations && filteredRelations.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredRelations.map((relation) => (
+              <Card key={relation.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex flex-col">
+                    <div className={`p-4 flex justify-between items-center border-b ${getRelationTypeColor(relation.relationType)}`}>
                       <div className="flex items-center">
-                        <span className="text-sm font-medium mr-2">Strength:</span>
-                        <span className="text-sm">{relation.relationStrength}</span>
+                        <h4 className="font-medium">{relation.partnerCountry}</h4>
+                        {relation.relationStrength && (
+                          <Badge 
+                            className={`ml-2 ${getRelationStrengthColor(relation.relationStrength)}`}
+                            variant="outline"
+                          >
+                            {relation.relationStrength}
+                          </Badge>
+                        )}
                       </div>
-                      
-                      {relation.startDate && (
-                        <div className="flex items-center">
-                          <span className="text-sm font-medium mr-2">Since:</span>
-                          <span className="text-sm">{new Date(relation.startDate).toLocaleDateString()}</span>
-                        </div>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEditRelation(relation)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteRelation(relation.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="text-sm text-gray-500 mb-2">
+                        <span className="font-medium">{relation.relationType} Relationship</span>
+                        {relation.startDate && (
+                          <span className="ml-2">
+                            Since {new Date(relation.startDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      {relation.details ? (
+                        <p className="text-sm">{relation.details}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">No details provided</p>
                       )}
                     </div>
-                    
-                    {relation.details && (
-                      <p className="text-sm text-gray-600 mt-1">{relation.details}</p>
-                    )}
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(relation)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(relation.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2Icon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 border rounded-lg bg-gray-50">
-          <p className="text-gray-500">No international relations added yet</p>
-          <p className="text-sm text-gray-400 mt-1">Add your first relation above</p>
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center p-6 border rounded-lg bg-gray-50">
+            <div className="flex flex-col items-center text-center">
+              <AlertCircle className="h-10 w-10 text-gray-400 mb-2" />
+              <h4 className="font-medium text-gray-900">No international relations found</h4>
+              <p className="text-gray-500 mt-1">
+                Add your first international relation using the form above
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
