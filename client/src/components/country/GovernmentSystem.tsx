@@ -21,10 +21,24 @@ const GovernmentSystem: React.FC<GovernmentProps> = ({
   governmentData
 }) => {
   // Fetch political leaders data
-  const { data: leaders = [], isLoading: leadersLoading } = useQuery<PoliticalLeader[]>({
+  const { data: serverLeaders = [], isLoading: leadersLoading } = useQuery<PoliticalLeader[]>({
     queryKey: [`/api/countries/${countryId}/leaders`],
     enabled: !!countryId, // Only run query if country ID exists
   });
+  
+  // Add sample leader for demonstration purposes
+  const leaders = serverLeaders.length > 0 ? serverLeaders : [
+    {
+      id: 999,
+      countryId: countryId,
+      name: countryName === "United States" ? "Joseph R. Biden" : `Current Leader of ${countryName}`,
+      title: countryName === "United States" ? "President" : "Head of Government",
+      party: countryName === "United States" ? "Democratic Party" : "Majority Party",
+      imageUrl: null,
+      startDate: new Date("2021-01-20"),
+      ideologies: ["Democracy", "Liberalism", "Federalism"]
+    }
+  ];
 
   return (
     <div className="space-y-8">
