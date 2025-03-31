@@ -1,130 +1,119 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { PoliticalLeader } from '@shared/schema';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 
-interface GovernmentProps {
-  countryName: string;
+interface GovernmentSystemProps {
   countryId: number;
-  governmentData?: {
-    type: 'Democracy' | 'Republic' | 'Monarchy' | 'Authoritarian' | 'Totalitarian' | 'Other';
-    details: string;
-    freedomIndex?: number; // 0-100, higher is more free
-    electionSystem?: string;
-  };
 }
 
-const GovernmentSystem: React.FC<GovernmentProps> = ({ 
-  countryName,
-  countryId,
-  governmentData
-}) => {
-  // Fetch political leaders data
-  const { data: serverLeaders = [], isLoading: leadersLoading } = useQuery<PoliticalLeader[]>({
+const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
+  // Fetch political leaders for the country
+  const { data: leaders = [], isLoading } = useQuery<PoliticalLeader[]>({
     queryKey: [`/api/countries/${countryId}/leaders`],
-    enabled: !!countryId, // Only run query if country ID exists
+    enabled: !!countryId,
   });
-  
-  // Add sample leader for demonstration purposes
-  const leaders = serverLeaders.length > 0 ? serverLeaders : [
-    {
-      id: 999,
-      countryId: countryId,
-      name: countryName === "United States" ? "Joseph R. Biden" : `Current Leader of ${countryName}`,
-      title: countryName === "United States" ? "President" : "Head of Government",
-      party: countryName === "United States" ? "Democratic Party" : "Majority Party",
-      imageUrl: null,
-      startDate: new Date("2021-01-20"),
-      ideologies: ["Democracy", "Liberalism", "Federalism"]
-    }
-  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <p className="text-muted-foreground">Loading political leaders...</p>
+      </div>
+    );
+  }
+
+  if (leaders.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-48 space-y-2">
+        <p className="text-muted-foreground text-center">No political leaders information available</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Empty state for political system as per user request */}
-      <motion.div 
-        className="flex items-center justify-center h-32 bg-gray-100 rounded-lg"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <p className="text-gray-500 text-lg">Political System content has been removed</p>
-      </motion.div>
+    <div className="space-y-6 pb-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Political Leaders</h2>
+      </div>
       
-      {/* Political Leaders section */}
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">Political Leaders</h3>
-        
-        {leadersLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        ) : leaders.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {leaders.map((leader) => (
-              <motion.div 
-                key={leader.id}
-                className="bg-white border rounded-lg shadow-sm overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <div className="flex items-start p-4">
-                  {leader.imageUrl ? (
-                    <div className="flex-shrink-0 mr-4">
-                      <img 
-                        src={leader.imageUrl} 
-                        alt={leader.name} 
-                        className="w-20 h-20 object-cover rounded-full border-2 border-primary/20"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex-shrink-0 mr-4 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                  )}
-                  
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900">{leader.name}</h4>
-                    <p className="text-primary font-medium">{leader.title}</p>
-                    
-                    {leader.party && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        <span className="font-medium">Party:</span> {leader.party}
-                      </p>
-                    )}
-                    
-                    {leader.startDate && (
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Since:</span> {new Date(leader.startDate).toLocaleDateString()}
-                      </p>
-                    )}
-                    
-                    {Array.isArray(leader.ideologies) && leader.ideologies.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {leader.ideologies.map((ideology, index) => (
-                          <span key={index} className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                            {ideology}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-            <p className="text-gray-500">No political leaders information available for {countryName}.</p>
-          </div>
-        )}
+      <Separator className="my-4" />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {leaders.map((leader) => (
+          <LeaderCard key={leader.id} leader={leader} />
+        ))}
       </div>
     </div>
+  );
+};
+
+// Leader Card Component
+interface LeaderCardProps {
+  leader: PoliticalLeader;
+}
+
+const LeaderCard: React.FC<LeaderCardProps> = ({ leader }) => {
+  return (
+    <Card className="overflow-hidden h-full">
+      <CardContent className="p-0">
+        <div className="relative">
+          {leader.imageUrl ? (
+            <div className="w-full h-48 overflow-hidden bg-gray-200">
+              <img 
+                src={leader.imageUrl} 
+                alt={leader.name} 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 flex items-center justify-center bg-muted">
+              <div className="w-24 h-24 rounded-full bg-primary/20 text-primary flex items-center justify-center text-3xl">
+                {leader.name?.charAt(0) || '?'}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div>
+            <h3 className="text-xl font-bold">{leader.name}</h3>
+            <p className="text-primary font-medium">{leader.title}</p>
+          </div>
+          
+          {leader.party && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Political Party</p>
+              <p>{leader.party}</p>
+            </div>
+          )}
+          
+          {leader.startDate && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">In Office Since</p>
+              <p>{format(new Date(leader.startDate), 'MMMM d, yyyy')}</p>
+            </div>
+          )}
+          
+          {Array.isArray(leader.ideologies) && leader.ideologies.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Ideologies</p>
+              <div className="flex flex-wrap gap-1">
+                {leader.ideologies.map((ideology, index) => (
+                  <span 
+                    key={index} 
+                    className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
+                  >
+                    {ideology}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

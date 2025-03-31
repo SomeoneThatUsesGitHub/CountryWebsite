@@ -142,7 +142,12 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export type InsertCountry = z.infer<typeof insertCountrySchema>;
-export type Country = typeof countries.$inferSelect;
+export type Country = typeof countries.$inferSelect & {
+  countryInfo?: {
+    governmentForm?: string | null;
+    [key: string]: any;
+  } | null;
+};
 
 export type InsertTimelineEvent = z.infer<typeof insertTimelineEventSchema>;
 export type TimelineEvent = typeof timelineEvents.$inferSelect;

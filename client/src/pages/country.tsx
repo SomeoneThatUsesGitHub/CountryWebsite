@@ -142,16 +142,7 @@ const CountryPage: React.FC = () => {
         {activeTab === 'political-system' && (
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
-            <GovernmentSystem 
-              countryName={country.name}
-              countryId={country.id}
-              governmentData={{
-                type: (politicalSystem?.type as "Democracy" | "Republic" | "Monarchy" | "Authoritarian" | "Totalitarian" | "Other") || "Democracy",
-                details: politicalSystem?.details || 'Federal constitutional republic with a strong democratic tradition',
-                freedomIndex: politicalSystem?.freedomIndex || 50,
-                electionSystem: politicalSystem?.electionSystem || 'Representative democracy with general elections every 4 years'
-              }}
-            />
+            <GovernmentSystem countryId={country.id} />
             <div className="mt-8">
               <InternationalRelations countryName={country.name} />
             </div>

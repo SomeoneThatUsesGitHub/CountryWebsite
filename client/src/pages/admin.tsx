@@ -28,6 +28,7 @@ import {
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import StatisticsEditor from '@/components/admin/StatisticsEditor';
+import LeadersEditor from '@/components/admin/LeadersEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -108,7 +109,7 @@ const AdminPage: React.FC = () => {
         population: selectedCountry.population,
         area: selectedCountry.area,
         flagUrl: selectedCountry.flagUrl,
-        governmentForm: selectedCountry.countryInfo?.governmentForm || null,
+        governmentForm: selectedCountry.countryInfo ? (selectedCountry.countryInfo as any).governmentForm || null : null,
       });
     }
   }, [selectedCountry, form]);
@@ -191,6 +192,7 @@ const AdminPage: React.FC = () => {
               <TabsList className="mb-4">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="political">Political System</TabsTrigger>
                 <TabsTrigger value="statistics">Statistics</TabsTrigger>
               </TabsList>
               
@@ -406,7 +408,23 @@ const AdminPage: React.FC = () => {
               
               {/* Timeline Tab */}
               <TabsContent value="timeline">
+                {/* TimelineEditor is defined later in this file */}
                 <TimelineEditor countryId={selectedCountry.id} />
+              </TabsContent>
+              
+              {/* Political System Tab */}
+              <TabsContent value="political">
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Political Leaders</CardTitle>
+                      <CardDescription>Manage political leaders for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <LeadersEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
               
               {/* Statistics Tab */}
