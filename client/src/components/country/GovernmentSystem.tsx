@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PoliticalLeader, PoliticalParty } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface GovernmentSystemProps {
@@ -251,74 +253,89 @@ interface PartyCardProps {
 
 const PartyCard: React.FC<PartyCardProps> = ({ party, colorIndex }) => {
   const partyColor = party.color || `hsl(${(colorIndex * 137) % 360}, 70%, 60%)`;
+  const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <Card className="overflow-hidden h-full">
+    <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div 
           className="h-2" 
           style={{ backgroundColor: partyColor }}
         />
-        <div className="p-6 space-y-4">
-          <div className="flex items-center space-x-3">
-            {party.logoUrl ? (
-              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img 
-                  src={party.logoUrl} 
-                  alt={party.name} 
-                  className="w-full h-full object-cover"
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {party.logoUrl ? (
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img 
+                      src={party.logoUrl} 
+                      alt={party.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    style={{ backgroundColor: partyColor }}
+                  >
+                    {party.acronym || party.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-lg font-bold">{party.name}</h3>
+                  <div className="flex items-center space-x-2">
+                    {party.acronym && <span className="text-sm text-muted-foreground">{party.acronym}</span>}
+                    {party.seats && party.totalSeats && (
+                      <span className="text-sm text-muted-foreground">
+                        {party.seats} seats ({Math.round((party.seats / party.totalSeats) * 100)}%)
+                      </span>
+                    )}
+                    {party.isRuling && (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                        Ruling
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <CollapsibleTrigger asChild>
+                <button className="rounded-full w-8 h-8 inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground">
+                  {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+              </CollapsibleTrigger>
+            </div>
+            
+            {party.seats && party.totalSeats && (
+              <div className="mt-3">
+                <Progress 
+                  value={(party.seats / party.totalSeats) * 100} 
+                  className="h-2"
+                  style={{ backgroundColor: `${partyColor}25` }}
                 />
               </div>
-            ) : (
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                style={{ backgroundColor: partyColor }}
-              >
-                {party.acronym || party.name.charAt(0)}
-              </div>
             )}
-            <div>
-              <h3 className="text-lg font-bold">{party.name}</h3>
-              {party.acronym && <p className="text-sm text-muted-foreground">{party.acronym}</p>}
-            </div>
           </div>
           
-          {party.ideology && (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Ideology</p>
-              <p>{party.ideology}</p>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-4 border-t pt-3 mt-1">
+              {party.ideology && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Ideology</p>
+                  <p>{party.ideology}</p>
+                </div>
+              )}
+              
+              {party.foundedYear && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Founded</p>
+                  <p>{party.foundedYear}</p>
+                </div>
+              )}
             </div>
-          )}
-          
-          {party.foundedYear && (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Founded</p>
-              <p>{party.foundedYear}</p>
-            </div>
-          )}
-          
-          {party.seats && party.totalSeats && (
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <p className="font-medium text-muted-foreground">Seats in Parliament</p>
-                <p className="font-medium">{party.seats}/{party.totalSeats} ({Math.round((party.seats / party.totalSeats) * 100)}%)</p>
-              </div>
-              <Progress 
-                value={(party.seats / party.totalSeats) * 100} 
-                className="h-2"
-                style={{ backgroundColor: `${partyColor}25` }}
-              />
-            </div>
-          )}
-          
-          {party.isRuling && (
-            <div className="mt-2">
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                Ruling Party
-              </span>
-            </div>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );
