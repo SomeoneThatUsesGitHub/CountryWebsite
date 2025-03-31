@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TimelineEvent } from '@/types';
-import { formatDate, getEventBadgeColor, getEventDotColor, getEventIcon, extractKeyword } from '@/lib/helpers';
+import { formatDate, getEventBadgeColor, getEventDotColor, getEventIcon } from '@/lib/helpers';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -13,6 +13,23 @@ interface InteractiveTimelineProps {
 const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const [isMobileView, setIsMobileView] = useState(false);
+  
+  // Setup responsive detection
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
   
   // Get unique event types
   const eventTypes = Array.from(new Set(events.map(event => event.eventType)));
@@ -36,11 +53,6 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
   const getTruncatedDescription = (desc: string) => {
     if (!desc || !isDescriptionLong(desc)) return desc;
     return `${desc.substring(0, 147)}...`;
-  };
-  
-  // Check if we're on a mobile device
-  const isMobile = () => {
-    return window.innerWidth < 768;
   };
 
   return (
@@ -74,70 +86,90 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
         ))}
       </div>
       
-      {/* Timeline Visualization */}
-      <div className="relative">
-        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 z-0"></div>
+      {/* Timeline Visualization - Different layout for mobile and desktop */}
+      <div className={`relative ${!isMobileView ? "pl-8" : ""}`}>
+        {/* Desktop timeline line */}
+        {!isMobileView && (
+          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 z-0"></div>
+        )}
         
         {filteredEvents.map((event, index) => (
           <motion.div 
             key={event.id} 
-            className="timeline-item relative pl-16 mb-10 last:mb-0"
+            className={`timeline-item relative mb-6 last:mb-0 ${!isMobileView ? "pl-16" : ""}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
-            <div 
-              className={`timeline-dot absolute left-0 w-10 h-10 ${getEventDotColor(event.eventType)} 
-                flex items-center justify-center text-white z-10 transition-all duration-300
-                hover:scale-110 hover:rotate-12 transform`}
-              style={{clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)"}}
-            >
-              <i className={`fas ${getEventIcon(event.eventType, event.icon)}`}></i>
-            </div>
+            {/* Desktop version of timeline dot (outside card) */}
+            {!isMobileView && (
+              <div 
+                className={`timeline-dot absolute left-0 w-10 h-10 ${getEventDotColor(event.eventType)} 
+                  flex items-center justify-center text-white z-10 transition-all duration-300
+                  hover:scale-110 hover:rotate-12 transform`}
+                style={{clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)"}}
+              >
+                <i className={`fas ${getEventIcon(event.eventType, event.icon)}`}></i>
+              </div>
+            )}
             
-            <div className="bg-white p-5 rounded-lg shadow-sm relative transition-all duration-300 
-                transform hover:-translate-y-1 hover:shadow-md">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-gray-500 font-medium">{formatDate(event.date)}</span>
-                <span className={`${getEventBadgeColor(event.eventType)} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
-                  {event.eventType}
-                </span>
-              </div>
+            <div className="bg-white rounded-lg shadow-sm relative transition-all duration-300 
+                transform hover:-translate-y-1 hover:shadow-md border border-gray-100">
               
-              <h3 className="font-bold text-lg mb-2">
-                {event.title}
-              </h3>
-              
-              {/* Description with read more functionality on mobile */}
-              <div className="text-gray-600">
-                {isMobile() && isDescriptionLong(event.description) ? (
-                  <>
-                    <p>{getTruncatedDescription(event.description)}</p>
-                    <Button 
-                      variant="link" 
-                      size="sm" 
-                      className="mt-1 p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      Read more
-                    </Button>
-                  </>
-                ) : (
-                  <p>{event.description}</p>
-                )}
-              </div>
-              
-              {/* AI-powered contextual analysis for tags */}
-              <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                {event.description && extractKeyword(event.description).map((tag, tagIndex) => (
-                  <span 
-                    key={`${event.id}-tag-${tagIndex}`}
-                    className={`${getEventBadgeColor(event.eventType)} px-3 py-1.5 rounded-full text-xs font-medium shadow-sm transition-transform duration-300 hover:scale-105 capitalize flex items-center gap-1.5`}
+              {/* Mobile version - integrated icon in the card header */}
+              {isMobileView && (
+                <div className="flex items-center gap-3 p-3 border-b border-gray-100">
+                  <div 
+                    className={`w-10 h-10 ${getEventDotColor(event.eventType)} 
+                      flex items-center justify-center text-white rounded-full`}
                   >
-                    <i className={`fas fa-tag text-xs opacity-70`}></i>
-                    {tag}
-                  </span>
-                ))}
+                    <i className={`fas ${getEventIcon(event.eventType, event.icon)}`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500 font-medium">{formatDate(event.date)}</span>
+                      <span className={`${getEventBadgeColor(event.eventType)} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
+                        {event.eventType}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Card content */}
+              <div className="p-4">
+                {/* Desktop version header */}
+                {!isMobileView && (
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm text-gray-500 font-medium">{formatDate(event.date)}</span>
+                    <span className={`${getEventBadgeColor(event.eventType)} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
+                      {event.eventType}
+                    </span>
+                  </div>
+                )}
+                
+                <h3 className="font-bold text-lg mb-2">
+                  {event.title}
+                </h3>
+                
+                {/* Description with read more functionality on mobile */}
+                <div className="text-gray-600">
+                  {isMobileView && isDescriptionLong(event.description) ? (
+                    <>
+                      <p>{getTruncatedDescription(event.description)}</p>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="mt-1 p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        Read more
+                      </Button>
+                    </>
+                  ) : (
+                    <p>{event.description}</p>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -161,23 +193,21 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
             </DialogClose>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-gray-500 text-sm">{selectedEvent?.date ? formatDate(selectedEvent.date) : ''}</p>
-            <p className="text-gray-700">{selectedEvent?.description}</p>
-            
-            {/* Display tags in modal too */}
-            {selectedEvent?.description && (
-              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
-                {extractKeyword(selectedEvent.description).map((tag, tagIndex) => (
-                  <span 
-                    key={`modal-tag-${tagIndex}`}
-                    className={`${getEventBadgeColor(selectedEvent.eventType || '')} px-3 py-1.5 rounded-full text-xs font-medium capitalize flex items-center gap-1.5`}
-                  >
-                    <i className={`fas fa-tag text-xs opacity-70`}></i>
-                    {tag}
-                  </span>
-                ))}
+            <div className="flex items-center gap-3">
+              <div 
+                className={`w-8 h-8 ${getEventDotColor(selectedEvent?.eventType || '')} 
+                  flex items-center justify-center text-white rounded-full`}
+              >
+                <i className={`fas ${getEventIcon(selectedEvent?.eventType || '', selectedEvent?.icon || null)}`}></i>
               </div>
-            )}
+              <div>
+                <span className="text-gray-500 text-sm">{selectedEvent?.date ? formatDate(selectedEvent.date) : ''}</span>
+                <span className={`ml-2 ${getEventBadgeColor(selectedEvent?.eventType || '')} text-xs font-medium px-2 py-0.5 rounded-full`}>
+                  {selectedEvent?.eventType}
+                </span>
+              </div>
+            </div>
+            <p className="text-gray-700">{selectedEvent?.description}</p>
           </div>
         </DialogContent>
       </Dialog>
