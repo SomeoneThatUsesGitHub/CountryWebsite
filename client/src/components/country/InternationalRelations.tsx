@@ -90,7 +90,6 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({ country
     <div className="space-y-6">
       <div className="flex items-center space-x-2 mb-4">
         <Globe className="h-5 w-5 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">International Relations</h2>
       </div>
 
       {sortedRelationTypes.map((type) => (

@@ -12,6 +12,7 @@ import GovernmentSystem from '@/components/country/GovernmentSystem';
 import InternationalRelations from '@/components/country/InternationalRelations';
 import Economy from '@/components/country/Economy';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 const CountryPage: React.FC = () => {
   const [location] = useLocation();
@@ -143,14 +144,15 @@ const CountryPage: React.FC = () => {
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
             <GovernmentSystem countryId={country.id} />
-          </div>
-        )}
-        
-        {/* International Relations Tab */}
-        {activeTab === 'international-relations' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-8">International Relations</h2>
-            <InternationalRelations countryId={country.id} />
+            
+            <div className="mt-10 mb-6">
+              <Separator />
+            </div>
+            
+            <div className="mt-8">
+              <h3 className="text-xl font-bold mb-6">International Relations</h3>
+              <InternationalRelations countryId={country.id} />
+            </div>
           </div>
         )}
         
