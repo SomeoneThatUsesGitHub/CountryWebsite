@@ -56,6 +56,7 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
 
   return (
     <div className="space-y-12 pb-8">
+      {/* Section: Political Leaders */}
       {leaders.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -72,6 +73,14 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
         </div>
       )}
       
+      {/* Visual separator between major sections */}
+      {leaders.length > 0 && parties.length > 0 && (
+        <div className="py-2">
+          <Separator className="h-0.5 bg-gray-300" />
+        </div>
+      )}
+      
+      {/* Section: Political Parties */}
       {parties.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -80,6 +89,7 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
           
           <Separator className="my-4" />
           
+          {/* Ruling Party subsection */}
           {rulingParty && (
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-2">Ruling Party</h3>
@@ -119,6 +129,14 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
             </div>
           )}
           
+          {/* Visual separator between subsections */}
+          {rulingParty && totalSeats > 0 && (
+            <div className="mb-6 mt-4">
+              <Separator className="bg-gray-200" />
+            </div>
+          )}
+          
+          {/* Parliament Composition subsection */}
           {totalSeats > 0 && (
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-2">Parliament Composition</h3>
@@ -166,10 +184,21 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedParties.map((party, index) => (
-              <PartyCard key={party.id} party={party} colorIndex={index} />
-            ))}
+          {/* Visual separator between subsections */}
+          {totalSeats > 0 && (
+            <div className="mb-6 mt-4">
+              <Separator className="bg-gray-200" />
+            </div>
+          )}
+          
+          {/* All Parties subsection */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">All Parties</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sortedParties.map((party, index) => (
+                <PartyCard key={party.id} party={party} colorIndex={index} />
+              ))}
+            </div>
           </div>
         </div>
       )}
