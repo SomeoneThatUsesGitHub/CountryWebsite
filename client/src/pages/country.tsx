@@ -144,7 +144,7 @@ const CountryPage: React.FC = () => {
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
             <GovernmentSystem countryId={country.id} />
             <div className="mt-8">
-              <InternationalRelations countryName={country.name} />
+              <InternationalRelations countryName={country.name} countryId={country.id} />
             </div>
           </div>
         )}
