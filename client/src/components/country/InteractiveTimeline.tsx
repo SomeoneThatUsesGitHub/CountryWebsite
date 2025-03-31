@@ -48,17 +48,36 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
   // More strict limit for mobile, more lenient for desktop
   const isDescriptionLong = (desc: string) => {
     if (!desc) return false;
+    
+    // Strip HTML tags for length calculation
+    const plainText = stripHtmlTags(desc);
+    
     return isMobileView 
-      ? desc.length > 120  // Lower threshold for mobile
-      : desc.length > 300; // Higher threshold for desktop
+      ? plainText.length > 120  // Lower threshold for mobile
+      : plainText.length > 300; // Higher threshold for desktop
+  };
+  
+  // Strip HTML tags from text
+  const stripHtmlTags = (html: string) => {
+    // Create a temporary div element
+    const tempDiv = document.createElement('div');
+    // Set the HTML content
+    tempDiv.innerHTML = html;
+    // Return the text content
+    return tempDiv.textContent || tempDiv.innerText || '';
   };
   
   // Truncated description
   const getTruncatedDescription = (desc: string) => {
-    if (!desc || !isDescriptionLong(desc)) return desc;
+    if (!desc) return '';
+    
+    // Strip HTML tags for preview
+    const plainText = stripHtmlTags(desc);
+    
+    if (!isDescriptionLong(plainText)) return plainText;
     
     const limit = isMobileView ? 117 : 297;
-    return `${desc.substring(0, limit)}...`;
+    return `${plainText.substring(0, limit)}...`;
   };
 
   return (
@@ -173,7 +192,10 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
                       </Button>
                     </>
                   ) : (
-                    <p>{event.description}</p>
+                    <div
+                      className="text-gray-600 rich-text-content"
+                      dangerouslySetInnerHTML={{ __html: event.description }}
+                    />
                   )}
                 </div>
               </div>

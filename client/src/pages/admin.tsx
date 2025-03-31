@@ -31,6 +31,17 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/helpers';
 import { toast } from '@/hooks/use-toast';
+
+// Helper function to strip HTML tags from text
+function stripHtmlTags(html: string) {
+  if (!html) return '';
+  // Create a temporary div element
+  const tempDiv = document.createElement('div');
+  // Set the HTML content
+  tempDiv.innerHTML = html;
+  // Return the text content
+  return tempDiv.textContent || tempDiv.innerText || '';
+}
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -457,6 +468,14 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<TimelineEventFormValues | null>(null);
   
+  // Helper function to strip HTML tags from text
+  const stripHtmlTags = (html: string) => {
+    if (!html) return '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
+  };
+  
   // Fetch timeline events for the selected country
   const { data: timelineEvents, isLoading: eventsLoading, refetch: refetchEvents } = useQuery<TimelineEvent[]>({
     queryKey: [`/api/countries/${countryId}/timeline`],
@@ -790,15 +809,11 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
                   <p className="font-semibold">{event.title}</p>
                   <p className="text-sm text-gray-500">{formatDate(event.date)} - {event.eventType}</p>
                   <div className="mt-1 line-clamp-3">
-                    {/* Truncate HTML output for the list view */}
-                    <div 
-                      className="text-sm rich-text-content" 
-                      dangerouslySetInnerHTML={{ 
-                        __html: event.description.length > 150 
-                          ? event.description.substring(0, 150) + '...' 
-                          : event.description 
-                      }} 
-                    />
+                    {/* Show plain text in the admin list view */}
+                    <div className="text-sm">
+                      {stripHtmlTags(event.description).substring(0, 150)}
+                      {event.description.length > 150 && '...'}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2 md:self-center">
