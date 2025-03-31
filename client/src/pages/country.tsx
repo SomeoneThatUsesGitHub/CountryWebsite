@@ -5,8 +5,8 @@ import { Country, TimelineEvent } from '@shared/schema';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
 import InteractiveTimeline from '@/components/country/InteractiveTimeline';
-import { PopulationChart, GDPChart, ReligionChart, generateSamplePopulationData, generateSampleGDPData, generateSampleReligionData } from '@/components/country/ChartDisplay';
-import EthnicityChart, { generateSampleEthnicGroups } from '@/components/country/EthnicityChart';
+import { PopulationChart, GDPChart, ReligionChart, getPopulationData, getGDPData, getReligionData } from '@/components/country/ChartDisplay';
+import EthnicityChart, { getEthnicGroupsData } from '@/components/country/EthnicityChart';
 import GovernmentSystem from '@/components/country/GovernmentSystem';
 import InternationalRelations from '@/components/country/InternationalRelations';
 import Economy from '@/components/country/Economy';
@@ -37,13 +37,19 @@ const CountryPage: React.FC = () => {
     queryKey: [`/api/countries/${country?.id}/timeline`],
     enabled: !!country?.id, // Only run query if country ID exists
   });
+  
+  // Fetch statistics for the country
+  const { data: statistics = [], isLoading: statisticsLoading } = useQuery<any[]>({
+    queryKey: [`/api/countries/${country?.id}/statistics`],
+    enabled: !!country?.id, // Only run query if country ID exists
+  });
 
   useEffect(() => {
     // Scroll to top when navigating to a new country
     window.scrollTo(0, 0);
   }, [code]);
 
-  if (countryLoading || eventsLoading) {
+  if (countryLoading || eventsLoading || statisticsLoading) {
     return (
       <div>
         <Skeleton className="h-80 w-full" />
@@ -97,10 +103,10 @@ const CountryPage: React.FC = () => {
             <h2 className="text-2xl font-bold mb-8">Key Statistics</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <PopulationChart data={generateSamplePopulationData(country.name)} />
-              <GDPChart data={generateSampleGDPData(country.name)} />
-              <EthnicityChart ethnicGroups={generateSampleEthnicGroups(country.name)} />
-              <ReligionChart data={generateSampleReligionData(country.name)} />
+              <PopulationChart data={getPopulationData(statistics)} />
+              <GDPChart data={getGDPData(statistics)} />
+              <EthnicityChart ethnicGroups={getEthnicGroupsData(statistics)} />
+              <ReligionChart data={getReligionData(statistics)} />
             </div>
           </div>
         )}

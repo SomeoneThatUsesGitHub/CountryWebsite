@@ -33,10 +33,25 @@ const EthnicityChart: React.FC<{ ethnicGroups: EthnicGroupProps[] }> = ({ ethnic
   );
 };
 
-// Sample data generator for demonstration
+export const getEthnicGroupsData = (statistics: any[] = []) => {
+  const ethnicityStat = statistics.find(s => s.type === 'Ethnicity');
+  
+  if (ethnicityStat && ethnicityStat.data && Array.isArray(ethnicityStat.data.values)) {
+    return ethnicityStat.data.values;
+  }
+  
+  // Default data if no statistics found
+  return [
+    { name: 'Main Group', percentage: 45 },
+    { name: 'Second Group', percentage: 25 },
+    { name: 'Third Group', percentage: 15 },
+    { name: 'Fourth Group', percentage: 10 },
+    { name: 'Others', percentage: 5 },
+  ];
+};
+
+// Sample data generator for backward compatibility
 export const generateSampleEthnicGroups = (countryName: string) => {
-  // This is just for demonstration - in a real app, this would come from the API
-  // These should sum to close to 100
   return [
     { name: 'Main Group', percentage: 45 },
     { name: 'Second Group', percentage: 25 },

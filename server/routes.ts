@@ -204,6 +204,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Statistics routes
+  app.get("/api/countries/:countryId/statistics", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const statistics = await storage.getStatisticsByCountryId(countryId);
+      res.json(statistics);
+    } catch (error) {
+      console.error(`Error fetching statistics for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  });
+
+  app.post("/api/countries/:countryId/statistics", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const country = await storage.getCountryById(countryId);
+      
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      const data = {
+        ...req.body,
+        countryId,
+      };
+      
+      const validatedData = insertStatisticSchema.parse(data);
+      
+      const statistic = await storage.createStatistic(validatedData);
+      res.status(201).json(statistic);
+    } catch (error: any) {
+      console.error(`Error creating statistic:`, error);
+      res.status(400).json({ message: error.message || "Failed to create statistic" });
+    }
+  });
+
+  app.patch("/api/statistics/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedStatistic = await storage.updateStatistic(id, req.body);
+      
+      if (!updatedStatistic) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      
+      res.json(updatedStatistic);
+    } catch (error: any) {
+      console.error(`Error updating statistic with id ${req.params.id}:`, error);
+      res.status(400).json({ message: error.message || "Failed to update statistic" });
+    }
+  });
+
+  app.delete("/api/statistics/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteStatistic(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting statistic with id ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete statistic" });
+    }
+  });
+  
   // Political leaders routes
   app.get("/api/countries/:countryId/leaders", async (req, res) => {
     try {

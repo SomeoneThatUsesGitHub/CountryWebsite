@@ -25,6 +25,7 @@ import {
 } from '@shared/schema';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import StatisticsEditor from '@/components/admin/StatisticsEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -425,7 +426,7 @@ const AdminPage: React.FC = () => {
               
               {/* Statistics Tab */}
               <TabsContent value="statistics">
-                <StatisticsEditor countryId={selectedCountry.id} />
+                <OldStatisticsEditor countryId={selectedCountry.id} />
               </TabsContent>
               
               {/* Political System Tab */}
@@ -1805,7 +1806,7 @@ const statisticSchema = z.object({
   data: z.any(), // This should be more specific based on the actual data structure
 });
 
-const StatisticsEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
+const OldStatisticsEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [editingStatistic, setEditingStatistic] = useState<StatisticFormValues | null>(null);
   

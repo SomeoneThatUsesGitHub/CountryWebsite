@@ -83,37 +83,81 @@ export const ReligionChart = ({ data }: { data: { name: string; value: number }[
   );
 };
 
-// Sample data generators for demonstration
-export const generateSamplePopulationData = (countryName: string) => {
-  // This is just for demonstration - in a real app, this would come from the API
-  const basePopulation = Math.floor(Math.random() * 100) + 20; // Random base between 20-120 million
+// Get chart data from statistics
+export const getPopulationData = (statistics: any[] = []) => {
+  const populationStat = statistics.find(s => s.type === 'Population');
   
+  if (populationStat && populationStat.data && Array.isArray(populationStat.data.values)) {
+    return populationStat.data.values;
+  }
+  
+  // Default data if no statistics found
   return [
-    { year: '2000', population: basePopulation * 1000000 },
-    { year: '2005', population: (basePopulation * 1.1) * 1000000 },
-    { year: '2010', population: (basePopulation * 1.2) * 1000000 },
-    { year: '2015', population: (basePopulation * 1.3) * 1000000 },
-    { year: '2020', population: (basePopulation * 1.4) * 1000000 },
-    { year: '2023', population: (basePopulation * 1.45) * 1000000 },
+    { year: '2000', population: 20000000 },
+    { year: '2005', population: 22000000 },
+    { year: '2010', population: 24000000 },
+    { year: '2015', population: 26000000 },
+    { year: '2020', population: 28000000 },
+    { year: '2023', population: 29000000 },
+  ];
+};
+
+export const getGDPData = (statistics: any[] = []) => {
+  const gdpStat = statistics.find(s => s.type === 'GDP');
+  
+  if (gdpStat && gdpStat.data && Array.isArray(gdpStat.data.values)) {
+    return gdpStat.data.values;
+  }
+  
+  // Default data if no statistics found
+  return [
+    { year: '2018', gdp: 100 },
+    { year: '2019', gdp: 120 },
+    { year: '2020', gdp: 110 },
+    { year: '2021', gdp: 130 },
+    { year: '2022', gdp: 150 },
+  ];
+};
+
+export const getReligionData = (statistics: any[] = []) => {
+  const religionStat = statistics.find(s => s.type === 'Religion');
+  
+  if (religionStat && religionStat.data && Array.isArray(religionStat.data.values)) {
+    return religionStat.data.values;
+  }
+  
+  // Default data if no statistics found
+  return [
+    { name: 'Christian', value: 45 },
+    { name: 'Muslim', value: 35 },
+    { name: 'Indigenous', value: 15 },
+    { name: 'Other', value: 5 },
+  ];
+};
+
+// These are kept for backward compatibility
+export const generateSamplePopulationData = (countryName: string) => {
+  return [
+    { year: '2000', population: 20000000 },
+    { year: '2005', population: 22000000 },
+    { year: '2010', population: 24000000 },
+    { year: '2015', population: 26000000 },
+    { year: '2020', population: 28000000 },
+    { year: '2023', population: 29000000 },
   ];
 };
 
 export const generateSampleGDPData = (countryName: string) => {
-  // This is just for demonstration - in a real app, this would come from the API
-  const baseGDP = Math.floor(Math.random() * 500) + 50; // Random base between 50-550 billion
-  
   return [
-    { year: '2018', gdp: Math.round(baseGDP * 0.8) },
-    { year: '2019', gdp: Math.round(baseGDP * 0.9) },
-    { year: '2020', gdp: Math.round(baseGDP * 0.85) }, // Simulating COVID impact
-    { year: '2021', gdp: Math.round(baseGDP * 0.95) },
-    { year: '2022', gdp: baseGDP },
+    { year: '2018', gdp: 100 },
+    { year: '2019', gdp: 120 },
+    { year: '2020', gdp: 110 },
+    { year: '2021', gdp: 130 },
+    { year: '2022', gdp: 150 },
   ];
 };
 
 export const generateSampleReligionData = (countryName: string) => {
-  // This is just for demonstration - in a real app, this would come from the API
-  // These numbers should add up to 100
   return [
     { name: 'Christian', value: 45 },
     { name: 'Muslim', value: 35 },
