@@ -11,7 +11,6 @@ interface InteractiveTimelineProps {
 }
 
 const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => {
-  const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
   
@@ -31,18 +30,10 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
   
-  // Get unique event types
-  const eventTypes = Array.from(new Set(events.map(event => event.eventType)));
-  
   // Sort events by date (most recent first)
   const sortedEvents = [...events].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-  
-  // Filter events by type if a filter is selected
-  const filteredEvents = filterType 
-    ? sortedEvents.filter(event => event.eventType === filterType)
-    : sortedEvents;
 
   // Strip HTML tags from text
   const stripHtmlTags = (html: string) => {
@@ -82,34 +73,6 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
 
   return (
     <div className="space-y-6">
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <span className="text-gray-600 font-medium">Filter by:</span>
-        <button 
-          className={`px-3 py-1 rounded-full text-sm transition-colors ${
-            filterType === null 
-              ? 'bg-primary text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-          onClick={() => setFilterType(null)}
-        >
-          All Events
-        </button>
-        
-        {eventTypes.map(type => (
-          <button 
-            key={type}
-            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-              filterType === type 
-                ? 'bg-primary text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-            onClick={() => setFilterType(type)}
-          >
-            {type}
-          </button>
-        ))}
-      </div>
       
       {/* Timeline Visualization - Different layout for mobile and desktop */}
       <div className={`relative ${!isMobileView ? "pl-8" : ""}`}>
@@ -118,7 +81,7 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
           <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 z-0"></div>
         )}
         
-        {filteredEvents.map((event, index) => (
+        {sortedEvents.map((event, index) => (
           <motion.div 
             key={event.id} 
             className={`timeline-item relative mb-6 last:mb-0 ${!isMobileView ? "pl-16" : ""}`}
@@ -204,9 +167,9 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
         ))}
       </div>
       
-      {filteredEvents.length === 0 && (
+      {sortedEvents.length === 0 && (
         <div className="text-center py-10 text-gray-500">
-          No timeline events found for this filter. Try another category or view all events.
+          No timeline events found for this country.
         </div>
       )}
 
