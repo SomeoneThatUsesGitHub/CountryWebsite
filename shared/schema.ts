@@ -45,6 +45,7 @@ export const timelineEvents = pgTable("timelineEvents", {
   date: timestamp("date").notNull(),
   eventType: text("eventType").notNull(), // e.g., "election", "protest", "agreement"
   icon: text("icon"), // Font Awesome icon name
+  tags: jsonb("tags"), // array of tags
 });
 
 // Political Leaders schema
@@ -59,6 +60,52 @@ export const politicalLeaders = pgTable("politicalLeaders", {
   ideologies: jsonb("ideologies"), // array of ideologies
 });
 
+// Political System schema
+export const politicalSystems = pgTable("politicalSystems", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  type: text("type").notNull(), // "Democracy", "Republic", "Monarchy", etc.
+  details: text("details"),
+  freedomIndex: integer("freedomIndex"), // 0-100 scale
+  electionSystem: text("electionSystem"),
+  governmentBranches: jsonb("governmentBranches"), // array of branches
+  democraticPrinciples: jsonb("democraticPrinciples"), // array of principles
+  internationalRelations: jsonb("internationalRelations"), // array of relations
+  laws: jsonb("laws"), // array of laws
+  organizations: jsonb("organizations"), // array of international organizations
+});
+
+// International Relations schema
+export const internationalRelations = pgTable("internationalRelations", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  partnerCountry: text("partnerCountry").notNull(),
+  relationType: text("relationType").notNull(), // Economic, Military, Cultural, etc.
+  relationStrength: text("relationStrength"), // Strong, Moderate, Weak
+  details: text("details"),
+  startDate: timestamp("startDate"),
+});
+
+// Historical Laws schema
+export const historicalLaws = pgTable("historicalLaws", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  date: timestamp("date"),
+  category: text("category"), // Economic, Social, Environmental, etc.
+  status: text("status"), // Enacted, Proposed, Repealed
+});
+
+// Statistics schema
+export const statistics = pgTable("statistics", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  type: text("type").notNull(), // Population, GDP, Religion, Ethnicity
+  data: jsonb("data"), // array of data points with labels and values
+  year: integer("year"),
+});
+
 // Economic Data schema
 export const economicData = pgTable("economicData", {
   id: serial("id").primaryKey(),
@@ -71,6 +118,8 @@ export const economicData = pgTable("economicData", {
   tradingPartners: jsonb("tradingPartners"), // array of countries
   challenges: jsonb("challenges"), // array of economic challenges
   reforms: jsonb("reforms"), // array of economic reforms
+  outlook: text("outlook"), // Economic outlook description
+  initiatives: jsonb("initiatives"), // array of economic initiatives
 });
 
 // Insert schemas
@@ -82,6 +131,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertCountrySchema = createInsertSchema(countries);
 export const insertTimelineEventSchema = createInsertSchema(timelineEvents);
 export const insertPoliticalLeaderSchema = createInsertSchema(politicalLeaders);
+export const insertPoliticalSystemSchema = createInsertSchema(politicalSystems);
+export const insertInternationalRelationSchema = createInsertSchema(internationalRelations);
+export const insertHistoricalLawSchema = createInsertSchema(historicalLaws);
+export const insertStatisticSchema = createInsertSchema(statistics);
 export const insertEconomicDataSchema = createInsertSchema(economicData);
 
 // Types
@@ -96,6 +149,18 @@ export type TimelineEvent = typeof timelineEvents.$inferSelect;
 
 export type InsertPoliticalLeader = z.infer<typeof insertPoliticalLeaderSchema>;
 export type PoliticalLeader = typeof politicalLeaders.$inferSelect;
+
+export type InsertPoliticalSystem = z.infer<typeof insertPoliticalSystemSchema>;
+export type PoliticalSystem = typeof politicalSystems.$inferSelect;
+
+export type InsertInternationalRelation = z.infer<typeof insertInternationalRelationSchema>;
+export type InternationalRelation = typeof internationalRelations.$inferSelect;
+
+export type InsertHistoricalLaw = z.infer<typeof insertHistoricalLawSchema>;
+export type HistoricalLaw = typeof historicalLaws.$inferSelect;
+
+export type InsertStatistic = z.infer<typeof insertStatisticSchema>;
+export type Statistic = typeof statistics.$inferSelect;
 
 export type InsertEconomicData = z.infer<typeof insertEconomicDataSchema>;
 export type EconomicData = typeof economicData.$inferSelect;

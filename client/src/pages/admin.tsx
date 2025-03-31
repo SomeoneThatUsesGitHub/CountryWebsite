@@ -13,7 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Country, TimelineEvent, PoliticalLeader, EconomicData } from '@shared/schema';
+import { 
+  Country, 
+  TimelineEvent, 
+  PoliticalLeader, 
+  PoliticalSystem,
+  InternationalRelation,
+  HistoricalLaw,
+  Statistic,
+  EconomicData
+} from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -177,6 +186,7 @@ const AdminPage: React.FC = () => {
               <TabsList className="mb-4">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="statistics">Statistics</TabsTrigger>
                 <TabsTrigger value="politics">Political System</TabsTrigger>
                 <TabsTrigger value="economy">Economy</TabsTrigger>
               </TabsList>
@@ -394,6 +404,11 @@ const AdminPage: React.FC = () => {
               {/* Timeline Tab */}
               <TabsContent value="timeline">
                 <TimelineEditor countryId={selectedCountry.id} />
+              </TabsContent>
+              
+              {/* Statistics Tab */}
+              <TabsContent value="statistics">
+                <StatisticsEditor countryId={selectedCountry.id} />
               </TabsContent>
               
               {/* Political System Tab */}
@@ -1439,6 +1454,261 @@ const EconomyEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
           </div>
         </form>
       </Form>
+    </div>
+  );
+};
+
+// Statistics Editor Component
+interface StatisticFormValues {
+  id?: number;
+  type: string;
+  year: number | null;
+  data: any; // This should be more specific based on the actual data structure
+}
+
+const statisticSchema = z.object({
+  id: z.number().optional(),
+  type: z.string().min(1, 'Statistic type is required'),
+  year: z.number().nullable(),
+  data: z.any(), // This should be more specific based on the actual data structure
+});
+
+const StatisticsEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
+  const [statistics, setStatistics] = useState<Statistic[]>([]);
+  const [editingStatistic, setEditingStatistic] = useState<StatisticFormValues | null>(null);
+  
+  // Fetch statistics for the selected country
+  const { data: countryStatistics, isLoading: statisticsLoading, refetch: refetchStatistics } = useQuery<Statistic[]>({
+    queryKey: [`/api/countries/${countryId}/statistics`],
+    enabled: countryId !== null,
+  });
+  
+  // Setup the form
+  const form = useForm<StatisticFormValues>({
+    resolver: zodResolver(statisticSchema),
+    defaultValues: {
+      type: 'Population',
+      year: new Date().getFullYear(),
+      data: { values: [] },
+    },
+  });
+  
+  // Update statistics when data is fetched
+  React.useEffect(() => {
+    if (countryStatistics) {
+      setStatistics(countryStatistics);
+    }
+  }, [countryStatistics]);
+  
+  // Handle form submission
+  const onSubmit = async (data: StatisticFormValues) => {
+    try {
+      if (editingStatistic?.id) {
+        // Update existing statistic
+        await apiRequest('PATCH', `/api/countries/${countryId}/statistics/${editingStatistic.id}`, {
+          ...data,
+          countryId,
+        });
+        
+        // Refetch statistics
+        refetchStatistics();
+        
+        toast({
+          title: 'Statistic Updated',
+          description: 'The statistic has been successfully updated.',
+        });
+      } else {
+        // Create new statistic
+        await apiRequest('POST', `/api/countries/${countryId}/statistics`, {
+          ...data,
+          countryId,
+        });
+        
+        // Refetch statistics
+        refetchStatistics();
+        
+        toast({
+          title: 'Statistic Added',
+          description: 'The statistic has been successfully added.',
+        });
+      }
+      
+      // Reset form
+      form.reset({
+        type: 'Population',
+        year: new Date().getFullYear(),
+        data: { values: [] },
+      });
+      setEditingStatistic(null);
+      
+    } catch (error) {
+      console.error('Failed to save statistic:', error);
+      toast({
+        title: 'Error',
+        description: 'There was an error saving the statistic.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Handle edit button click
+  const handleEdit = (statistic: Statistic) => {
+    setEditingStatistic({
+      id: statistic.id,
+      type: statistic.type,
+      year: statistic.year,
+      data: statistic.data || { values: [] },
+    });
+    
+    form.reset({
+      type: statistic.type,
+      year: statistic.year,
+      data: statistic.data || { values: [] },
+    });
+  };
+  
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Country Statistics</h2>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 border rounded-lg p-4 bg-gray-50">
+          <h3 className="text-lg font-medium">{editingStatistic?.id ? 'Edit Statistic' : 'Add Statistic'}</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Statistic Type</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select statistic type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Population">Population</SelectItem>
+                        <SelectItem value="GDP">GDP</SelectItem>
+                        <SelectItem value="Inflation">Inflation</SelectItem>
+                        <SelectItem value="Unemployment">Unemployment</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Healthcare">Healthcare</SelectItem>
+                        <SelectItem value="Crime">Crime</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="year"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Year</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      {...field}
+                      value={field.value === null ? '' : field.value}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? null : Number(e.target.value);
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="data"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data (JSON format)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field}
+                    rows={5}
+                    value={typeof field.value === 'object' ? JSON.stringify(field.value, null, 2) : field.value}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        field.onChange(parsed);
+                      } catch (err) {
+                        // If not valid JSON, just store as string
+                        field.onChange(e.target.value);
+                      }
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter data in JSON format with yearly values
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="flex justify-end gap-2">
+            {editingStatistic?.id && (
+              <Button type="button" variant="outline" onClick={() => {
+                setEditingStatistic(null);
+                form.reset({
+                  type: 'Population',
+                  year: new Date().getFullYear(),
+                  data: { values: [] },
+                });
+              }}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit">
+              {editingStatistic?.id ? 'Update Statistic' : 'Add Statistic'}
+            </Button>
+          </div>
+        </form>
+      </Form>
+      
+      <div className="border rounded-lg overflow-hidden">
+        <div className="bg-gray-100 px-4 py-3 border-b font-medium">
+          Country Statistics
+        </div>
+        {statisticsLoading ? (
+          <div className="p-4 text-center">Loading statistics...</div>
+        ) : statistics && statistics.length > 0 ? (
+          <div className="divide-y">
+            {statistics.map((statistic) => (
+              <div key={statistic.id} className="p-4 flex flex-col md:flex-row md:justify-between gap-2">
+                <div>
+                  <p className="font-semibold">{statistic.type} {statistic.year ? `(${statistic.year})` : ''}</p>
+                  <p className="mt-1 font-mono text-sm bg-gray-100 p-2 rounded">
+                    {JSON.stringify(statistic.data, null, 2)}
+                  </p>
+                </div>
+                <div className="flex gap-2 md:self-center">
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(statistic)}>
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 text-center text-gray-500">
+            No statistics found. Add your first statistic above.
+          </div>
+        )}
+      </div>
     </div>
   );
 };

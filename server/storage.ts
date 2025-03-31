@@ -7,6 +7,14 @@ import {
   InsertTimelineEvent,
   PoliticalLeader,
   InsertPoliticalLeader,
+  PoliticalSystem,
+  InsertPoliticalSystem,
+  InternationalRelation,
+  InsertInternationalRelation,
+  HistoricalLaw,
+  InsertHistoricalLaw,
+  Statistic,
+  InsertStatistic,
   EconomicData,
   InsertEconomicData,
 } from "@shared/schema";
@@ -28,10 +36,37 @@ export interface IStorage {
   // Timeline events methods
   getTimelineEventsByCountryId(countryId: number): Promise<TimelineEvent[]>;
   createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent>;
+  updateTimelineEvent(id: number, event: Partial<InsertTimelineEvent>): Promise<TimelineEvent | undefined>;
+  deleteTimelineEvent(id: number): Promise<boolean>;
 
   // Political leaders methods
   getPoliticalLeadersByCountryId(countryId: number): Promise<PoliticalLeader[]>;
   createPoliticalLeader(leader: InsertPoliticalLeader): Promise<PoliticalLeader>;
+  updatePoliticalLeader(id: number, leader: Partial<InsertPoliticalLeader>): Promise<PoliticalLeader | undefined>;
+  deletePoliticalLeader(id: number): Promise<boolean>;
+
+  // Political system methods
+  getPoliticalSystemByCountryId(countryId: number): Promise<PoliticalSystem | undefined>;
+  createPoliticalSystem(system: InsertPoliticalSystem): Promise<PoliticalSystem>;
+  updatePoliticalSystem(id: number, system: Partial<InsertPoliticalSystem>): Promise<PoliticalSystem | undefined>;
+
+  // International relations methods
+  getInternationalRelationsByCountryId(countryId: number): Promise<InternationalRelation[]>;
+  createInternationalRelation(relation: InsertInternationalRelation): Promise<InternationalRelation>;
+  updateInternationalRelation(id: number, relation: Partial<InsertInternationalRelation>): Promise<InternationalRelation | undefined>;
+  deleteInternationalRelation(id: number): Promise<boolean>;
+
+  // Historical laws methods
+  getHistoricalLawsByCountryId(countryId: number): Promise<HistoricalLaw[]>;
+  createHistoricalLaw(law: InsertHistoricalLaw): Promise<HistoricalLaw>;
+  updateHistoricalLaw(id: number, law: Partial<InsertHistoricalLaw>): Promise<HistoricalLaw | undefined>;
+  deleteHistoricalLaw(id: number): Promise<boolean>;
+
+  // Statistics methods
+  getStatisticsByCountryId(countryId: number): Promise<Statistic[]>;
+  createStatistic(statistic: InsertStatistic): Promise<Statistic>;
+  updateStatistic(id: number, statistic: Partial<InsertStatistic>): Promise<Statistic | undefined>;
+  deleteStatistic(id: number): Promise<boolean>;
 
   // Economic data methods
   getEconomicDataByCountryId(countryId: number): Promise<EconomicData | undefined>;
@@ -44,12 +79,20 @@ export class MemStorage implements IStorage {
   private countries: Map<number, Country>;
   private timelineEvents: Map<number, TimelineEvent>;
   private politicalLeaders: Map<number, PoliticalLeader>;
+  private politicalSystems: Map<number, PoliticalSystem>;
+  private internationalRelations: Map<number, InternationalRelation>;
+  private historicalLaws: Map<number, HistoricalLaw>;
+  private statistics: Map<number, Statistic>;
   private economicData: Map<number, EconomicData>;
 
   private userId: number;
   private countryId: number;
   private timelineEventId: number;
   private politicalLeaderId: number;
+  private politicalSystemId: number;
+  private internationalRelationId: number;
+  private historicalLawId: number;
+  private statisticId: number;
   private economicDataId: number;
 
   constructor() {
@@ -57,12 +100,20 @@ export class MemStorage implements IStorage {
     this.countries = new Map();
     this.timelineEvents = new Map();
     this.politicalLeaders = new Map();
+    this.politicalSystems = new Map();
+    this.internationalRelations = new Map();
+    this.historicalLaws = new Map();
+    this.statistics = new Map();
     this.economicData = new Map();
 
     this.userId = 1;
     this.countryId = 1;
     this.timelineEventId = 1;
     this.politicalLeaderId = 1;
+    this.politicalSystemId = 1;
+    this.internationalRelationId = 1;
+    this.historicalLawId = 1;
+    this.statisticId = 1;
     this.economicDataId = 1;
   }
 
@@ -164,6 +215,19 @@ export class MemStorage implements IStorage {
     return newEvent;
   }
 
+  async updateTimelineEvent(id: number, event: Partial<InsertTimelineEvent>): Promise<TimelineEvent | undefined> {
+    const existingEvent = this.timelineEvents.get(id);
+    if (!existingEvent) return undefined;
+
+    const updatedEvent = { ...existingEvent, ...event };
+    this.timelineEvents.set(id, updatedEvent);
+    return updatedEvent;
+  }
+
+  async deleteTimelineEvent(id: number): Promise<boolean> {
+    return this.timelineEvents.delete(id);
+  }
+
   // Political leaders methods
   async getPoliticalLeadersByCountryId(countryId: number): Promise<PoliticalLeader[]> {
     return Array.from(this.politicalLeaders.values()).filter(
@@ -176,6 +240,123 @@ export class MemStorage implements IStorage {
     const newLeader: PoliticalLeader = { ...leader, id };
     this.politicalLeaders.set(id, newLeader);
     return newLeader;
+  }
+
+  async updatePoliticalLeader(id: number, leader: Partial<InsertPoliticalLeader>): Promise<PoliticalLeader | undefined> {
+    const existingLeader = this.politicalLeaders.get(id);
+    if (!existingLeader) return undefined;
+
+    const updatedLeader = { ...existingLeader, ...leader };
+    this.politicalLeaders.set(id, updatedLeader);
+    return updatedLeader;
+  }
+
+  async deletePoliticalLeader(id: number): Promise<boolean> {
+    return this.politicalLeaders.delete(id);
+  }
+
+  // Political system methods
+  async getPoliticalSystemByCountryId(countryId: number): Promise<PoliticalSystem | undefined> {
+    return Array.from(this.politicalSystems.values()).find(
+      (system) => system.countryId === countryId
+    );
+  }
+
+  async createPoliticalSystem(system: InsertPoliticalSystem): Promise<PoliticalSystem> {
+    const id = this.politicalSystemId++;
+    const newSystem: PoliticalSystem = { ...system, id };
+    this.politicalSystems.set(id, newSystem);
+    return newSystem;
+  }
+
+  async updatePoliticalSystem(id: number, system: Partial<InsertPoliticalSystem>): Promise<PoliticalSystem | undefined> {
+    const existingSystem = this.politicalSystems.get(id);
+    if (!existingSystem) return undefined;
+
+    const updatedSystem = { ...existingSystem, ...system };
+    this.politicalSystems.set(id, updatedSystem);
+    return updatedSystem;
+  }
+
+  // International relations methods
+  async getInternationalRelationsByCountryId(countryId: number): Promise<InternationalRelation[]> {
+    return Array.from(this.internationalRelations.values()).filter(
+      (relation) => relation.countryId === countryId
+    );
+  }
+
+  async createInternationalRelation(relation: InsertInternationalRelation): Promise<InternationalRelation> {
+    const id = this.internationalRelationId++;
+    const newRelation: InternationalRelation = { ...relation, id };
+    this.internationalRelations.set(id, newRelation);
+    return newRelation;
+  }
+
+  async updateInternationalRelation(id: number, relation: Partial<InsertInternationalRelation>): Promise<InternationalRelation | undefined> {
+    const existingRelation = this.internationalRelations.get(id);
+    if (!existingRelation) return undefined;
+
+    const updatedRelation = { ...existingRelation, ...relation };
+    this.internationalRelations.set(id, updatedRelation);
+    return updatedRelation;
+  }
+
+  async deleteInternationalRelation(id: number): Promise<boolean> {
+    return this.internationalRelations.delete(id);
+  }
+
+  // Historical laws methods
+  async getHistoricalLawsByCountryId(countryId: number): Promise<HistoricalLaw[]> {
+    return Array.from(this.historicalLaws.values()).filter(
+      (law) => law.countryId === countryId
+    );
+  }
+
+  async createHistoricalLaw(law: InsertHistoricalLaw): Promise<HistoricalLaw> {
+    const id = this.historicalLawId++;
+    const newLaw: HistoricalLaw = { ...law, id };
+    this.historicalLaws.set(id, newLaw);
+    return newLaw;
+  }
+
+  async updateHistoricalLaw(id: number, law: Partial<InsertHistoricalLaw>): Promise<HistoricalLaw | undefined> {
+    const existingLaw = this.historicalLaws.get(id);
+    if (!existingLaw) return undefined;
+
+    const updatedLaw = { ...existingLaw, ...law };
+    this.historicalLaws.set(id, updatedLaw);
+    return updatedLaw;
+  }
+
+  async deleteHistoricalLaw(id: number): Promise<boolean> {
+    return this.historicalLaws.delete(id);
+  }
+
+  // Statistics methods
+  async getStatisticsByCountryId(countryId: number): Promise<Statistic[]> {
+    return Array.from(this.statistics.values()).filter(
+      (statistic) => statistic.countryId === countryId
+    );
+  }
+
+  async createStatistic(statistic: InsertStatistic): Promise<Statistic> {
+    const id = this.statisticId++;
+    const newStatistic: Statistic = { ...statistic, id };
+    this.statistics.set(id, newStatistic);
+    return newStatistic;
+  }
+
+  async updateStatistic(id: number, statistic: Partial<InsertStatistic>): Promise<Statistic | undefined> {
+    const existingStatistic = this.statistics.get(id);
+    if (!existingStatistic) return undefined;
+
+    const updatedStatistic = { ...existingStatistic, ...statistic };
+    this.statistics.set(id, updatedStatistic);
+    return updatedStatistic;
+  }
+
+  async deleteStatistic(id: number): Promise<boolean> {
+    return this.statistics.delete(id);
   }
 
   // Economic data methods
