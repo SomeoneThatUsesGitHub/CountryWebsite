@@ -123,6 +123,20 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <div className={`flex items-center p-3 gap-3 ${getRelationTypeColor(relation.relationType)}`}>
+                {/* Country Flag */}
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 shadow-sm">
+                  <img 
+                    src={`https://flagcdn.com/${getCountryCode(relation.partnerCountry).toLowerCase()}.svg`}
+                    alt={`${relation.partnerCountry} flag`} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://via.placeholder.com/40x40?text=Flag';
+                    }}
+                  />
+                </div>
+                
                 <div className="flex-grow">
                   <h5 className="font-bold text-lg">{relation.partnerCountry}</h5>
                   <div className="flex items-center">
