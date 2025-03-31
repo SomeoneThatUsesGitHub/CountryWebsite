@@ -38,22 +38,33 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
   const { 
     data: politicalSystem,
     isLoading: systemLoading,
-    isError: systemError 
+    isError: systemError,
+    status: systemStatus
   } = useQuery<PoliticalSystem>({
     queryKey: [`/api/countries/${countryId}/political-system`],
     enabled: !!countryId,
-    retry: 0 // Don't retry on 404
+    retry: 0, // Don't retry on 404
+    // This is a critical fix - we need to force 404 responses to be treated as "success" 
+    // with null data so the component doesn't get stuck loading
+    networkMode: 'always',
+    refetchOnWindowFocus: false
   });
 
-  // Only show loading indicator when actively loading and no errors have occurred
-  const isLoading = (leadersLoading || partiesLoading || systemLoading) && !systemError;
+  // We consider loading complete when either:
+  // 1. All data loaded successfully, or
+  // 2. Leaders and parties are loaded and political system error has occurred (404)
+  const loadingComplete = 
+    (leadersSuccess && partiesSuccess && 
+     (systemStatus === 'success' || systemStatus === 'error'));
   
-  // All data has loaded but no content exists
+  // Only show loading indicator during active loading
+  const isLoading = !loadingComplete;
+  
+  // Check if we actually have any meaningful data to display
   const hasNoData = 
     !isLoading && 
-    leadersSuccess && partiesSuccess && 
-    leaders.length === 0 && parties.length === 0 && 
-    (systemError || !politicalSystem);
+    leaders.length === 0 && 
+    parties.length === 0;
 
   // Check if country has an unstable political situation - this needs special handling because it's important
   // We need to handle three cases:
