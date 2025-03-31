@@ -27,54 +27,23 @@ const CountryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch country data
-  const { data: country, isLoading, error } = useQuery<Country>({
+  const { data: country, isLoading: countryLoading, error: countryError } = useQuery<Country>({
     queryKey: [`/api/countries/code/${code}`],
     enabled: code.length > 0, // Only run query if code exists
   });
-
-  // Sample timeline events for demonstration
-  // In a real app, these would come from an API
-  const timelineEvents: TimelineEvent[] = [
-    {
-      id: 1,
-      countryId: country?.id || 0,
-      title: "National Election",
-      description: "The country held its general election, resulting in a new government formation.",
-      date: "2023-05-15",
-      eventType: "Election"
-    },
-    {
-      id: 2,
-      countryId: country?.id || 0,
-      title: "Major Policy Reform",
-      description: "The government passed a significant reform package aimed at economic growth and social development.",
-      date: "2022-11-10",
-      eventType: "Legislation"
-    },
-    {
-      id: 3,
-      countryId: country?.id || 0,
-      title: "International Agreement",
-      description: "The country signed a major international trade agreement with neighboring nations.",
-      date: "2021-07-22",
-      eventType: "Agreement"
-    },
-    {
-      id: 4,
-      countryId: country?.id || 0,
-      title: "Public Demonstrations",
-      description: "Citizens organized peaceful protests demanding political reforms and transparency.",
-      date: "2020-10-05",
-      eventType: "Protest"
-    }
-  ];
+  
+  // Fetch timeline events for the country
+  const { data: timelineEvents = [], isLoading: eventsLoading, error: eventsError } = useQuery<TimelineEvent[]>({
+    queryKey: [`/api/countries/${country?.id}/timeline`],
+    enabled: !!country?.id, // Only run query if country ID exists
+  });
 
   useEffect(() => {
     // Scroll to top when navigating to a new country
     window.scrollTo(0, 0);
   }, [code]);
 
-  if (isLoading) {
+  if (countryLoading || eventsLoading) {
     return (
       <div>
         <Skeleton className="h-80 w-full" />
@@ -91,7 +60,7 @@ const CountryPage: React.FC = () => {
     );
   }
 
-  if (error || !country) {
+  if (!country) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Country</h2>

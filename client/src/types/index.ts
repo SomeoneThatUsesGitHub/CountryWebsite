@@ -37,9 +37,10 @@ export interface TimelineEvent {
   countryId: number;
   title: string;
   description: string;
-  date: string;
+  date: string | Date;
   eventType: string;
-  icon?: string;
+  icon?: string | null;
+  tags?: any;
 }
 
 export interface PoliticalLeader {
