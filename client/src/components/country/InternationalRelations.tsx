@@ -1,137 +1,250 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { InternationalRelation } from '@shared/schema';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Globe, AlertCircle } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { motion } from 'framer-motion';
 
-interface InternationalRelationsProps {
-  countryId: number;
+interface Relation {
+  country: string;
+  type: 'Ally' | 'Economic Partner' | 'Cultural Exchange' | 'Dispute' | 'Treaty';
+  strength: 'Strong' | 'Moderate' | 'Developing';
+  details: string;
+  flagUrl?: string;
 }
 
-// Function to get badge color based on relationship type
-const getRelationBadgeColor = (type: string): string => {
-  switch (type.toLowerCase()) {
-    case 'economic':
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    case 'treaty':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'cultural':
-      return 'bg-purple-100 text-purple-800 border-purple-200';
-    case 'ally':
-      return 'bg-amber-100 text-amber-800 border-amber-200';
-    case 'military':
-      return 'bg-red-100 text-red-800 border-red-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
+interface InternationalRelationsProps {
+  countryName: string;
+  relations?: Relation[];
+}
 
-// Function to get badge color based on relationship strength
-const getStrengthBadgeColor = (strength: string | null): string => {
-  if (!strength) return 'bg-gray-100 text-gray-800';
-  
-  switch (strength.toLowerCase()) {
-    case 'strong':
-      return 'bg-green-100 text-green-800 border-green-200';
-    case 'moderate':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'weak':
-      return 'bg-red-100 text-red-800 border-red-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
-const InternationalRelations: React.FC<InternationalRelationsProps> = ({ countryId }) => {
-  // Fetch international relations for the country
-  const { data: relations = [], isLoading } = useQuery<InternationalRelation[]>({
-    queryKey: [`/api/countries/${countryId}/relations`],
-    enabled: !!countryId,
-  });
-
-  // Group relations by type
-  const relationsByType: Record<string, InternationalRelation[]> = relations.reduce((acc, relation) => {
-    const type = relation.relationType;
-    if (!acc[type]) {
-      acc[type] = [];
+const InternationalRelations: React.FC<InternationalRelationsProps> = ({ 
+  countryName, 
+  relations = []
+}) => {
+  // Default relations if none provided
+  const countryRelations: Relation[] = relations.length > 0 ? relations : [
+    {
+      country: 'United States',
+      type: 'Economic Partner',
+      strength: 'Strong',
+      details: 'Major trading partner with bilateral trade agreements. Cooperation on technology and security.',
+      flagUrl: 'https://flagcdn.com/us.svg'
+    },
+    {
+      country: 'Germany',
+      type: 'Ally',
+      strength: 'Strong',
+      details: 'Strategic military alliance and defense cooperation. Shared diplomatic objectives.',
+      flagUrl: 'https://flagcdn.com/de.svg'
+    },
+    {
+      country: 'Japan',
+      type: 'Economic Partner',
+      strength: 'Moderate',
+      details: 'Growing economic relationship with focus on technology exchange and investment.',
+      flagUrl: 'https://flagcdn.com/jp.svg'
+    },
+    {
+      country: 'Brazil',
+      type: 'Cultural Exchange',
+      strength: 'Developing',
+      details: 'Educational and cultural programs promoting mutual understanding and cooperation.',
+      flagUrl: 'https://flagcdn.com/br.svg'
+    },
+    {
+      country: 'Russia',
+      type: 'Treaty',
+      strength: 'Moderate',
+      details: 'Limited cooperation through specific international agreements and treaties.',
+      flagUrl: 'https://flagcdn.com/ru.svg'
     }
-    acc[type].push(relation);
-    return acc;
-  }, {} as Record<string, InternationalRelation[]>);
-
-  // Define the order of relation types
-  const relationTypeOrder = ['ally', 'military', 'economic', 'treaty', 'cultural'];
+  ];
   
-  // Sort the relation types
-  const sortedRelationTypes = Object.keys(relationsByType).sort(
-    (a, b) => relationTypeOrder.indexOf(a.toLowerCase()) - relationTypeOrder.indexOf(b.toLowerCase())
-  );
-
-  if (isLoading) {
-    return <div className="py-6 text-center">Loading international relations...</div>;
-  }
-
-  if (relations.length === 0) {
-    return (
-      <Alert variant="default" className="bg-blue-50 border-blue-200 my-4">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription>
-          No international relations information available for this country.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  // Colors for different relation types
+  const relationColors = {
+    'Ally': {
+      bg: 'bg-blue-100',
+      text: 'text-blue-800',
+      border: 'border-blue-300',
+      icon: 'text-blue-500'
+    },
+    'Economic Partner': {
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      border: 'border-green-300',
+      icon: 'text-green-500'
+    },
+    'Cultural Exchange': {
+      bg: 'bg-purple-100',
+      text: 'text-purple-800',
+      border: 'border-purple-300',
+      icon: 'text-purple-500'
+    },
+    'Dispute': {
+      bg: 'bg-red-100',
+      text: 'text-red-800',
+      border: 'border-red-300',
+      icon: 'text-red-500'
+    },
+    'Treaty': {
+      bg: 'bg-amber-100',
+      text: 'text-amber-800',
+      border: 'border-amber-300',
+      icon: 'text-amber-500'
+    }
+  };
+  
+  // Bar width for relationship strength
+  const strengthWidth = {
+    'Strong': 'w-full',
+    'Moderate': 'w-2/3',
+    'Developing': 'w-1/3'
+  };
+  
+  // Icons for different relation types
+  const relationIcons = {
+    'Ally': 'fa-handshake',
+    'Economic Partner': 'fa-chart-line',
+    'Cultural Exchange': 'fa-university',
+    'Dispute': 'fa-exclamation-triangle',
+    'Treaty': 'fa-file-signature'
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <Globe className="h-5 w-5 text-blue-600" />
+    <div className="mb-12">
+      <h3 className="text-xl font-bold mb-6">International Relations</h3>
+      
+      {/* Key Partners List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {countryRelations.map((relation, index) => (
+          <motion.div 
+            key={relation.country}
+            className="bg-white rounded-lg overflow-hidden shadow-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <div className={`flex items-center p-3 gap-3 ${relationColors[relation.type].bg}`}>
+              {relation.flagUrl && (
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 shadow-sm">
+                  <img 
+                    src={relation.flagUrl} 
+                    alt={`${relation.country} flag`} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://via.placeholder.com/40x40?text=Flag';
+                    }}
+                  />
+                </div>
+              )}
+              
+              <div className="flex-grow">
+                <h5 className="font-bold text-lg">{relation.country}</h5>
+                <div className="flex items-center">
+                  <i className={`fas ${relationIcons[relation.type]} mr-1 ${relationColors[relation.type].icon}`}></i>
+                  <span className={`text-sm font-medium ${relationColors[relation.type].text}`}>
+                    {relation.type}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4">
+              <div className="mb-3">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium">Relationship Strength</span>
+                  <span className="text-gray-500">{relation.strength}</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-primary ${strengthWidth[relation.strength]}`}
+                  ></div>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 text-sm">
+                {relation.details}
+              </p>
+            </div>
+          </motion.div>
+        ))}
       </div>
-
-      {sortedRelationTypes.map((type) => (
-        <div key={type} className="space-y-3">
-          <h3 className="font-medium text-lg text-gray-700 flex items-center space-x-2">
-            <Badge className={getRelationBadgeColor(type)}>
-              {type.charAt(0).toUpperCase() + type.slice(1)} Relations
-            </Badge>
-          </h3>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {relationsByType[type].map((relation) => (
-              <Card key={relation.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-medium">{relation.partnerCountry}</h4>
-                      {relation.relationStrength && (
-                        <Badge className={getStrengthBadgeColor(relation.relationStrength)}>
-                          {relation.relationStrength}
-                        </Badge>
-                      )}
-                    </div>
-                    {relation.startDate && (
-                      <span className="text-sm text-gray-500">
-                        Established: {format(new Date(relation.startDate), "MMMM d, yyyy")}
-                      </span>
-                    )}
-                  </div>
-                  {relation.details && (
-                    <p className="mt-2 text-sm text-gray-600">{relation.details}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {type !== sortedRelationTypes[sortedRelationTypes.length - 1] && (
-            <Separator className="my-4" />
-          )}
+      
+      {/* Historical Laws */}
+      <div className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-5 rounded-lg shadow-sm">
+        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
+          <i className="fas fa-gavel text-primary mr-2"></i>
+          Historical Laws
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { 
+              name: 'Constitutional Reform', 
+              year: '2010', 
+              description: 'Major revision of the constitution that strengthened democratic institutions and expanded civil liberties.', 
+              icon: 'fa-landmark'
+            },
+            { 
+              name: 'Environmental Protection Act', 
+              year: '2015', 
+              description: 'Landmark legislation establishing strict environmental standards and conservation regulations.', 
+              icon: 'fa-tree'
+            },
+            { 
+              name: 'Digital Rights Law', 
+              year: '2018', 
+              description: 'Comprehensive legislation protecting digital privacy and regulating tech companies.', 
+              icon: 'fa-shield-alt'
+            }
+          ].map((law, index) => (
+            <motion.div 
+              key={index} 
+              className="bg-white rounded-lg overflow-hidden shadow-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 + (index * 0.1) }}
+            >
+              <div className="p-3 bg-primary/10 border-b border-primary/20">
+                <div className="flex items-center gap-2">
+                  <i className={`fas ${law.icon} text-primary`}></i>
+                  <h5 className="font-semibold">{law.name}</h5>
+                </div>
+                <p className="text-xs text-gray-600 mt-1">Enacted in {law.year}</p>
+              </div>
+              <div className="p-3">
+                <p className="text-sm text-gray-600">{law.description}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      ))}
+      </div>
+      
+      {/* International Organizations */}
+      <div className="mt-6 bg-white p-5 rounded-lg shadow-sm border border-primary/10">
+        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
+          <i className="fas fa-globe-americas text-primary mr-2"></i>
+          International Organizations Membership
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {[
+            { name: 'United Nations', icon: 'fa-globe-americas', color: 'bg-blue-50 text-blue-600 border-blue-200' },
+            { name: 'World Trade Organization', icon: 'fa-balance-scale', color: 'bg-green-50 text-green-600 border-green-200' },
+            { name: 'G20', icon: 'fa-users', color: 'bg-purple-50 text-purple-600 border-purple-200' },
+            { name: 'NATO', icon: 'fa-shield-alt', color: 'bg-red-50 text-red-600 border-red-200' },
+            { name: 'World Health Organization', icon: 'fa-heartbeat', color: 'bg-teal-50 text-teal-600 border-teal-200' }
+          ].map((org, index) => (
+            <motion.div 
+              key={org.name}
+              className={`flex items-center gap-2 p-3 rounded-lg border ${org.color}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 + (index * 0.1) }}
+            >
+              <i className={`fas ${org.icon} text-lg`}></i>
+              <p className="text-sm font-medium">{org.name}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
