@@ -8,9 +8,22 @@ import { getChartColors } from '@/lib/helpers';
 
 // Population chart component
 export const PopulationChart = ({ data }: { data: { year: string; population: number }[] }) => {
+  // Helper function to format population numbers
+  const formatPopulation = (value: number) => {
+    if (value >= 1000000000) {
+      return (Math.round(value / 100000000) / 10) + 'B';
+    } else if (value >= 1000000) {
+      return (Math.round(value / 100000) / 10) + 'M';
+    } else if (value >= 1000) {
+      return (Math.round(value / 100) / 10) + 'K';
+    } else {
+      return value;
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm h-full">
-      <h3 className="text-lg font-bold mb-4">Population Growth (in millions)</h3>
+      <h3 className="text-lg font-bold mb-4">Population Growth</h3>
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart
           data={data}
@@ -18,14 +31,26 @@ export const PopulationChart = ({ data }: { data: { year: string; population: nu
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
-          <YAxis />
-          <Tooltip formatter={(value) => (Math.round(Number(value) / 1000000 * 10) / 10) + ' million'} />
+          <YAxis tickFormatter={formatPopulation} />
+          <Tooltip formatter={(value) => {
+            const numValue = Number(value);
+            if (numValue >= 1000000000) {
+              return (Math.round(numValue / 100000000) / 10) + ' billion';
+            } else if (numValue >= 1000000) {
+              return (Math.round(numValue / 100000) / 10) + ' million';
+            } else if (numValue >= 1000) {
+              return (Math.round(numValue / 100) / 10) + ' thousand';
+            } else {
+              return numValue;
+            }
+          }} />
           <Area 
             type="monotone" 
             dataKey="population" 
             stroke="#3B82F6" 
             fill="rgba(59, 130, 246, 0.1)" 
             activeDot={{ r: 8 }} 
+            name="Population"
           />
         </AreaChart>
       </ResponsiveContainer>
