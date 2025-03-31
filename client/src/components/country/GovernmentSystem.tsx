@@ -47,8 +47,19 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
 
   if (leaders.length === 0 && parties.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-48 space-y-2">
-        <p className="text-muted-foreground text-center">No political information available</p>
+      <div className="space-y-8">
+        {/* Display warning even if no other political info is available */}
+        {hasUnstablePoliticalSituation && (
+          <Alert variant="destructive" className="bg-red-50 border-red-300 text-red-800 mb-6">
+            <AlertTriangle className="h-5 w-5" />
+            <AlertDescription className="ml-2">
+              This country is currently experiencing political instability. The information below may change frequently.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="flex flex-col justify-center items-center h-48 space-y-2">
+          <p className="text-muted-foreground text-center">No political leadership or party information available</p>
+        </div>
       </div>
     );
   }
