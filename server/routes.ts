@@ -7,6 +7,7 @@ import {
   insertTimelineEventSchema, 
   insertPoliticalLeaderSchema, 
   insertPoliticalSystemSchema,
+  insertPoliticalPartySchema,
   insertInternationalRelationSchema,
   insertHistoricalLawSchema,
   insertStatisticSchema,
@@ -622,6 +623,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error(`Error updating political system:`, error);
       res.status(400).json({ message: error.message || "Failed to update political system" });
+    }
+  });
+
+  // Political parties routes
+  app.get("/api/countries/:countryId/parties", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const parties = await storage.getPoliticalPartiesByCountryId(countryId);
+      res.json(parties);
+    } catch (error) {
+      console.error(`Error fetching political parties for country ${req.params.countryId}:`, error);
+      res.status(500).json({ message: "Failed to fetch political parties" });
+    }
+  });
+  
+  app.post("/api/countries/:countryId/parties", async (req, res) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      
+      // Check if country exists
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      const data = {
+        ...req.body,
+        countryId
+      };
+      
+      const validatedData = insertPoliticalPartySchema.parse(data);
+      
+      const party = await storage.createPoliticalParty(validatedData);
+      res.status(201).json(party);
+    } catch (error: any) {
+      console.error(`Error creating political party:`, error);
+      res.status(400).json({ message: error.message || "Failed to create political party" });
+    }
+  });
+  
+  app.patch("/api/countries/:countryId/parties/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const countryId = parseInt(req.params.countryId);
+      
+      // Check if country exists
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Get existing party
+      const parties = await storage.getPoliticalPartiesByCountryId(countryId);
+      const existingParty = parties.find(party => party.id === id);
+      
+      if (!existingParty) {
+        return res.status(404).json({ message: "Political party not found for this country" });
+      }
+      
+      // Update the party
+      const updatedParty = await storage.updatePoliticalParty(id, req.body);
+      if (!updatedParty) {
+        return res.status(500).json({ message: "Failed to update political party" });
+      }
+      
+      res.json(updatedParty);
+    } catch (error: any) {
+      console.error(`Error updating political party:`, error);
+      res.status(400).json({ message: error.message || "Failed to update political party" });
+    }
+  });
+  
+  app.delete("/api/countries/:countryId/parties/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const countryId = parseInt(req.params.countryId);
+      
+      // Check if country exists
+      const country = await storage.getCountryById(countryId);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      
+      // Get existing party
+      const parties = await storage.getPoliticalPartiesByCountryId(countryId);
+      const existingParty = parties.find(party => party.id === id);
+      
+      if (!existingParty) {
+        return res.status(404).json({ message: "Political party not found for this country" });
+      }
+      
+      // Delete the party
+      const success = await storage.deletePoliticalParty(id);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete political party" });
+      }
+      
+      res.status(204).end();
+    } catch (error: any) {
+      console.error(`Error deleting political party:`, error);
+      res.status(400).json({ message: error.message || "Failed to delete political party" });
     }
   });
 

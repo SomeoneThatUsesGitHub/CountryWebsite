@@ -29,6 +29,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import StatisticsEditor from '@/components/admin/StatisticsEditor';
 import LeadersEditor from '@/components/admin/LeadersEditor';
+import PartiesEditor from '@/components/admin/PartiesEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -422,6 +423,16 @@ const AdminPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <LeadersEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Political Parties</CardTitle>
+                      <CardDescription>Manage political parties for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PartiesEditor countryId={selectedCountry.id} />
                     </CardContent>
                   </Card>
                 </div>

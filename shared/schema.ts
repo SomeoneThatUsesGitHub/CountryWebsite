@@ -122,6 +122,21 @@ export const economicData = pgTable("economicData", {
   initiatives: jsonb("initiatives"), // array of economic initiatives
 });
 
+// Political Party schema
+export const politicalParties = pgTable("politicalParties", {
+  id: serial("id").primaryKey(),
+  countryId: integer("countryId").notNull().references(() => countries.id),
+  name: text("name").notNull(),
+  acronym: text("acronym"),
+  color: text("color"), // Hex color or name for visualization
+  ideology: text("ideology"),
+  logoUrl: text("logoUrl"),
+  foundedYear: integer("foundedYear"),
+  isRuling: boolean("isRuling").default(false), // Whether this party is currently in power
+  seats: integer("seats"), // Number of seats in parliament
+  totalSeats: integer("totalSeats"), // Total number of seats in parliament
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -136,6 +151,7 @@ export const insertInternationalRelationSchema = createInsertSchema(internationa
 export const insertHistoricalLawSchema = createInsertSchema(historicalLaws);
 export const insertStatisticSchema = createInsertSchema(statistics);
 export const insertEconomicDataSchema = createInsertSchema(economicData);
+export const insertPoliticalPartySchema = createInsertSchema(politicalParties);
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -169,3 +185,6 @@ export type Statistic = typeof statistics.$inferSelect;
 
 export type InsertEconomicData = z.infer<typeof insertEconomicDataSchema>;
 export type EconomicData = typeof economicData.$inferSelect;
+
+export type InsertPoliticalParty = z.infer<typeof insertPoliticalPartySchema>;
+export type PoliticalParty = typeof politicalParties.$inferSelect;

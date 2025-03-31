@@ -9,6 +9,8 @@ import {
   InsertPoliticalLeader,
   PoliticalSystem,
   InsertPoliticalSystem,
+  PoliticalParty,
+  InsertPoliticalParty,
   InternationalRelation,
   InsertInternationalRelation,
   HistoricalLaw,
@@ -50,6 +52,12 @@ export interface IStorage {
   createPoliticalSystem(system: InsertPoliticalSystem): Promise<PoliticalSystem>;
   updatePoliticalSystem(id: number, system: Partial<InsertPoliticalSystem>): Promise<PoliticalSystem | undefined>;
 
+  // Political parties methods
+  getPoliticalPartiesByCountryId(countryId: number): Promise<PoliticalParty[]>;
+  createPoliticalParty(party: InsertPoliticalParty): Promise<PoliticalParty>;
+  updatePoliticalParty(id: number, party: Partial<InsertPoliticalParty>): Promise<PoliticalParty | undefined>;
+  deletePoliticalParty(id: number): Promise<boolean>;
+
   // International relations methods
   getInternationalRelationsByCountryId(countryId: number): Promise<InternationalRelation[]>;
   createInternationalRelation(relation: InsertInternationalRelation): Promise<InternationalRelation>;
@@ -80,6 +88,7 @@ export class MemStorage implements IStorage {
   private timelineEvents: Map<number, TimelineEvent>;
   private politicalLeaders: Map<number, PoliticalLeader>;
   private politicalSystems: Map<number, PoliticalSystem>;
+  private politicalParties: Map<number, PoliticalParty>;
   private internationalRelations: Map<number, InternationalRelation>;
   private historicalLaws: Map<number, HistoricalLaw>;
   private statistics: Map<number, Statistic>;
@@ -90,6 +99,7 @@ export class MemStorage implements IStorage {
   private timelineEventId: number;
   private politicalLeaderId: number;
   private politicalSystemId: number;
+  private politicalPartyId: number;
   private internationalRelationId: number;
   private historicalLawId: number;
   private statisticId: number;
@@ -101,6 +111,7 @@ export class MemStorage implements IStorage {
     this.timelineEvents = new Map();
     this.politicalLeaders = new Map();
     this.politicalSystems = new Map();
+    this.politicalParties = new Map();
     this.internationalRelations = new Map();
     this.historicalLaws = new Map();
     this.statistics = new Map();
@@ -111,6 +122,7 @@ export class MemStorage implements IStorage {
     this.timelineEventId = 1;
     this.politicalLeaderId = 1;
     this.politicalSystemId = 1;
+    this.politicalPartyId = 1;
     this.internationalRelationId = 1;
     this.historicalLawId = 1;
     this.statisticId = 1;
@@ -276,6 +288,33 @@ export class MemStorage implements IStorage {
     const updatedSystem = { ...existingSystem, ...system };
     this.politicalSystems.set(id, updatedSystem);
     return updatedSystem;
+  }
+
+  // Political parties methods
+  async getPoliticalPartiesByCountryId(countryId: number): Promise<PoliticalParty[]> {
+    return Array.from(this.politicalParties.values()).filter(
+      (party) => party.countryId === countryId
+    );
+  }
+
+  async createPoliticalParty(party: InsertPoliticalParty): Promise<PoliticalParty> {
+    const id = this.politicalPartyId++;
+    const newParty: PoliticalParty = { ...party, id };
+    this.politicalParties.set(id, newParty);
+    return newParty;
+  }
+
+  async updatePoliticalParty(id: number, party: Partial<InsertPoliticalParty>): Promise<PoliticalParty | undefined> {
+    const existingParty = this.politicalParties.get(id);
+    if (!existingParty) return undefined;
+
+    const updatedParty = { ...existingParty, ...party };
+    this.politicalParties.set(id, updatedParty);
+    return updatedParty;
+  }
+
+  async deletePoliticalParty(id: number): Promise<boolean> {
+    return this.politicalParties.delete(id);
   }
 
   // International relations methods
