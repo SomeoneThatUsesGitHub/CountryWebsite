@@ -85,7 +85,7 @@ const AdminPage: React.FC = () => {
       // Extract the government form from the countryInfo object
       const countryInfo = selectedCountry.countryInfo || {};
       const governmentForm = typeof countryInfo === 'object' && 'governmentForm' in countryInfo 
-        ? countryInfo.governmentForm 
+        ? countryInfo.governmentForm as string | null
         : null;
       
       form.reset({
@@ -534,20 +534,23 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
     // Process the date properly regardless of format
     const dateStr = (() => {
       if (!event.date) return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      if (typeof event.date === 'string') {
-        // If it's a formatted string without time part, use as is
-        if (!event.date.includes('T') && !event.date.includes(':')) {
-          return event.date;
-        }
-        // Otherwise try to parse it into a date and format
-        try {
-          return new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch (e) {
-          return event.date;
-        }
+      
+      // Convert date to string if it's not already
+      const dateString = typeof event.date === 'string' 
+        ? event.date 
+        : new Date(event.date as Date).toISOString();
+        
+      // If it's a formatted string without time part, use as is
+      if (!dateString.includes('T') && !dateString.includes(':')) {
+        return dateString;
       }
-      // If it's a Date object, format it
-      return new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      
+      // Otherwise try to parse it into a date and format
+      try {
+        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (e) {
+        return dateString;
+      }
     })();
     
     setEditingEvent({

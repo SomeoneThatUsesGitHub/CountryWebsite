@@ -190,13 +190,15 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
 
       {/* Modal for reading full text (for both mobile and desktop) */}
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{selectedEvent?.title}</DialogTitle>
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              <X className="h-4 w-4" />
+        <DialogContent className="sm:max-w-[600px] md:max-w-[700px] max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="absolute right-4 top-4">
+            <DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-6 w-6" />
               <span className="sr-only">Close</span>
             </DialogClose>
+          </div>
+          <DialogHeader className="flex-shrink-0 pt-2">
+            <DialogTitle className="pr-8 text-xl font-bold">{selectedEvent?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -215,8 +217,8 @@ const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ events }) => 
             </div>
           </div>
           {/* Scrollable content area */}
-          <div className="overflow-y-auto pr-1 my-2 flex-grow">
-            <p className="text-gray-700">{selectedEvent?.description}</p>
+          <div className="overflow-y-auto pr-2 my-4 flex-grow">
+            <p className="text-gray-700 text-base leading-relaxed px-1">{selectedEvent?.description}</p>
           </div>
         </DialogContent>
       </Dialog>
