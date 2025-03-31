@@ -11,7 +11,6 @@ const CountryTabs: React.FC<CountryTabsProps> = ({ activeTab, onTabChange }) => 
     { id: 'overview', label: 'Political Overview' },
     { id: 'statistics', label: 'Statistics' },
     { id: 'political-system', label: 'Political System' },
-    { id: 'laws', label: 'Laws & Legislation' },
     { id: 'economy', label: 'Economy' }
   ];
 

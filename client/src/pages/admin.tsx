@@ -31,7 +31,6 @@ import StatisticsEditor from '@/components/admin/StatisticsEditor';
 import LeadersEditor from '@/components/admin/LeadersEditor';
 import PartiesEditor from '@/components/admin/PartiesEditor';
 import RelationsEditor from '@/components/admin/RelationsEditor';
-import LawsEditor from '@/components/admin/LawsEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -197,7 +196,6 @@ const AdminPage: React.FC = () => {
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="political">Political System</TabsTrigger>
                 <TabsTrigger value="relations">International Relations</TabsTrigger>
-                <TabsTrigger value="laws">Historical Laws</TabsTrigger>
                 <TabsTrigger value="statistics">Statistics</TabsTrigger>
               </TabsList>
               
@@ -462,21 +460,6 @@ const AdminPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <RelationsEditor countryId={selectedCountry.id} />
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-              
-              {/* Historical Laws Tab */}
-              <TabsContent value="laws">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Historical Laws</CardTitle>
-                      <CardDescription>Manage historical laws for this country</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <LawsEditor countryId={selectedCountry.id} />
                     </CardContent>
                   </Card>
                 </div>
