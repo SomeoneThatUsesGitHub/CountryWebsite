@@ -94,7 +94,7 @@ export const historicalLaws = pgTable("historicalLaws", {
   countryId: integer("countryId").notNull().references(() => countries.id),
   title: text("title").notNull(),
   description: text("description"),
-  date: timestamp("date"),
+  date: text("date"), // Using text to allow any date format, similar to timelineEvents
   category: text("category"), // Economic, Social, Environmental, etc.
   status: text("status"), // Enacted, Proposed, Repealed
 });
