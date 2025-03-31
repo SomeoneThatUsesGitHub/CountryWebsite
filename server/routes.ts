@@ -149,10 +149,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertTimelineEventSchema.parse({
+      // Convert date string to Date object if it's a string
+      const data = {
         ...req.body,
         countryId,
-      });
+        date: req.body.date ? new Date(req.body.date) : null,
+      };
+      
+      const validatedData = insertTimelineEventSchema.parse(data);
       
       const event = await storage.createTimelineEvent(validatedData);
       res.status(201).json(event);
@@ -183,10 +187,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertPoliticalLeaderSchema.parse({
+      // Convert date string to Date object if it's a string
+      const data = {
         ...req.body,
         countryId,
-      });
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      };
+      
+      const validatedData = insertPoliticalLeaderSchema.parse(data);
       
       const leader = await storage.createPoliticalLeader(validatedData);
       res.status(201).json(leader);
@@ -282,8 +290,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a validation schema that allows partial updates
       const updateTimelineEventSchema = insertTimelineEventSchema.partial();
       
+      // Prepare data with date conversion if needed
+      const data = {
+        ...req.body,
+        date: req.body.date ? new Date(req.body.date) : undefined,
+      };
+      
       // Validate the request body
-      const validatedData = updateTimelineEventSchema.parse(req.body);
+      const validatedData = updateTimelineEventSchema.parse(data);
       
       // Update the timeline event
       const updatedEvent = await storage.updateTimelineEvent(id, validatedData);
@@ -340,8 +354,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a validation schema that allows partial updates
       const updatePoliticalLeaderSchema = insertPoliticalLeaderSchema.partial();
       
+      // Prepare data with date conversion if needed
+      const data = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      };
+      
       // Validate the request body
-      const validatedData = updatePoliticalLeaderSchema.parse(req.body);
+      const validatedData = updatePoliticalLeaderSchema.parse(data);
       
       // Update the political leader
       const updatedLeader = await storage.updatePoliticalLeader(id, validatedData);
@@ -473,10 +493,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertInternationalRelationSchema.parse({
+      // Convert date string to Date object if it's a string
+      const data = {
         ...req.body,
         countryId,
-      });
+        startDate: req.body.startDate ? new Date(req.body.startDate) : null,
+      };
+      
+      const validatedData = insertInternationalRelationSchema.parse(data);
       
       const relation = await storage.createInternationalRelation(validatedData);
       res.status(201).json(relation);
@@ -499,7 +523,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updateInternationalRelationSchema = insertInternationalRelationSchema.partial();
-      const validatedData = updateInternationalRelationSchema.parse(req.body);
+      
+      // Prepare data with date conversion if needed
+      const data = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      };
+      
+      const validatedData = updateInternationalRelationSchema.parse(data);
       
       const updatedRelation = await storage.updateInternationalRelation(id, validatedData);
       
@@ -560,10 +591,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Country not found" });
       }
       
-      const validatedData = insertHistoricalLawSchema.parse({
+      // Convert date string to Date object if it's a string
+      const data = {
         ...req.body,
         countryId,
-      });
+        date: req.body.date ? new Date(req.body.date) : null,
+      };
+      
+      const validatedData = insertHistoricalLawSchema.parse(data);
       
       const law = await storage.createHistoricalLaw(validatedData);
       res.status(201).json(law);
@@ -586,7 +621,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updateHistoricalLawSchema = insertHistoricalLawSchema.partial();
-      const validatedData = updateHistoricalLawSchema.parse(req.body);
+      
+      // Prepare data with date conversion if needed
+      const data = {
+        ...req.body,
+        date: req.body.date ? new Date(req.body.date) : undefined,
+      };
+      
+      const validatedData = updateHistoricalLawSchema.parse(data);
       
       const updatedLaw = await storage.updateHistoricalLaw(id, validatedData);
       
