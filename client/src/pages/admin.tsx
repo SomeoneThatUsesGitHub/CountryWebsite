@@ -36,7 +36,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate, getEventBadgeColor, getEventDotColor } from '@/lib/helpers';
 import { toast } from '@/hooks/use-toast';
-import { Pencil, AlertTriangle, Check, Ban } from 'lucide-react';
+import { Pencil, AlertTriangle, Check, Ban, AlertCircle } from 'lucide-react';
 
 // Helper function to strip HTML tags from text
 function stripHtmlTags(html: string) {
@@ -416,6 +416,16 @@ const AdminPage: React.FC = () => {
               {/* Political System Tab */}
               <TabsContent value="political">
                 <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Political Stability</CardTitle>
+                      <CardDescription>Indicate the current political stability of this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PoliticalStabilityEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                  
                   <Card>
                     <CardHeader>
                       <CardTitle>Political Leaders</CardTitle>
@@ -895,6 +905,127 @@ const TimelineEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// Political Stability Editor Component
+const PoliticalStabilityEditor: React.FC<{ countryId: number }> = ({ countryId }) => {
+  const [isUnstable, setIsUnstable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Fetch the political system data
+  const { data: politicalSystem, isLoading: systemLoading, refetch } = useQuery<PoliticalSystem>({
+    queryKey: [`/api/countries/${countryId}/political-system`],
+    enabled: countryId !== null,
+  });
+
+  // Update local state when data is loaded
+  React.useEffect(() => {
+    if (politicalSystem) {
+      setIsUnstable(politicalSystem.hasUnstablePoliticalSituation || false);
+    }
+  }, [politicalSystem]);
+  
+  const handleToggleStability = async () => {
+    setIsLoading(true);
+    try {
+      if (politicalSystem) {
+        // Update existing political system
+        await apiRequest('PATCH', `/api/countries/${countryId}/political-system`, {
+          hasUnstablePoliticalSituation: !isUnstable
+        });
+        
+        toast({
+          title: 'Success',
+          description: `Political stability status updated successfully.`,
+        });
+      } else {
+        // Create new political system
+        await apiRequest('POST', `/api/countries/${countryId}/political-system`, {
+          countryId,
+          type: 'Unknown', // Provide a default type
+          hasUnstablePoliticalSituation: !isUnstable
+        });
+        
+        toast({
+          title: 'Success',
+          description: `Political system created with stability status.`,
+        });
+      }
+      
+      // Update local state and refetch
+      setIsUnstable(!isUnstable);
+      refetch();
+      
+    } catch (error) {
+      console.error('Failed to update political stability:', error);
+      toast({
+        title: 'Error',
+        description: 'There was an error updating the political stability status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between border p-4 rounded-lg bg-background">
+        <div className="flex items-start space-x-3">
+          {isUnstable ? (
+            <AlertTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
+          ) : (
+            <Check className="h-6 w-6 text-green-600 flex-shrink-0" />
+          )}
+          <div>
+            <h3 className="font-medium">Political Stability Status</h3>
+            <p className="text-sm text-muted-foreground">
+              {isUnstable 
+                ? "This country is currently marked as politically unstable" 
+                : "This country is currently marked as politically stable"}
+            </p>
+          </div>
+        </div>
+        
+        <Button 
+          variant={isUnstable ? "outline" : "default"}
+          className={isUnstable ? "border-red-300 hover:bg-red-50 text-red-700" : ""}
+          onClick={handleToggleStability}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="flex items-center">
+              <span className="mr-2">Processing...</span>
+            </span>
+          ) : isUnstable ? (
+            <span className="flex items-center">
+              <Check className="mr-2 h-4 w-4" /> 
+              Mark as Stable
+            </span>
+          ) : (
+            <span className="flex items-center">
+              <AlertCircle className="mr-2 h-4 w-4" /> 
+              Mark as Unstable
+            </span>
+          )}
+        </Button>
+      </div>
+      
+      <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+        <div className="flex items-start space-x-3">
+          <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-medium">Important Note</p>
+            <p>
+              Marking a country as politically unstable will display a warning message to users on the 
+              country page. This should be used for countries experiencing significant political unrest, 
+              civil conflict, or governmental instability.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

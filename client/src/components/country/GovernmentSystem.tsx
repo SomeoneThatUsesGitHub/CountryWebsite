@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PoliticalLeader, PoliticalParty } from '@shared/schema';
+import { PoliticalLeader, PoliticalParty, PoliticalSystem } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface GovernmentSystemProps {
   countryId: number;
@@ -24,8 +25,17 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
     queryKey: [`/api/countries/${countryId}/parties`],
     enabled: !!countryId,
   });
+  
+  // Fetch political system for the country
+  const { data: politicalSystem, isLoading: systemLoading } = useQuery<PoliticalSystem>({
+    queryKey: [`/api/countries/${countryId}/political-system`],
+    enabled: !!countryId,
+  });
 
-  const isLoading = leadersLoading || partiesLoading;
+  const isLoading = leadersLoading || partiesLoading || systemLoading;
+  
+  // Check if country has an unstable political situation
+  const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation || false;
 
   if (isLoading) {
     return (
@@ -56,6 +66,16 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
 
   return (
     <div className="space-y-12 pb-8">
+      {/* Unstable political situation alert */}
+      {hasUnstablePoliticalSituation && (
+        <Alert variant="destructive" className="bg-red-50 border-red-300 text-red-800 mb-6">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertDescription className="ml-2">
+            This country is currently experiencing political instability. The information below may change frequently.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Section: Political Leaders */}
       {leaders.length > 0 && (
         <div className="space-y-6">
