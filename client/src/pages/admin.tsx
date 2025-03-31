@@ -30,6 +30,7 @@ import 'react-quill/dist/quill.snow.css';
 import StatisticsEditor from '@/components/admin/StatisticsEditor';
 import LeadersEditor from '@/components/admin/LeadersEditor';
 import PartiesEditor from '@/components/admin/PartiesEditor';
+import RelationsEditor from '@/components/admin/RelationsEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -194,6 +195,7 @@ const AdminPage: React.FC = () => {
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="political">Political System</TabsTrigger>
+                <TabsTrigger value="relations">International Relations</TabsTrigger>
                 <TabsTrigger value="statistics">Statistics</TabsTrigger>
               </TabsList>
               
@@ -443,6 +445,21 @@ const AdminPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <PartiesEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              {/* International Relations Tab */}
+              <TabsContent value="relations">
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>International Relations</CardTitle>
+                      <CardDescription>Manage international relations for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RelationsEditor countryId={selectedCountry.id} />
                     </CardContent>
                   </Card>
                 </div>
