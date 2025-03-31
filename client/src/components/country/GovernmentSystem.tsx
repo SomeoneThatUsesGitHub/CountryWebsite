@@ -27,12 +27,14 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
   });
   
   // Fetch political system for the country
-  const { data: politicalSystem, isLoading: systemLoading } = useQuery<PoliticalSystem>({
+  const { data: politicalSystem, isLoading: systemLoading, isError: systemError } = useQuery<PoliticalSystem>({
     queryKey: [`/api/countries/${countryId}/political-system`],
     enabled: !!countryId,
+    retry: 1, // Only retry once to avoid infinite retries on 404
+    retryDelay: 1000,
   });
 
-  const isLoading = leadersLoading || partiesLoading || systemLoading;
+  const isLoading = leadersLoading || partiesLoading || (systemLoading && !systemError);
   
   // Check if country has an unstable political situation
   const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation || false;
