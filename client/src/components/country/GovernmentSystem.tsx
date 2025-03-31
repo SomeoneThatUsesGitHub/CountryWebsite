@@ -34,31 +34,48 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
     enabled: !!countryId,
   });
   
-  // Attempt to fetch political system for the country
+  // Attempt to fetch political system for the country with complete control over retries
   const { 
     data: politicalSystem,
     isLoading: systemLoading,
-    isError: systemError,
-    status: systemStatus
+    isSuccess: systemSuccess,
+    isPaused: systemPaused,
+    fetchStatus
   } = useQuery<PoliticalSystem>({
     queryKey: [`/api/countries/${countryId}/political-system`],
     enabled: !!countryId,
-    retry: 0, // Don't retry on 404
-    // This is a critical fix - we need to force 404 responses to be treated as "success" 
-    // with null data so the component doesn't get stuck loading
-    networkMode: 'always',
-    refetchOnWindowFocus: false
+    retry: false, // Disable retry completely
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    staleTime: Infinity, // Prevent automatic refetching due to staleness
+    gcTime: Infinity, // Keep data in cache forever to prevent re-queries
+    // This function transforms any error into a successful response with null data
+    queryFn: async ({ queryKey }) => {
+      try {
+        const response = await fetch(queryKey[0] as string);
+        if (!response.ok) {
+          // For 404s, treat as successful fetch with null data
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error('Network response was not ok');
+        }
+        return await response.json();
+      } catch (error) {
+        console.log('Error fetching political system, returning null:', error);
+        return null;
+      }
+    }
   });
 
-  // We consider loading complete when either:
-  // 1. All data loaded successfully, or
-  // 2. Leaders and parties are loaded and political system error has occurred (404)
-  const loadingComplete = 
-    (leadersSuccess && partiesSuccess && 
-     (systemStatus === 'success' || systemStatus === 'error'));
-  
-  // Only show loading indicator during active loading
-  const isLoading = !loadingComplete;
+  // Consider loading complete when all three queries have finished their network operations
+  // regardless of success/error state
+  const isLoading = 
+    leadersLoading || 
+    partiesLoading || 
+    (systemLoading && fetchStatus !== 'idle');
   
   // Check if we actually have any meaningful data to display
   const hasNoData = 
