@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Country as CountrySchema, TimelineEvent as TimelineEventSchema, PoliticalSystem, EconomicData as EconomicDataSchema } from '@shared/schema';
+import { Country as CountrySchema, TimelineEvent as TimelineEventSchema, PoliticalSystem, EconomicData as EconomicDataSchema, HistoricalLaw } from '@shared/schema';
 import { Country, TimelineEvent, EconomicData } from '@/types';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
@@ -10,6 +10,7 @@ import { PopulationChart, GDPChart, ReligionChart, getPopulationData, getGDPData
 import EthnicityChart, { getEthnicGroupsData } from '@/components/country/EthnicityChart';
 import GovernmentSystem from '@/components/country/GovernmentSystem';
 import InternationalRelations from '@/components/country/InternationalRelations';
+import RecentLaws from '@/components/country/RecentLaws';
 import Economy from '@/components/country/Economy';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -57,6 +58,12 @@ const CountryPage: React.FC = () => {
     enabled: !!country?.id, // Only run query if country ID exists
   });
   
+  // Fetch laws data for the country
+  const { data: laws = [], isLoading: lawsLoading } = useQuery<HistoricalLaw[]>({
+    queryKey: [`/api/countries/${country?.id}/laws`],
+    enabled: !!country?.id, // Only run query if country ID exists
+  });
+  
   // Convert the raw economic data to the format expected by the Economy component
   const economicData: EconomicData | undefined = rawEconomicData ? {
     id: rawEconomicData.id,
@@ -76,7 +83,7 @@ const CountryPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, [code]);
 
-  if (countryLoading || eventsLoading || statisticsLoading || politicalSystemLoading || economicDataLoading) {
+  if (countryLoading || eventsLoading || statisticsLoading || politicalSystemLoading || economicDataLoading || lawsLoading) {
     return (
       <div>
         <Skeleton className="h-80 w-full" />
@@ -146,6 +153,17 @@ const CountryPage: React.FC = () => {
             <div className="mt-8">
               <InternationalRelations countryName={country.name} countryId={country.id} />
             </div>
+          </div>
+        )}
+        
+        {/* Laws Tab */}
+        {activeTab === 'laws' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-8">Laws & Legislation</h2>
+            <RecentLaws
+              countryName={country.name}
+              laws={laws}
+            />
           </div>
         )}
         
