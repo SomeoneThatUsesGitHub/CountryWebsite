@@ -23,43 +23,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only fetch if we don't have countries already
       if (countries.length === 0) {
-        const response = await axios.get("https://restcountries.com/v3.1/all");
-        const countriesData = response.data;
-        
-        for (const countryData of countriesData) {
-          const country = {
-            name: countryData.name.common,
-            alpha2Code: countryData.cca2,
-            alpha3Code: countryData.cca3,
-            capital: countryData.capital?.[0] || null,
-            region: countryData.region || null,
-            subregion: countryData.subregion || null,
-            population: countryData.population || null,
-            area: countryData.area || null,
-            flagUrl: countryData.flags?.svg || null,
-            coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-            mapUrl: countryData.maps?.googleMaps || null,
-            independent: countryData.independent || false,
-            unMember: countryData.unMember || false,
-            currencies: countryData.currencies || null,
-            languages: countryData.languages || null,
-            borders: countryData.borders || null,
-            timezones: countryData.timezones || null,
-            startOfWeek: countryData.startOfWeek || null,
-            capitalInfo: countryData.capitalInfo || null,
-            postalCode: countryData.postalCode || null,
-            flag: countryData.flag || null, // emoji
-            countryInfo: {
+        try {
+          const response = await axios.get("https://restcountries.com/v3.1/all");
+          const countriesData = response.data;
+          
+          for (const countryData of countriesData) {
+            const country = {
+              name: countryData.name.common,
+              alpha2Code: countryData.cca2,
+              alpha3Code: countryData.cca3,
               capital: countryData.capital?.[0] || null,
               region: countryData.region || null,
               subregion: countryData.subregion || null,
               population: countryData.population || null,
-              governmentForm: null, // To be added manually or from another source
-            }
-          };
+              area: countryData.area || null,
+              flagUrl: countryData.flags?.svg || null,
+              coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+              mapUrl: countryData.maps?.googleMaps || null,
+              independent: countryData.independent || false,
+              unMember: countryData.unMember || false,
+              currencies: countryData.currencies || null,
+              languages: countryData.languages || null,
+              borders: countryData.borders || null,
+              timezones: countryData.timezones || null,
+              startOfWeek: countryData.startOfWeek || null,
+              capitalInfo: countryData.capitalInfo || null,
+              postalCode: countryData.postalCode || null,
+              flag: countryData.flag || null, // emoji
+              countryInfo: {
+                capital: countryData.capital?.[0] || null,
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                governmentForm: null, // To be added manually or from another source
+              }
+            };
+            
+            await storage.createCountry(country);
+          }
+        } catch (apiError) {
+          console.error("Error fetching from external API, using fallback countries data:", apiError);
           
-          await storage.createCountry(country);
+          // Sample countries data for fallback
+          const sampleCountries = [
+            {
+              name: "United States",
+              alpha2Code: "US",
+              alpha3Code: "USA",
+              capital: "Washington, D.C.",
+              region: "Americas",
+              subregion: "North America",
+              population: 329484123,
+              area: 9629091,
+              flagUrl: "https://flagcdn.com/w320/us.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Washington, D.C.",
+                region: "Americas",
+                subregion: "North America",
+                population: 329484123,
+                governmentForm: "Federal presidential constitutional republic"
+              }
+            },
+            {
+              name: "Germany",
+              alpha2Code: "DE",
+              alpha3Code: "DEU",
+              capital: "Berlin",
+              region: "Europe",
+              subregion: "Western Europe",
+              population: 83240525,
+              area: 357114,
+              flagUrl: "https://flagcdn.com/w320/de.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Berlin",
+                region: "Europe",
+                subregion: "Western Europe",
+                population: 83240525,
+                governmentForm: "Federal parliamentary republic"
+              }
+            },
+            {
+              name: "Japan",
+              alpha2Code: "JP",
+              alpha3Code: "JPN",
+              capital: "Tokyo",
+              region: "Asia",
+              subregion: "Eastern Asia",
+              population: 125836021,
+              area: 377930,
+              flagUrl: "https://flagcdn.com/w320/jp.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Tokyo",
+                region: "Asia",
+                subregion: "Eastern Asia",
+                population: 125836021,
+                governmentForm: "Unitary parliamentary constitutional monarchy"
+              }
+            },
+            {
+              name: "Brazil",
+              alpha2Code: "BR",
+              alpha3Code: "BRA",
+              capital: "Brasília",
+              region: "Americas",
+              subregion: "South America",
+              population: 212559409,
+              area: 8515767,
+              flagUrl: "https://flagcdn.com/w320/br.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Brasília",
+                region: "Americas",
+                subregion: "South America",
+                population: 212559409,
+                governmentForm: "Federal presidential constitutional republic"
+              }
+            },
+            {
+              name: "South Africa",
+              alpha2Code: "ZA",
+              alpha3Code: "ZAF",
+              capital: "Pretoria",
+              region: "Africa",
+              subregion: "Southern Africa",
+              population: 59308690,
+              area: 1221037,
+              flagUrl: "https://flagcdn.com/w320/za.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Pretoria",
+                region: "Africa",
+                subregion: "Southern Africa",
+                population: 59308690,
+                governmentForm: "Parliamentary constitutional republic"
+              }
+            },
+            {
+              name: "India",
+              alpha2Code: "IN",
+              alpha3Code: "IND",
+              capital: "New Delhi",
+              region: "Asia",
+              subregion: "Southern Asia",
+              population: 1380004385,
+              area: 3287590,
+              flagUrl: "https://flagcdn.com/w320/in.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "New Delhi",
+                region: "Asia",
+                subregion: "Southern Asia",
+                population: 1380004385,
+                governmentForm: "Federal parliamentary constitutional republic"
+              }
+            },
+            {
+              name: "Australia",
+              alpha2Code: "AU",
+              alpha3Code: "AUS",
+              capital: "Canberra",
+              region: "Oceania",
+              subregion: "Australia and New Zealand",
+              population: 25687041,
+              area: 7692024,
+              flagUrl: "https://flagcdn.com/w320/au.png",
+              independent: true,
+              unMember: true,
+              countryInfo: {
+                capital: "Canberra",
+                region: "Oceania",
+                subregion: "Australia and New Zealand",
+                population: 25687041,
+                governmentForm: "Federal parliamentary constitutional monarchy"
+              }
+            }
+          ];
+          
+          // Add sample countries to the database
+          for (const country of sampleCountries) {
+            await storage.createCountry({
+              ...country,
+              coatOfArmsUrl: null,
+              mapUrl: null,
+              currencies: null,
+              languages: null,
+              borders: null,
+              timezones: null,
+              startOfWeek: null,
+              capitalInfo: null,
+              postalCode: null,
+              flag: null
+            });
+          }
         }
+      } else {
+        console.log(`Countries already initialized (${countries.length} countries found). Skipping initialization.`);
       }
       
       res.json({ success: true, message: "Countries data initialized successfully" });
@@ -93,6 +260,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching country codes:", error);
       res.status(500).json({ message: "Failed to fetch country codes" });
+    }
+  });
+  
+  // Debug route to reset all data (for development only)
+  app.post("/api/debug/reset", async (req, res) => {
+    try {
+      storage.resetAllData();
+      res.json({ success: true, message: "All data has been reset successfully" });
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      res.status(500).json({ success: false, message: "Failed to reset data" });
     }
   });
 

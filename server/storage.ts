@@ -22,6 +22,9 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
+  // Reset method (for development)
+  resetAllData(): void;
+  
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -93,6 +96,31 @@ export class MemStorage implements IStorage {
   private historicalLaws: Map<number, HistoricalLaw>;
   private statistics: Map<number, Statistic>;
   private economicData: Map<number, EconomicData>;
+  
+  // Méthode pour réinitialiser toutes les données (utile pour le développement)
+  resetAllData(): void {
+    this.users.clear();
+    this.countries.clear();
+    this.timelineEvents.clear();
+    this.politicalLeaders.clear();
+    this.politicalSystems.clear();
+    this.politicalParties.clear();
+    this.internationalRelations.clear();
+    this.historicalLaws.clear();
+    this.statistics.clear();
+    this.economicData.clear();
+    this.userId = 0;
+    this.countryId = 0;
+    this.timelineEventId = 0;
+    this.politicalLeaderId = 0;
+    this.politicalSystemId = 0;
+    this.politicalPartyId = 0;
+    this.internationalRelationId = 0;
+    this.historicalLawId = 0;
+    this.statisticId = 0;
+    this.economicDataId = 0;
+    console.log("Storage reset completed. All data has been cleared.");
+  };
 
   private userId: number;
   private countryId: number;
