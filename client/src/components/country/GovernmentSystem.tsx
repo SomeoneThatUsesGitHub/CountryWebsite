@@ -562,36 +562,33 @@ const PoliticalSystemSummaryCard: React.FC<PoliticalSystemSummaryCardProps> = ({
           
           <div>
             <h4 className="font-semibold mb-3">Election System</h4>
-            <div className="bg-gray-50 rounded-md p-3">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
-                  <i className="fas fa-vote-yea"></i>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-md p-3">
+                <div className="flex items-center mb-2">
+                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
+                    <i className="fas fa-vote-yea"></i>
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Parliamentary Elections</h5>
+                    <p className="text-sm text-muted-foreground">Held every 4-5 years</p>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="font-medium">Parliamentary Elections</h5>
-                  <p className="text-sm text-muted-foreground">Held every 4-5 years</p>
-                </div>
+                <p className="text-sm">Elections determine the composition of parliament and influence who forms the government.</p>
               </div>
-              <p className="text-sm">Elections determine the composition of parliament and influence who forms the government.</p>
+              
+              <div className="bg-gray-50 rounded-md p-3">
+                <div className="flex items-center mb-2">
+                  <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mr-3">
+                    <i className="fas fa-users"></i>
+                  </div>
+                  <div>
+                    <h5 className="font-medium">Electoral System</h5>
+                    <p className="text-sm text-muted-foreground">Democratic representation</p>
+                  </div>
+                </div>
+                <p className="text-sm">Combination of proportional representation and direct voting ensures fair democratic processes.</p>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">International Stance</h4>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start">
-                <i className="fas fa-globe-americas mt-1 mr-2 text-primary"></i>
-                <span>Active participant in international organizations</span>
-              </li>
-              <li className="flex items-start">
-                <i className="fas fa-handshake mt-1 mr-2 text-primary"></i>
-                <span>Diplomatic relations with most nations</span>
-              </li>
-              <li className="flex items-start">
-                <i className="fas fa-university mt-1 mr-2 text-primary"></i>
-                <span>Commitments to international treaties</span>
-              </li>
-            </ul>
           </div>
         </div>
       </CardContent>
