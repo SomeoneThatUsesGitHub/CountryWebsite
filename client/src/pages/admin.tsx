@@ -32,6 +32,7 @@ import LeadersEditor from '@/components/admin/LeadersEditor';
 import PartiesEditor from '@/components/admin/PartiesEditor';
 import RelationsEditor from '@/components/admin/RelationsEditor';
 import FreedomIndexEditor from '@/components/admin/FreedomIndexEditor';
+import ConflictsEditor from '@/components/admin/ConflictsEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -456,6 +457,16 @@ const AdminPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <PartiesEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Ongoing Conflicts</CardTitle>
+                      <CardDescription>Manage ongoing conflicts and disputes for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ConflictsEditor countryId={selectedCountry.id} />
                     </CardContent>
                   </Card>
                 </div>

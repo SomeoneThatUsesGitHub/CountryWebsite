@@ -759,6 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasUnstablePoliticalSituation: req.body.hasUnstablePoliticalSituation !== undefined 
           ? Boolean(req.body.hasUnstablePoliticalSituation) 
           : undefined,
+        ongoingConflicts: req.body.ongoingConflicts || undefined,
       };
       
       // Update the political system
@@ -806,6 +807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasUnstablePoliticalSituation: req.body.hasUnstablePoliticalSituation !== undefined 
           ? Boolean(req.body.hasUnstablePoliticalSituation) 
           : false,
+        ongoingConflicts: req.body.ongoingConflicts || [],
       };
       
       const validatedData = insertPoliticalSystemSchema.parse(data);

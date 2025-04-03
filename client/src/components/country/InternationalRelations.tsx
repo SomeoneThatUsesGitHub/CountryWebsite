@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { InternationalRelation, PoliticalSystem } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, Shield } from 'lucide-react';
 
 interface InternationalRelationsProps {
   countryName: string;
@@ -363,6 +364,71 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
                   <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">No Freedom Index Data Available</h4>
                   <p className="text-xs sm:text-sm text-gray-500 max-w-md">
                     Freedom index information for {countryName} is currently not available in our database.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+      
+      {/* Ongoing Conflicts Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="mb-8"
+      >
+        <h3 className="text-xl font-bold mb-4">Ongoing Conflicts</h3>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-r from-red-50 to-amber-50 p-3 sm:p-4 border-b">
+              <div className="flex items-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mr-3 sm:mr-4 shadow-sm flex-shrink-0">
+                  <i className="fas fa-exclamation-triangle text-sm sm:text-xl"></i>
+                </div>
+                <div>
+                  <h4 className="text-base sm:text-lg font-semibold">Conflicts & Disputes</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">Military, territorial, and diplomatic tensions</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 sm:p-6">
+              {politicalSystem?.ongoingConflicts && Array.isArray(politicalSystem.ongoingConflicts) && politicalSystem.ongoingConflicts.length > 0 ? (
+                <div className="space-y-3">
+                  <ul className="space-y-3">
+                    {politicalSystem.ongoingConflicts.map((conflict, index) => (
+                      <li key={index} className="border-l-4 border-red-500 pl-3 py-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <h4 className="font-medium text-sm sm:text-base">{conflict.name}</h4>
+                            <p className="text-xs sm:text-sm text-gray-600">{conflict.type}</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Badge variant={conflict.status === 'Active' ? 'destructive' : 'outline'} className="text-xs">
+                              {conflict.status}
+                            </Badge>
+                            {conflict.year && (
+                              <span className="text-xs text-gray-500 ml-2">Since {conflict.year}</span>
+                            )}
+                          </div>
+                        </div>
+                        {conflict.description && (
+                          <p className="mt-1 text-xs sm:text-sm text-gray-700">{conflict.description}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-4 sm:py-8">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">No Active Conflicts</h4>
+                  <p className="text-xs sm:text-sm text-gray-500 max-w-md">
+                    {countryName} is not currently involved in any major ongoing conflicts or international disputes.
                   </p>
                 </div>
               )}
