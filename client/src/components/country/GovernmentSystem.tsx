@@ -160,6 +160,13 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
             {leaders.map((leader) => (
               <LeaderCard key={leader.id} leader={leader} />
             ))}
+            
+            {/* Political System Summary Card - Only shown on desktop when there's only 1 leader */}
+            {leaders.length === 1 && (
+              <div className="hidden lg:block">
+                <PoliticalSystemSummaryCard politicalSystem={politicalSystem} countryId={countryId} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -456,6 +463,100 @@ const PartyCard: React.FC<PartyCardProps> = ({ party, colorIndex }) => {
             </div>
           </CollapsibleContent>
         </Collapsible>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Political System Summary Card Component
+interface PoliticalSystemSummaryCardProps {
+  politicalSystem: PoliticalSystem | null | undefined;
+  countryId: number;
+}
+
+const PoliticalSystemSummaryCard: React.FC<PoliticalSystemSummaryCardProps> = ({ politicalSystem, countryId }) => {
+  // Government structure branches for the card display
+  const governmentBranches = [
+    {
+      title: 'Executive',
+      icon: 'fa-user-tie',
+      color: 'bg-blue-100 text-blue-600',
+      description: 'Head of government'
+    },
+    {
+      title: 'Legislative',
+      icon: 'fa-landmark',
+      color: 'bg-green-100 text-green-600',
+      description: 'Parliament'
+    },
+    {
+      title: 'Judicial',
+      icon: 'fa-balance-scale',
+      color: 'bg-amber-100 text-amber-600',
+      description: 'Courts'
+    }
+  ];
+
+  // Core democratic principles for display
+  const democraticPrinciples = [
+    'Rule of Law', 
+    'Freedom of Speech', 
+    'Democratic Elections', 
+    'Separation of Powers'
+  ];
+
+  const systemType = politicalSystem?.type || 'Democratic Republic';
+  const hasUnstablePoliticalSituation = politicalSystem?.hasUnstablePoliticalSituation;
+
+  return (
+    <Card className="h-full overflow-hidden">
+      <CardContent className="p-0">
+        <div className="bg-primary/10 p-4">
+          <h3 className="text-xl font-bold mb-2">Political System</h3>
+          <p className="text-muted-foreground">{systemType}</p>
+          
+          {hasUnstablePoliticalSituation && (
+            <Alert variant="destructive" className="mt-3 bg-red-50 border-red-200 py-2">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="ml-2 text-sm">
+                Currently experiencing political instability
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+        
+        <div className="p-5 space-y-4">
+          <div>
+            <h4 className="font-semibold mb-3">Government Structure</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {governmentBranches.map((branch) => (
+                <div key={branch.title} className="text-center">
+                  <div className={`w-10 h-10 mx-auto ${branch.color} rounded-full flex items-center justify-center mb-2`}>
+                    <i className={`fas ${branch.icon}`}></i>
+                  </div>
+                  <div className="text-sm font-medium">{branch.title}</div>
+                  <div className="text-xs text-muted-foreground">{branch.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div>
+            <h4 className="font-semibold mb-2">Key Principles</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {democraticPrinciples.map((principle) => (
+                <span 
+                  key={principle}
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {principle}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
