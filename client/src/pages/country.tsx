@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Country as CountrySchema, TimelineEvent as TimelineEventSchema, PoliticalSystem as PoliticalSystemSchema, EconomicData as EconomicDataSchema } from '@shared/schema';
+import { Country as CountrySchema, TimelineEvent as TimelineEventSchema, PoliticalSystem, EconomicData as EconomicDataSchema } from '@shared/schema';
 import { Country, TimelineEvent, EconomicData } from '@/types';
 import CountryBanner from '@/components/country/CountryBanner';
 import CountryTabs from '@/components/country/CountryTabs';
@@ -10,7 +10,6 @@ import { PopulationChart, GDPChart, ReligionChart, getPopulationData, getGDPData
 import EthnicityChart, { getEthnicGroupsData } from '@/components/country/EthnicityChart';
 import GovernmentSystem from '@/components/country/GovernmentSystem';
 import InternationalRelations from '@/components/country/InternationalRelations';
-import PoliticalSystem from '@/components/country/PoliticalSystem';
 import Economy from '@/components/country/Economy';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -47,14 +46,8 @@ const CountryPage: React.FC = () => {
   });
   
   // Fetch political system data for the country
-  const { data: politicalSystem, isLoading: politicalSystemLoading } = useQuery<any>({
+  const { data: politicalSystem, isLoading: politicalSystemLoading } = useQuery<PoliticalSystem | undefined>({
     queryKey: [`/api/countries/${country?.id}/political-system`],
-    enabled: !!country?.id, // Only run query if country ID exists
-  });
-  
-  // Fetch political leaders for the country
-  const { data: politicalLeaders = [], isLoading: leadersLoading } = useQuery<any[]>({
-    queryKey: [`/api/countries/${country?.id}/leaders`],
     enabled: !!country?.id, // Only run query if country ID exists
   });
   
@@ -83,7 +76,7 @@ const CountryPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, [code]);
 
-  if (countryLoading || eventsLoading || statisticsLoading || politicalSystemLoading || economicDataLoading || leadersLoading) {
+  if (countryLoading || eventsLoading || statisticsLoading || politicalSystemLoading || economicDataLoading) {
     return (
       <div>
         <Skeleton className="h-80 w-full" />
@@ -149,11 +142,10 @@ const CountryPage: React.FC = () => {
         {activeTab === 'political-system' && (
           <div>
             <h2 className="text-2xl font-bold mb-8">Political System</h2>
-            <PoliticalSystem 
-              countryName={country.name} 
-              countryId={country.id}
-              leader={politicalLeaders?.[0]} 
-            />
+            <GovernmentSystem countryId={country.id} />
+            <div className="mt-8">
+              <InternationalRelations countryName={country.name} countryId={country.id} />
+            </div>
           </div>
         )}
         
