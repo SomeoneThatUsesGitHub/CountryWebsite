@@ -42,22 +42,22 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">{country.name}</h1>
           
           <div className="flex flex-wrap gap-2 md:gap-4 mt-2">
-            <div className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 md:px-4 md:py-2 rounded-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-1.5 md:gap-2 text-sm md:text-base">
               <i className="fas fa-users"></i>
               <span>{formatNumber(country.population || 0)}</span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 md:px-4 md:py-2 rounded-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-1.5 md:gap-2 text-sm md:text-base">
               <i className="fas fa-map-marker-alt"></i>
               <span>{country.capital || 'No capital'}</span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 md:px-4 md:py-2 rounded-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-1.5 md:gap-2 text-sm md:text-base">
               <i className="fas fa-flag"></i>
               <span>{country.countryInfo?.governmentForm || 'Republic'}</span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 md:px-4 md:py-2 rounded-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-1.5 md:gap-2 text-sm md:text-base">
               <i className="fas fa-map"></i>
               <span>{country.area ? `${formatNumber(country.area)} km²` : 'No size data'}</span>
             </div>
