@@ -21,68 +21,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const countries = await storage.getAllCountries();
       
-      // Only fetch if we don't have countries already
-      if (countries.length === 0) {
-        try {
-          const response = await axios.get("https://restcountries.com/v3.1/all", { 
-            timeout: 10000,
-            headers: {
-              'Accept': 'application/json',
-              'User-Agent': 'WorldInfoApp/1.0'
-            }
-          });
+      // Only fetch if we have fewer than 200 countries (assume data is incomplete)
+      if (countries.length < 200) {
+        console.log(`Found ${countries.length} countries. Attempting to fetch more from API.`);
+        
+        // We will try to fetch from two sources to maximize our chances
+        const apiSources = [
+          "https://restcountries.com/v3.1/all",
+          "https://restcountries.com/v2/all" // Fallback to v2 API if v3 fails
+        ];
+        
+        let fetchSuccessful = false;
+        let countriesData = [];
+        
+        // Try each API source
+        for (const apiUrl of apiSources) {
+          if (fetchSuccessful) break;
           
-          if (response.status === 200 && Array.isArray(response.data)) {
-            const countriesData = response.data;
+          try {
+            console.log(`Trying to fetch countries from ${apiUrl}`);
+            const response = await axios.get(apiUrl, { 
+              timeout: 15000, // Increased timeout
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; CountryExplorer/1.0)'
+              }
+            });
             
-            for (const countryData of countriesData) {
-              try {
-                const country = {
-                  name: countryData.name.common,
-                  alpha2Code: countryData.cca2,
-                  alpha3Code: countryData.cca3,
-                  capital: countryData.capital?.[0] || null,
+            if (response.status === 200 && Array.isArray(response.data)) {
+              countriesData = response.data;
+              fetchSuccessful = true;
+              console.log(`Successfully fetched ${countriesData.length} countries from ${apiUrl}`);
+            }
+          } catch (sourceError: any) {
+            console.error(`Error fetching from ${apiUrl}:`, sourceError.message || 'Unknown error');
+          }
+        }
+        
+        // If we successfully fetched countries data
+        if (fetchSuccessful && countriesData.length > 0) {
+          // Create a map of existing country codes for quick lookup
+          const existingCountryCodes = new Set(countries.map(c => c.alpha3Code));
+          let countAdded = 0;
+          
+          for (const countryData of countriesData) {
+            try {
+              // Skip if country already exists in the database
+              const alpha3 = countryData.alpha3Code || countryData.cca3;
+              if (existingCountryCodes.has(alpha3)) {
+                continue;
+              }
+              
+              // Handle differences between v2 and v3 API responses
+              const isV3Format = countryData.cca3 !== undefined;
+              
+              const country = {
+                name: isV3Format ? countryData.name.common : countryData.name,
+                alpha2Code: isV3Format ? countryData.cca2 : countryData.alpha2Code,
+                alpha3Code: isV3Format ? countryData.cca3 : countryData.alpha3Code,
+                capital: isV3Format 
+                  ? (countryData.capital ? countryData.capital[0] : null) 
+                  : (countryData.capital || null),
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                area: countryData.area || null,
+                flagUrl: isV3Format 
+                  ? (countryData.flags ? countryData.flags.svg : null)
+                  : (countryData.flags ? countryData.flags.svg : null),
+                coatOfArmsUrl: isV3Format
+                  ? (countryData.coatOfArms ? countryData.coatOfArms.svg : null)
+                  : null,
+                mapUrl: isV3Format 
+                  ? (countryData.maps ? countryData.maps.googleMaps : null)
+                  : null,
+                independent: countryData.independent || false,
+                unMember: countryData.unMember || false,
+                currencies: countryData.currencies || null,
+                languages: countryData.languages || null,
+                borders: countryData.borders || null,
+                timezones: countryData.timezones || null,
+                startOfWeek: countryData.startOfWeek || null,
+                capitalInfo: countryData.capitalInfo || null,
+                postalCode: countryData.postalCode || null,
+                flag: countryData.flag || null,
+                countryInfo: {
+                  capital: isV3Format 
+                    ? (countryData.capital ? countryData.capital[0] : null)
+                    : (countryData.capital || null),
                   region: countryData.region || null,
                   subregion: countryData.subregion || null,
                   population: countryData.population || null,
-                  area: countryData.area || null,
-                  flagUrl: countryData.flags?.svg || null,
-                  coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-                  mapUrl: countryData.maps?.googleMaps || null,
-                  independent: countryData.independent || false,
-                  unMember: countryData.unMember || false,
-                  currencies: countryData.currencies || null,
-                  languages: countryData.languages || null,
-                  borders: countryData.borders || null,
-                  timezones: countryData.timezones || null,
-                  startOfWeek: countryData.startOfWeek || null,
-                  capitalInfo: countryData.capitalInfo || null,
-                  postalCode: countryData.postalCode || null,
-                  flag: countryData.flag || null, // emoji
-                  countryInfo: {
-                    capital: countryData.capital?.[0] || null,
-                    region: countryData.region || null,
-                    subregion: countryData.subregion || null,
-                    population: countryData.population || null,
-                    governmentForm: null, // To be added manually or from another source
-                  }
-                };
-                
-                await storage.createCountry(country);
-              } catch (countryError) {
-                console.error(`Error processing country ${countryData?.name?.common || 'unknown'}:`, countryError);
-                // Continue processing other countries
-              }
+                  governmentForm: null, // To be added manually or from another source
+                }
+              };
+              
+              await storage.createCountry(country);
+              countAdded++;
+              
+            } catch (countryError: any) {
+              console.error(`Error processing country ${countryData?.name?.common || countryData?.name || 'unknown'}:`, countryError.message || 'Unknown error');
+              // Continue processing other countries
             }
-          } else {
-            // Fallback to creating sample countries if API response is not valid
+          }
+          
+          console.log(`Added ${countAdded} new countries to the database`);
+          
+          // If we didn't add any new countries, check if we need to create sample countries
+          if (countAdded === 0 && countries.length < 6) {
+            // Only create sample countries if we have fewer than 6 countries total
             await createSampleCountries();
           }
-        } catch (apiError) {
-          console.error("Error fetching from RestCountries API:", apiError);
-          // Create sample countries as a fallback when API fails
-          await createSampleCountries();
+        } else {
+          console.log("Could not fetch countries from any API source");
+          
+          // Only create sample countries if we have fewer than 6 countries
+          if (countries.length < 6) {
+            await createSampleCountries();
+          }
         }
+      } else {
+        console.log(`Database already has ${countries.length} countries. Skipping fetch.`);
       }
       
       res.json({ success: true, message: "Countries data initialized successfully" });

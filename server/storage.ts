@@ -19,7 +19,19 @@ import {
   InsertStatistic,
   EconomicData,
   InsertEconomicData,
+  users,
+  countries,
+  timelineEvents,
+  politicalLeaders,
+  politicalSystems,
+  politicalParties,
+  internationalRelations,
+  historicalLaws,
+  statistics,
+  economicData
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, or, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -422,4 +434,280 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation using Drizzle ORM
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  // Country methods
+  async getAllCountries(): Promise<Country[]> {
+    const allCountries = await db.select().from(countries);
+    return allCountries;
+  }
+
+  async getCountriesByRegion(region: string): Promise<Country[]> {
+    const regionCountries = await db.select().from(countries).where(eq(countries.region, region));
+    return regionCountries;
+  }
+
+  async getCountryByCode(code: string): Promise<Country | undefined> {
+    console.log('Storage: Searching for country with code', code);
+    try {
+      // Try to match on alpha2Code or alpha3Code
+      const [country] = await db.select().from(countries).where(
+        or(
+          eq(countries.alpha2Code, code),
+          eq(countries.alpha3Code, code)
+        )
+      );
+      
+      // Get count differently
+      const result = await db.select({ count: sql`count(*)` }).from(countries);
+      const countValue = Number(result[0].count);
+      console.log('Storage: Number of countries in storage:', countValue);
+      
+      if (country) {
+        console.log(`Storage: Found country ${country.name} with code ${code}`);
+      } else {
+        console.log(`Storage: No country found with code ${code}`);
+      }
+      
+      return country;
+    } catch (error) {
+      console.error('Error in getCountryByCode:', error);
+      return undefined;
+    }
+  }
+
+  async getCountryById(id: number): Promise<Country | undefined> {
+    const [country] = await db.select().from(countries).where(eq(countries.id, id));
+    return country;
+  }
+
+  async createCountry(country: InsertCountry): Promise<Country> {
+    const [newCountry] = await db.insert(countries).values(country).returning();
+    return newCountry;
+  }
+
+  async updateCountry(id: number, country: Partial<InsertCountry>): Promise<Country | undefined> {
+    const [updatedCountry] = await db.update(countries)
+      .set(country)
+      .where(eq(countries.id, id))
+      .returning();
+    return updatedCountry;
+  }
+
+  // Timeline events methods
+  async getTimelineEventsByCountryId(countryId: number): Promise<TimelineEvent[]> {
+    const events = await db.select()
+      .from(timelineEvents)
+      .where(eq(timelineEvents.countryId, countryId))
+      .orderBy(desc(timelineEvents.date));
+    return events;
+  }
+
+  async createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent> {
+    const [newEvent] = await db.insert(timelineEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async updateTimelineEvent(id: number, event: Partial<InsertTimelineEvent>): Promise<TimelineEvent | undefined> {
+    const [updatedEvent] = await db.update(timelineEvents)
+      .set(event)
+      .where(eq(timelineEvents.id, id))
+      .returning();
+    return updatedEvent;
+  }
+
+  async deleteTimelineEvent(id: number): Promise<boolean> {
+    const result = await db.delete(timelineEvents).where(eq(timelineEvents.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Political leaders methods
+  async getPoliticalLeadersByCountryId(countryId: number): Promise<PoliticalLeader[]> {
+    const leaders = await db.select()
+      .from(politicalLeaders)
+      .where(eq(politicalLeaders.countryId, countryId));
+    return leaders;
+  }
+
+  async createPoliticalLeader(leader: InsertPoliticalLeader): Promise<PoliticalLeader> {
+    const [newLeader] = await db.insert(politicalLeaders).values(leader).returning();
+    return newLeader;
+  }
+
+  async updatePoliticalLeader(id: number, leader: Partial<InsertPoliticalLeader>): Promise<PoliticalLeader | undefined> {
+    const [updatedLeader] = await db.update(politicalLeaders)
+      .set(leader)
+      .where(eq(politicalLeaders.id, id))
+      .returning();
+    return updatedLeader;
+  }
+
+  async deletePoliticalLeader(id: number): Promise<boolean> {
+    const result = await db.delete(politicalLeaders).where(eq(politicalLeaders.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Political system methods
+  async getPoliticalSystemByCountryId(countryId: number): Promise<PoliticalSystem | undefined> {
+    const [system] = await db.select()
+      .from(politicalSystems)
+      .where(eq(politicalSystems.countryId, countryId));
+    return system;
+  }
+
+  async createPoliticalSystem(system: InsertPoliticalSystem): Promise<PoliticalSystem> {
+    const [newSystem] = await db.insert(politicalSystems).values(system).returning();
+    return newSystem;
+  }
+
+  async updatePoliticalSystem(id: number, system: Partial<InsertPoliticalSystem>): Promise<PoliticalSystem | undefined> {
+    const [updatedSystem] = await db.update(politicalSystems)
+      .set(system)
+      .where(eq(politicalSystems.id, id))
+      .returning();
+    return updatedSystem;
+  }
+
+  // Political parties methods
+  async getPoliticalPartiesByCountryId(countryId: number): Promise<PoliticalParty[]> {
+    const parties = await db.select()
+      .from(politicalParties)
+      .where(eq(politicalParties.countryId, countryId));
+    return parties;
+  }
+
+  async createPoliticalParty(party: InsertPoliticalParty): Promise<PoliticalParty> {
+    const [newParty] = await db.insert(politicalParties).values(party).returning();
+    return newParty;
+  }
+
+  async updatePoliticalParty(id: number, party: Partial<InsertPoliticalParty>): Promise<PoliticalParty | undefined> {
+    const [updatedParty] = await db.update(politicalParties)
+      .set(party)
+      .where(eq(politicalParties.id, id))
+      .returning();
+    return updatedParty;
+  }
+
+  async deletePoliticalParty(id: number): Promise<boolean> {
+    const result = await db.delete(politicalParties).where(eq(politicalParties.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // International relations methods
+  async getInternationalRelationsByCountryId(countryId: number): Promise<InternationalRelation[]> {
+    const relations = await db.select()
+      .from(internationalRelations)
+      .where(eq(internationalRelations.countryId, countryId));
+    return relations;
+  }
+
+  async createInternationalRelation(relation: InsertInternationalRelation): Promise<InternationalRelation> {
+    const [newRelation] = await db.insert(internationalRelations).values(relation).returning();
+    return newRelation;
+  }
+
+  async updateInternationalRelation(id: number, relation: Partial<InsertInternationalRelation>): Promise<InternationalRelation | undefined> {
+    const [updatedRelation] = await db.update(internationalRelations)
+      .set(relation)
+      .where(eq(internationalRelations.id, id))
+      .returning();
+    return updatedRelation;
+  }
+
+  async deleteInternationalRelation(id: number): Promise<boolean> {
+    const result = await db.delete(internationalRelations).where(eq(internationalRelations.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Historical laws methods
+  async getHistoricalLawsByCountryId(countryId: number): Promise<HistoricalLaw[]> {
+    const laws = await db.select()
+      .from(historicalLaws)
+      .where(eq(historicalLaws.countryId, countryId));
+    return laws;
+  }
+
+  async createHistoricalLaw(law: InsertHistoricalLaw): Promise<HistoricalLaw> {
+    const [newLaw] = await db.insert(historicalLaws).values(law).returning();
+    return newLaw;
+  }
+
+  async updateHistoricalLaw(id: number, law: Partial<InsertHistoricalLaw>): Promise<HistoricalLaw | undefined> {
+    const [updatedLaw] = await db.update(historicalLaws)
+      .set(law)
+      .where(eq(historicalLaws.id, id))
+      .returning();
+    return updatedLaw;
+  }
+
+  async deleteHistoricalLaw(id: number): Promise<boolean> {
+    const result = await db.delete(historicalLaws).where(eq(historicalLaws.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Statistics methods
+  async getStatisticsByCountryId(countryId: number): Promise<Statistic[]> {
+    const stats = await db.select()
+      .from(statistics)
+      .where(eq(statistics.countryId, countryId));
+    return stats;
+  }
+
+  async createStatistic(statistic: InsertStatistic): Promise<Statistic> {
+    const [newStat] = await db.insert(statistics).values(statistic).returning();
+    return newStat;
+  }
+
+  async updateStatistic(id: number, statistic: Partial<InsertStatistic>): Promise<Statistic | undefined> {
+    const [updatedStat] = await db.update(statistics)
+      .set(statistic)
+      .where(eq(statistics.id, id))
+      .returning();
+    return updatedStat;
+  }
+
+  async deleteStatistic(id: number): Promise<boolean> {
+    const result = await db.delete(statistics).where(eq(statistics.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Economic data methods
+  async getEconomicDataByCountryId(countryId: number): Promise<EconomicData | undefined> {
+    const [data] = await db.select()
+      .from(economicData)
+      .where(eq(economicData.countryId, countryId));
+    return data;
+  }
+
+  async createEconomicData(data: InsertEconomicData): Promise<EconomicData> {
+    const [newData] = await db.insert(economicData).values(data).returning();
+    return newData;
+  }
+
+  async updateEconomicData(id: number, data: Partial<InsertEconomicData>): Promise<EconomicData | undefined> {
+    const [updatedData] = await db.update(economicData)
+      .set(data)
+      .where(eq(economicData.id, id))
+      .returning();
+    return updatedData;
+  }
+}
+
+export const storage = new DatabaseStorage();
