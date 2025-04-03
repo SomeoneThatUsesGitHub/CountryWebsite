@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { InternationalRelation } from '@shared/schema';
+import { InternationalRelation, PoliticalSystem } from '@shared/schema';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { AlertTriangle } from 'lucide-react';
 
 interface InternationalRelationsProps {
   countryName: string;
@@ -100,6 +103,29 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
   const { data: relations, isLoading } = useQuery<InternationalRelation[]>({
     queryKey: [`/api/countries/${countryId}/relations`],
     queryFn: customQueryFn,
+    enabled: Boolean(countryId),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  
+  // Custom query function for political system data
+  const politicalSystemQueryFn = async () => {
+    try {
+      const response = await fetch(`/api/countries/${countryId}/political-system`);
+      if (response.status === 404) {
+        return null;
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching political system data:', error);
+      return null;
+    }
+  };
+  
+  // Fetch political system data for freedom index
+  const { data: politicalSystem } = useQuery<PoliticalSystem | null>({
+    queryKey: [`/api/countries/${countryId}/political-system`],
+    queryFn: politicalSystemQueryFn,
     enabled: Boolean(countryId),
     staleTime: Infinity,
     gcTime: Infinity,
@@ -254,6 +280,95 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
           </div>
         )}
       </div>
+
+      {/* Freedom Indicator Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8"
+      >
+        <h3 className="text-xl font-bold mb-4">Freedom Indicator</h3>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4 shadow-sm">
+                  <i className="fas fa-flag text-xl"></i>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold">{countryName}'s Freedom Rating</h4>
+                  <p className="text-sm text-gray-600">Based on political and civil liberties</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {politicalSystem?.freedomIndex !== undefined && politicalSystem.freedomIndex !== null ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">Freedom Index Score</span>
+                    <span className="text-lg font-bold">{politicalSystem.freedomIndex}/100</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Progress 
+                      value={politicalSystem.freedomIndex} 
+                      className="h-3"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Not Free</span>
+                      <span>Partially Free</span>
+                      <span>Free</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-md p-4 mt-4">
+                    <div className="flex items-start">
+                      <div className="mt-1 mr-3">
+                        {politicalSystem.freedomIndex >= 70 ? (
+                          <i className="fas fa-check-circle text-green-500 text-lg"></i>
+                        ) : politicalSystem.freedomIndex >= 40 ? (
+                          <i className="fas fa-exclamation-circle text-amber-500 text-lg"></i>
+                        ) : (
+                          <i className="fas fa-times-circle text-red-500 text-lg"></i>
+                        )}
+                      </div>
+                      <div>
+                        <h5 className="font-medium mb-1">
+                          {politicalSystem.freedomIndex >= 70 
+                            ? 'Free Society' 
+                            : politicalSystem.freedomIndex >= 40 
+                              ? 'Partially Free Society' 
+                              : 'Not Free Society'}
+                        </h5>
+                        <p className="text-sm text-gray-600">
+                          {politicalSystem.freedomIndex >= 70 
+                            ? 'Strong protection of civil liberties and political rights.'
+                            : politicalSystem.freedomIndex >= 40 
+                              ? 'Moderate protection of civil liberties with some political restrictions.'
+                              : 'Limited civil liberties and significant political restrictions.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-medium mb-2">No Freedom Index Data Available</h4>
+                  <p className="text-gray-500 max-w-md">
+                    Freedom index information for {countryName} is currently not available in our database.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };
