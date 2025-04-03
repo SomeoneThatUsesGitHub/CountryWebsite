@@ -29,22 +29,6 @@ function App() {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        // Vérifie et corrige les doublons en premier
-        console.log("Checking for duplicate countries...");
-        try {
-          const dedupResponse = await apiRequest('POST', '/api/debug/deduplicate-countries', undefined);
-          console.log("Duplicate check result:", dedupResponse);
-          
-          // Si une réinitialisation a eu lieu à cause de doublons, attendre une seconde
-          if (dedupResponse.wasReset) {
-            console.log("Data was reset due to duplicates, waiting before continuing...");
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        } catch (dedupError) {
-          console.error("Error checking for duplicates:", dedupError);
-        }
-        
-        // Continue avec l'initialisation normale
         console.log("Initializing country data...");
         const result = await apiRequest('GET', '/api/initialize', undefined);
         console.log("Data initialization completed:", result);

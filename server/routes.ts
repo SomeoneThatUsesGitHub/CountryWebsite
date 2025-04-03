@@ -19,350 +19,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize data fetching for countries
   app.get("/api/initialize", async (req, res) => {
     try {
-      // Vérifie si nous avons besoin d'ajouter des pays
       const countries = await storage.getAllCountries();
       
-      // Si nous n'avons pas de pays OU si nous détectons des doublons, nous nettoyons d'abord
-      const countCodes = new Map();
-      let hasDuplicates = false;
-      
-      // Vérifie les doublons
-      for (const country of countries) {
-        const code = country.alpha3Code;
-        if (code && countCodes.has(code)) {
-          hasDuplicates = true;
-          break;
-        }
-        countCodes.set(code, true);
-      }
-      
-      // S'il y a des doublons, réinitialiser la base de données
-      if (hasDuplicates) {
-        console.log("Duplicate countries detected. Resetting countries data...");
-        storage.resetAllData();
-      }
-      
-      // Définition des pays de secours
-      const sampleCountries = [
-        {
-          name: "United States",
-          alpha2Code: "US",
-          alpha3Code: "USA",
-          capital: "Washington, D.C.",
-          region: "Americas",
-          subregion: "North America",
-          population: 329484123,
-          area: 9629091,
-          flagUrl: "https://flagcdn.com/w320/us.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Washington, D.C.",
-            region: "Americas",
-            subregion: "North America",
-            population: 329484123,
-            governmentForm: "Federal presidential constitutional republic"
-          }
-        },
-        {
-          name: "Germany",
-          alpha2Code: "DE",
-          alpha3Code: "DEU",
-          capital: "Berlin",
-          region: "Europe",
-          subregion: "Western Europe",
-          population: 83240525,
-          area: 357114,
-          flagUrl: "https://flagcdn.com/w320/de.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Berlin",
-            region: "Europe",
-            subregion: "Western Europe",
-            population: 83240525,
-            governmentForm: "Federal parliamentary republic"
-          }
-        },
-        {
-          name: "Japan",
-          alpha2Code: "JP",
-          alpha3Code: "JPN",
-          capital: "Tokyo",
-          region: "Asia",
-          subregion: "Eastern Asia",
-          population: 125836021,
-          area: 377930,
-          flagUrl: "https://flagcdn.com/w320/jp.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Tokyo",
-            region: "Asia",
-            subregion: "Eastern Asia",
-            population: 125836021,
-            governmentForm: "Unitary parliamentary constitutional monarchy"
-          }
-        },
-        {
-          name: "Brazil",
-          alpha2Code: "BR",
-          alpha3Code: "BRA",
-          capital: "Brasília",
-          region: "Americas",
-          subregion: "South America",
-          population: 212559409,
-          area: 8515767,
-          flagUrl: "https://flagcdn.com/w320/br.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Brasília",
-            region: "Americas",
-            subregion: "South America",
-            population: 212559409,
-            governmentForm: "Federal presidential constitutional republic"
-          }
-        },
-        {
-          name: "South Africa",
-          alpha2Code: "ZA",
-          alpha3Code: "ZAF",
-          capital: "Pretoria",
-          region: "Africa",
-          subregion: "Southern Africa",
-          population: 59308690,
-          area: 1221037,
-          flagUrl: "https://flagcdn.com/w320/za.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Pretoria",
-            region: "Africa",
-            subregion: "Southern Africa",
-            population: 59308690,
-            governmentForm: "Parliamentary constitutional republic"
-          }
-        },
-        {
-          name: "India",
-          alpha2Code: "IN",
-          alpha3Code: "IND",
-          capital: "New Delhi",
-          region: "Asia",
-          subregion: "Southern Asia",
-          population: 1380004385,
-          area: 3287590,
-          flagUrl: "https://flagcdn.com/w320/in.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "New Delhi",
-            region: "Asia",
-            subregion: "Southern Asia",
-            population: 1380004385,
-            governmentForm: "Federal parliamentary constitutional republic"
-          }
-        },
-        {
-          name: "Australia",
-          alpha2Code: "AU",
-          alpha3Code: "AUS",
-          capital: "Canberra",
-          region: "Oceania",
-          subregion: "Australia and New Zealand",
-          population: 25687041,
-          area: 7692024,
-          flagUrl: "https://flagcdn.com/w320/au.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Canberra",
-            region: "Oceania",
-            subregion: "Australia and New Zealand",
-            population: 25687041,
-            governmentForm: "Federal parliamentary constitutional monarchy"
-          }
-        },
-        {
-          name: "France",
-          alpha2Code: "FR",
-          alpha3Code: "FRA",
-          capital: "Paris",
-          region: "Europe",
-          subregion: "Western Europe",
-          population: 67391582,
-          area: 551695,
-          flagUrl: "https://flagcdn.com/w320/fr.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Paris",
-            region: "Europe",
-            subregion: "Western Europe",
-            population: 67391582,
-            governmentForm: "Unitary semi-presidential republic"
-          }
-        },
-        {
-          name: "China",
-          alpha2Code: "CN",
-          alpha3Code: "CHN",
-          capital: "Beijing",
-          region: "Asia",
-          subregion: "Eastern Asia",
-          population: 1402112000,
-          area: 9640011,
-          flagUrl: "https://flagcdn.com/w320/cn.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Beijing",
-            region: "Asia",
-            subregion: "Eastern Asia",
-            population: 1402112000,
-            governmentForm: "Unitary one-party socialist republic"
-          }
-        },
-        {
-          name: "Egypt",
-          alpha2Code: "EG",
-          alpha3Code: "EGY",
-          capital: "Cairo",
-          region: "Africa",
-          subregion: "Northern Africa",
-          population: 102334404,
-          area: 1002450,
-          flagUrl: "https://flagcdn.com/w320/eg.png",
-          independent: true,
-          unMember: true,
-          countryInfo: {
-            capital: "Cairo",
-            region: "Africa",
-            subregion: "Northern Africa",
-            population: 102334404,
-            governmentForm: "Unitary semi-presidential republic"
-          }
-        }
-      ];
-      
-      // Une fois nettoyée, recompter les pays
-      const updatedCountries = await storage.getAllCountries();
-      
-      // N'ajoute des pays que si nous n'en avons pas
-      if (updatedCountries.length === 0) {
-        let countriesAdded = false;
+      // Only fetch if we don't have countries already
+      if (countries.length === 0) {
+        const response = await axios.get("https://restcountries.com/v3.1/all");
+        const countriesData = response.data;
         
-        try {
-          console.log("Fetching countries from external API...");
-          const response = await axios.get("https://restcountries.com/v3.1/all", { 
-            timeout: 5000 // Timeout à 5 secondes pour éviter d'attendre trop longtemps
-          });
-          
-          const countriesData = response.data;
-          console.log(`Fetched ${countriesData.length} countries from API.`);
-          
-          for (const countryData of countriesData) {
-            const country = {
-              name: countryData.name.common,
-              alpha2Code: countryData.cca2,
-              alpha3Code: countryData.cca3,
+        for (const countryData of countriesData) {
+          const country = {
+            name: countryData.name.common,
+            alpha2Code: countryData.cca2,
+            alpha3Code: countryData.cca3,
+            capital: countryData.capital?.[0] || null,
+            region: countryData.region || null,
+            subregion: countryData.subregion || null,
+            population: countryData.population || null,
+            area: countryData.area || null,
+            flagUrl: countryData.flags?.svg || null,
+            coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+            mapUrl: countryData.maps?.googleMaps || null,
+            independent: countryData.independent || false,
+            unMember: countryData.unMember || false,
+            currencies: countryData.currencies || null,
+            languages: countryData.languages || null,
+            borders: countryData.borders || null,
+            timezones: countryData.timezones || null,
+            startOfWeek: countryData.startOfWeek || null,
+            capitalInfo: countryData.capitalInfo || null,
+            postalCode: countryData.postalCode || null,
+            flag: countryData.flag || null, // emoji
+            countryInfo: {
               capital: countryData.capital?.[0] || null,
               region: countryData.region || null,
               subregion: countryData.subregion || null,
               population: countryData.population || null,
-              area: countryData.area || null,
-              flagUrl: countryData.flags?.svg || null,
-              coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-              mapUrl: countryData.maps?.googleMaps || null,
-              independent: countryData.independent || false,
-              unMember: countryData.unMember || false,
-              currencies: countryData.currencies || null,
-              languages: countryData.languages || null,
-              borders: countryData.borders || null,
-              timezones: countryData.timezones || null,
-              startOfWeek: countryData.startOfWeek || null,
-              capitalInfo: countryData.capitalInfo || null,
-              postalCode: countryData.postalCode || null,
-              flag: countryData.flag || null, // emoji
-              countryInfo: {
-                capital: countryData.capital?.[0] || null,
-                region: countryData.region || null,
-                subregion: countryData.subregion || null,
-                population: countryData.population || null,
-                governmentForm: null, // To be added manually or from another source
-              }
-            };
-            
-            // Vérifie si le pays existe déjà avant de l'ajouter
-            const existingCountry = await storage.getCountryByCode(country.alpha3Code);
-            if (!existingCountry) {
-              await storage.createCountry(country);
-              countriesAdded = true;
+              governmentForm: null, // To be added manually or from another source
             }
-          }
-        } catch (apiError) {
-          console.error("Error fetching from external API, using fallback countries data:", apiError);
-        }
-        
-        // Si l'API externe a échoué ou n'a pas ajouté de pays, utiliser les données de secours
-        if (!countriesAdded) {
-          console.log("Using fallback countries data");
+          };
           
-          // Add sample countries to the database (checking for duplicates)
-          for (const country of sampleCountries) {
-            const existingCountry = await storage.getCountryByCode(country.alpha3Code);
-            if (!existingCountry) {
-              await storage.createCountry({
-                ...country,
-                coatOfArmsUrl: null,
-                mapUrl: null,
-                currencies: null,
-                languages: null,
-                borders: null,
-                timezones: null,
-                startOfWeek: null,
-                capitalInfo: null,
-                postalCode: null,
-                flag: null
-              });
-            }
-          }
-        }
-      } else {
-        console.log(`Countries already initialized (${updatedCountries.length} countries found). Skipping initialization.`);
-      }
-      
-      // Vérifie à nouveau - si nous n'avons toujours pas de pays, forcer l'ajout des échantillons
-      const finalCheck = await storage.getAllCountries();
-      if (finalCheck.length === 0) {
-        console.log("EMERGENCY: No countries found after initialization attempts. Forcing fallback data.");
-        
-        for (const country of sampleCountries) {
-          await storage.createCountry({
-            ...country,
-            coatOfArmsUrl: null,
-            mapUrl: null,
-            currencies: null,
-            languages: null,
-            borders: null,
-            timezones: null,
-            startOfWeek: null,
-            capitalInfo: null,
-            postalCode: null,
-            flag: null
-          });
+          await storage.createCountry(country);
         }
       }
       
-      // Mise à jour finale du nombre de pays (pour informer l'utilisateur)
-      const finalCountriesCount = await storage.getAllCountries();
-      res.json({ 
-        success: true, 
-        message: "Countries data initialized successfully", 
-        count: finalCountriesCount.length,
-        hasDuplicates: hasDuplicates
-      });
+      res.json({ success: true, message: "Countries data initialized successfully" });
     } catch (error) {
       console.error("Error initializing countries data:", error);
       res.status(500).json({ success: false, message: "Failed to initialize countries data" });
@@ -393,68 +93,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching country codes:", error);
       res.status(500).json({ message: "Failed to fetch country codes" });
-    }
-  });
-  
-  // Debug route to reset all data (for development only)
-  app.post("/api/debug/reset", async (req, res) => {
-    try {
-      storage.resetAllData();
-      res.json({ success: true, message: "All data has been reset successfully" });
-    } catch (error) {
-      console.error("Error resetting data:", error);
-      res.status(500).json({ success: false, message: "Failed to reset data" });
-    }
-  });
-  
-  // Debug route to detect and remove duplicate countries
-  app.post("/api/debug/deduplicate-countries", async (req, res) => {
-    try {
-      const countries = await storage.getAllCountries();
-      console.log(`Checking for duplicates among ${countries.length} countries...`);
-      
-      // Collect countries by alpha3Code
-      const countriesByCode = new Map();
-      const duplicates = [];
-      
-      // Find duplicates
-      for (const country of countries) {
-        const code = country.alpha3Code;
-        if (!code) continue;
-        
-        if (countriesByCode.has(code)) {
-          duplicates.push({
-            code,
-            duplicate: country,
-            original: countriesByCode.get(code)
-          });
-        } else {
-          countriesByCode.set(code, country);
-        }
-      }
-      
-      console.log(`Found ${duplicates.length} duplicate countries`);
-      
-      // If there are duplicates, reset all data
-      if (duplicates.length > 0) {
-        storage.resetAllData();
-        console.log("Reset all data due to country duplicates");
-        
-        // Trigger reinitialization by making a request to the initialize endpoint
-        await axios.get(`http://localhost:${process.env.PORT || 5000}/api/initialize`);
-      }
-      
-      res.json({ 
-        success: true, 
-        message: `Check complete. Found ${duplicates.length} duplicates.`,
-        totalCountries: countries.length,
-        uniqueCountries: countriesByCode.size,
-        duplicatesFound: duplicates.length,
-        wasReset: duplicates.length > 0
-      });
-    } catch (error) {
-      console.error("Error checking for duplicate countries:", error);
-      res.status(500).json({ success: false, message: "Failed to check for duplicate countries" });
     }
   });
 
