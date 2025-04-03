@@ -157,13 +157,14 @@ const GovernmentSystem: React.FC<GovernmentSystemProps> = ({ countryId }) => {
           <Separator className="my-4" />
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Leader cards */}
             {leaders.map((leader) => (
               <LeaderCard key={leader.id} leader={leader} />
             ))}
             
             {/* Political System Summary Card - Only shown on desktop when there's only 1 leader */}
             {leaders.length === 1 && (
-              <div className="hidden lg:block">
+              <div className="hidden lg:col-span-2 lg:block">
                 <PoliticalSystemSummaryCard politicalSystem={politicalSystem} countryId={countryId} />
               </div>
             )}
@@ -525,14 +526,14 @@ const PoliticalSystemSummaryCard: React.FC<PoliticalSystemSummaryCardProps> = ({
           )}
         </div>
         
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-6">
           <div>
             <h4 className="font-semibold mb-3">Government Structure</h4>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {governmentBranches.map((branch) => (
                 <div key={branch.title} className="text-center">
-                  <div className={`w-10 h-10 mx-auto ${branch.color} rounded-full flex items-center justify-center mb-2`}>
-                    <i className={`fas ${branch.icon}`}></i>
+                  <div className={`w-12 h-12 mx-auto ${branch.color} rounded-full flex items-center justify-center mb-2`}>
+                    <i className={`fas ${branch.icon} text-lg`}></i>
                   </div>
                   <div className="text-sm font-medium">{branch.title}</div>
                   <div className="text-xs text-muted-foreground">{branch.description}</div>
@@ -544,17 +545,53 @@ const PoliticalSystemSummaryCard: React.FC<PoliticalSystemSummaryCardProps> = ({
           <Separator />
           
           <div>
-            <h4 className="font-semibold mb-2">Key Principles</h4>
-            <div className="flex flex-wrap gap-1.5">
+            <h4 className="font-semibold mb-3">Key Principles</h4>
+            <div className="flex flex-wrap gap-2 mb-4">
               {democraticPrinciples.map((principle) => (
                 <span 
                   key={principle}
-                  className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium"
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium"
                 >
                   {principle}
                 </span>
               ))}
             </div>
+          </div>
+          
+          <Separator />
+          
+          <div>
+            <h4 className="font-semibold mb-3">Election System</h4>
+            <div className="bg-gray-50 rounded-md p-3">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
+                  <i className="fas fa-vote-yea"></i>
+                </div>
+                <div>
+                  <h5 className="font-medium">Parliamentary Elections</h5>
+                  <p className="text-sm text-muted-foreground">Held every 4-5 years</p>
+                </div>
+              </div>
+              <p className="text-sm">Elections determine the composition of parliament and influence who forms the government.</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold mb-3">International Stance</h4>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start">
+                <i className="fas fa-globe-americas mt-1 mr-2 text-primary"></i>
+                <span>Active participant in international organizations</span>
+              </li>
+              <li className="flex items-start">
+                <i className="fas fa-handshake mt-1 mr-2 text-primary"></i>
+                <span>Diplomatic relations with most nations</span>
+              </li>
+              <li className="flex items-start">
+                <i className="fas fa-university mt-1 mr-2 text-primary"></i>
+                <span>Commitments to international treaties</span>
+              </li>
+            </ul>
           </div>
         </div>
       </CardContent>
