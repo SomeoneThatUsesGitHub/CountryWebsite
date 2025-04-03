@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import InternationalRelations from './InternationalRelations';
-import RecentLaws from './RecentLaws';
 
 interface PoliticalSystemProps {
   countryName: string;
+  countryId?: number;
   leader?: {
     name: string;
     title: string;
@@ -14,7 +14,7 @@ interface PoliticalSystemProps {
   };
 }
 
-const PoliticalSystem: React.FC<PoliticalSystemProps> = ({ countryName, leader }) => {
+const PoliticalSystem: React.FC<PoliticalSystemProps> = ({ countryName, countryId, leader }) => {
   // Default leader info if none provided
   const leaderInfo = leader || {
     name: 'Current Leader',
@@ -141,10 +141,7 @@ const PoliticalSystem: React.FC<PoliticalSystemProps> = ({ countryName, leader }
       </div>
       
       {/* International Relations Section */}
-      <InternationalRelations countryName={countryName} />
-      
-      {/* Recent Laws Section */}
-      <RecentLaws countryName={countryName} />
+      <InternationalRelations countryName={countryName} countryId={countryId || 0} />
     </div>
   );
 };
