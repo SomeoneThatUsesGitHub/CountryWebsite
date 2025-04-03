@@ -431,6 +431,16 @@ const AdminPage: React.FC = () => {
                   
                   <Card>
                     <CardHeader>
+                      <CardTitle>Freedom Index</CardTitle>
+                      <CardDescription>Manage freedom index data for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <FreedomIndexEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
                       <CardTitle>Political Leaders</CardTitle>
                       <CardDescription>Manage political leaders for this country</CardDescription>
                     </CardHeader>
@@ -454,16 +464,6 @@ const AdminPage: React.FC = () => {
               {/* International Relations Tab */}
               <TabsContent value="relations">
                 <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Freedom Index</CardTitle>
-                      <CardDescription>Manage freedom index data for this country</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <FreedomIndexEditor countryId={selectedCountry.id} />
-                    </CardContent>
-                  </Card>
-                  
                   <Card>
                     <CardHeader>
                       <CardTitle>International Relations</CardTitle>

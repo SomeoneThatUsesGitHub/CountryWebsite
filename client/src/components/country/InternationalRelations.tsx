@@ -291,59 +291,60 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
         <h3 className="text-xl font-bold mb-4">Freedom Indicator</h3>
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 sm:p-4 border-b">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4 shadow-sm">
-                  <i className="fas fa-flag text-xl"></i>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 sm:mr-4 shadow-sm flex-shrink-0">
+                  <i className="fas fa-flag text-sm sm:text-xl"></i>
                 </div>
                 <div>
-                  <h4 className="text-lg font-semibold">{countryName}'s Freedom Rating</h4>
-                  <p className="text-sm text-gray-600">Based on political and civil liberties</p>
+                  <h4 className="text-base sm:text-lg font-semibold">{countryName}'s Freedom Rating</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">Based on political and civil liberties</p>
                 </div>
               </div>
             </div>
             
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               {politicalSystem?.freedomIndex !== undefined && politicalSystem.freedomIndex !== null ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">Freedom Index Score</span>
-                    <span className="text-lg font-bold">{politicalSystem.freedomIndex}/100</span>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center justify-between mb-1 sm:mb-2">
+                    <span className="text-sm sm:text-base font-medium">Freedom Index Score</span>
+                    <span className="text-base sm:text-lg font-bold">{politicalSystem.freedomIndex}/100</span>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-1 sm:space-y-2">
                     <Progress 
                       value={politicalSystem.freedomIndex} 
-                      className="h-3"
+                      className="h-2 sm:h-3"
                     />
                     
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>Not Free</span>
-                      <span>Partially Free</span>
+                      <span className="hidden sm:inline">Partially Free</span>
+                      <span className="inline sm:hidden">Partial</span>
                       <span>Free</span>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-50 rounded-md p-4 mt-4">
+                  <div className="bg-gray-50 rounded-md p-3 sm:p-4 mt-2 sm:mt-4">
                     <div className="flex items-start">
-                      <div className="mt-1 mr-3">
+                      <div className="mt-0.5 sm:mt-1 mr-2 sm:mr-3 flex-shrink-0">
                         {politicalSystem.freedomIndex >= 70 ? (
-                          <i className="fas fa-check-circle text-green-500 text-lg"></i>
+                          <i className="fas fa-check-circle text-green-500 text-base sm:text-lg"></i>
                         ) : politicalSystem.freedomIndex >= 40 ? (
-                          <i className="fas fa-exclamation-circle text-amber-500 text-lg"></i>
+                          <i className="fas fa-exclamation-circle text-amber-500 text-base sm:text-lg"></i>
                         ) : (
-                          <i className="fas fa-times-circle text-red-500 text-lg"></i>
+                          <i className="fas fa-times-circle text-red-500 text-base sm:text-lg"></i>
                         )}
                       </div>
                       <div>
-                        <h5 className="font-medium mb-1">
+                        <h5 className="text-sm sm:text-base font-medium mb-0.5 sm:mb-1">
                           {politicalSystem.freedomIndex >= 70 
                             ? 'Free Society' 
                             : politicalSystem.freedomIndex >= 40 
                               ? 'Partially Free Society' 
                               : 'Not Free Society'}
                         </h5>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           {politicalSystem.freedomIndex >= 70 
                             ? 'Strong protection of civil liberties and political rights.'
                             : politicalSystem.freedomIndex >= 40 
@@ -355,12 +356,12 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <AlertTriangle className="h-8 w-8 text-gray-400" />
+                <div className="flex flex-col items-center justify-center text-center py-4 sm:py-8">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                    <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <h4 className="text-lg font-medium mb-2">No Freedom Index Data Available</h4>
-                  <p className="text-gray-500 max-w-md">
+                  <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">No Freedom Index Data Available</h4>
+                  <p className="text-xs sm:text-sm text-gray-500 max-w-md">
                     Freedom index information for {countryName} is currently not available in our database.
                   </p>
                 </div>

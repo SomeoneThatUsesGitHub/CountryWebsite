@@ -23,42 +23,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only fetch if we don't have countries already
       if (countries.length === 0) {
-        const response = await axios.get("https://restcountries.com/v3.1/all");
-        const countriesData = response.data;
-        
-        for (const countryData of countriesData) {
-          const country = {
-            name: countryData.name.common,
-            alpha2Code: countryData.cca2,
-            alpha3Code: countryData.cca3,
-            capital: countryData.capital?.[0] || null,
-            region: countryData.region || null,
-            subregion: countryData.subregion || null,
-            population: countryData.population || null,
-            area: countryData.area || null,
-            flagUrl: countryData.flags?.svg || null,
-            coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-            mapUrl: countryData.maps?.googleMaps || null,
-            independent: countryData.independent || false,
-            unMember: countryData.unMember || false,
-            currencies: countryData.currencies || null,
-            languages: countryData.languages || null,
-            borders: countryData.borders || null,
-            timezones: countryData.timezones || null,
-            startOfWeek: countryData.startOfWeek || null,
-            capitalInfo: countryData.capitalInfo || null,
-            postalCode: countryData.postalCode || null,
-            flag: countryData.flag || null, // emoji
-            countryInfo: {
-              capital: countryData.capital?.[0] || null,
-              region: countryData.region || null,
-              subregion: countryData.subregion || null,
-              population: countryData.population || null,
-              governmentForm: null, // To be added manually or from another source
+        try {
+          const response = await axios.get("https://restcountries.com/v3.1/all", { 
+            timeout: 10000,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'WorldInfoApp/1.0'
             }
-          };
+          });
           
-          await storage.createCountry(country);
+          if (response.status === 200 && Array.isArray(response.data)) {
+            const countriesData = response.data;
+            
+            for (const countryData of countriesData) {
+              try {
+                const country = {
+                  name: countryData.name.common,
+                  alpha2Code: countryData.cca2,
+                  alpha3Code: countryData.cca3,
+                  capital: countryData.capital?.[0] || null,
+                  region: countryData.region || null,
+                  subregion: countryData.subregion || null,
+                  population: countryData.population || null,
+                  area: countryData.area || null,
+                  flagUrl: countryData.flags?.svg || null,
+                  coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+                  mapUrl: countryData.maps?.googleMaps || null,
+                  independent: countryData.independent || false,
+                  unMember: countryData.unMember || false,
+                  currencies: countryData.currencies || null,
+                  languages: countryData.languages || null,
+                  borders: countryData.borders || null,
+                  timezones: countryData.timezones || null,
+                  startOfWeek: countryData.startOfWeek || null,
+                  capitalInfo: countryData.capitalInfo || null,
+                  postalCode: countryData.postalCode || null,
+                  flag: countryData.flag || null, // emoji
+                  countryInfo: {
+                    capital: countryData.capital?.[0] || null,
+                    region: countryData.region || null,
+                    subregion: countryData.subregion || null,
+                    population: countryData.population || null,
+                    governmentForm: null, // To be added manually or from another source
+                  }
+                };
+                
+                await storage.createCountry(country);
+              } catch (countryError) {
+                console.error(`Error processing country ${countryData?.name?.common || 'unknown'}:`, countryError);
+                // Continue processing other countries
+              }
+            }
+          } else {
+            // Fallback to creating sample countries if API response is not valid
+            await createSampleCountries();
+          }
+        } catch (apiError) {
+          console.error("Error fetching from RestCountries API:", apiError);
+          // Create sample countries as a fallback when API fails
+          await createSampleCountries();
         }
       }
       
@@ -68,6 +91,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, message: "Failed to initialize countries data" });
     }
   });
+  
+  // Helper function to create sample countries when API fails
+  async function createSampleCountries() {
+    console.log("Creating sample countries as fallback");
+    
+    const sampleCountries = [
+      {
+        name: "United States",
+        alpha2Code: "US",
+        alpha3Code: "USA",
+        capital: "Washington, D.C.",
+        region: "Americas",
+        subregion: "North America",
+        population: 331002651,
+        area: 9833517,
+        flagUrl: "https://flagcdn.com/us.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/e8M246zY4BSjkjAv6",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "sunday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇺🇸",
+        countryInfo: {
+          capital: "Washington, D.C.",
+          region: "Americas",
+          subregion: "North America",
+          population: 331002651,
+          governmentForm: "Federal Republic"
+        }
+      },
+      {
+        name: "Germany",
+        alpha2Code: "DE",
+        alpha3Code: "DEU",
+        capital: "Berlin",
+        region: "Europe",
+        subregion: "Western Europe",
+        population: 83240525,
+        area: 357114,
+        flagUrl: "https://flagcdn.com/de.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/mD9FBMq1nvXUBrkv6",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "monday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇩🇪",
+        countryInfo: {
+          capital: "Berlin",
+          region: "Europe",
+          subregion: "Western Europe",
+          population: 83240525,
+          governmentForm: "Federal Parliamentary Republic"
+        }
+      },
+      {
+        name: "Japan",
+        alpha2Code: "JP",
+        alpha3Code: "JPN",
+        capital: "Tokyo",
+        region: "Asia",
+        subregion: "Eastern Asia",
+        population: 125836021,
+        area: 377930,
+        flagUrl: "https://flagcdn.com/jp.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/NGTLSCSrA8bMrvnX9",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "monday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇯🇵",
+        countryInfo: {
+          capital: "Tokyo",
+          region: "Asia",
+          subregion: "Eastern Asia",
+          population: 125836021,
+          governmentForm: "Unitary Parliamentary Constitutional Monarchy"
+        }
+      },
+      {
+        name: "South Africa",
+        alpha2Code: "ZA",
+        alpha3Code: "ZAF",
+        capital: "Pretoria",
+        region: "Africa",
+        subregion: "Southern Africa",
+        population: 59308690,
+        area: 1221037,
+        flagUrl: "https://flagcdn.com/za.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/CLCZ1R8Uz1KpYhRv6",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "monday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇿🇦",
+        countryInfo: {
+          capital: "Pretoria",
+          region: "Africa",
+          subregion: "Southern Africa",
+          population: 59308690,
+          governmentForm: "Parliamentary Republic"
+        }
+      },
+      {
+        name: "Australia",
+        alpha2Code: "AU",
+        alpha3Code: "AUS",
+        capital: "Canberra",
+        region: "Oceania",
+        subregion: "Australia and New Zealand",
+        population: 25687041,
+        area: 7692024,
+        flagUrl: "https://flagcdn.com/au.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/DcjaDa7UbhnZTndH6",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "monday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇦🇺",
+        countryInfo: {
+          capital: "Canberra",
+          region: "Oceania",
+          subregion: "Australia and New Zealand",
+          population: 25687041,
+          governmentForm: "Federal Parliamentary Constitutional Monarchy"
+        }
+      },
+      {
+        name: "Switzerland",
+        alpha2Code: "CH",
+        alpha3Code: "CHE",
+        capital: "Bern",
+        region: "Europe",
+        subregion: "Western Europe",
+        population: 8654622,
+        area: 41284,
+        flagUrl: "https://flagcdn.com/ch.svg",
+        coatOfArmsUrl: null,
+        mapUrl: "https://goo.gl/maps/uVuZcXaxSx5jLyv87",
+        independent: true,
+        unMember: true,
+        currencies: null,
+        languages: null,
+        borders: null,
+        timezones: null,
+        startOfWeek: "monday",
+        capitalInfo: null,
+        postalCode: null,
+        flag: "🇨🇭",
+        countryInfo: {
+          capital: "Bern",
+          region: "Europe",
+          subregion: "Western Europe",
+          population: 8654622,
+          governmentForm: "Federal Republic"
+        }
+      }
+    ];
+    
+    for (const country of sampleCountries) {
+      await storage.createCountry(country);
+    }
+  }
 
   // Get all countries
   app.get("/api/countries", async (req, res) => {
