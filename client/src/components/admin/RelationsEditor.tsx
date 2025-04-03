@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const relationSchema = z.object({
   id: z.number().optional(),
   partnerCountry: z.string().min(1, 'Partner country is required'),
+  countryCode: z.string().min(2, 'Country code should be 2 characters').max(2).nullable(),
   relationType: z.string().min(1, 'Relation type is required'),
   relationStrength: z.string().nullable(),
   details: z.string().nullable(),
@@ -119,6 +120,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
     resolver: zodResolver(relationSchema),
     defaultValues: {
       partnerCountry: '',
+      countryCode: null,
       relationType: 'Diplomatic',
       relationStrength: 'Moderate',
       details: '',
@@ -137,6 +139,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
       form.reset({
         id: selectedRelation.id,
         partnerCountry: selectedRelation.partnerCountry,
+        countryCode: selectedRelation.countryCode || null,
         relationType: selectedRelation.relationType,
         relationStrength: selectedRelation.relationStrength,
         details: selectedRelation.details,
@@ -145,6 +148,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
     } else {
       form.reset({
         partnerCountry: '',
+        countryCode: null,
         relationType: 'Diplomatic',
         relationStrength: 'Moderate',
         details: '',
@@ -307,6 +311,32 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
             
             <FormField
               control={form.control}
+              name="countryCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country Code (ISO)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="e.g., US" 
+                      maxLength={2}
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        // Convert to uppercase
+                        field.onChange(e.target.value.toUpperCase() || null);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Two-letter ISO country code (e.g., US, GB, DE)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
               name="relationType"
               render={({ field }) => (
                 <FormItem>
@@ -434,6 +464,15 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
                   <div className="flex flex-col">
                     <div className={`p-4 flex justify-between items-center border-b ${getRelationTypeColor(relation.relationType)}`}>
                       <div className="flex items-center">
+                        {relation.countryCode && (
+                          <img 
+                            src={`https://flagcdn.com/w20/${relation.countryCode.toLowerCase()}.png`}
+                            width="20"
+                            height="15"
+                            className="mr-2"
+                            alt={`${relation.partnerCountry} flag`}
+                          />
+                        )}
                         <h4 className="font-medium">{relation.partnerCountry}</h4>
                         {relation.relationStrength && (
                           <Badge 
