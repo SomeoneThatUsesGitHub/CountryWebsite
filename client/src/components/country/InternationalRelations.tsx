@@ -3,40 +3,6 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { InternationalRelation } from '@shared/schema';
 
-// Dictionary of common country names to their alpha-2 codes
-const countryCodeMap: Record<string, string> = {
-  "Germany": "DE",
-  "France": "FR",
-  "United Kingdom": "GB",
-  "UK": "GB",
-  "United States": "US",
-  "USA": "US",
-  "Canada": "CA",
-  "Australia": "AU",
-  "Japan": "JP",
-  "China": "CN",
-  "Russia": "RU",
-  "Brazil": "BR",
-  "India": "IN",
-  "Italy": "IT",
-  "Spain": "ES",
-  "Switzerland": "CH",
-  "Sweden": "SE",
-  "Norway": "NO",
-  "Denmark": "DK",
-  "Finland": "FI",
-  "Netherlands": "NL",
-  "Belgium": "BE",
-  "Austria": "AT",
-  "Portugal": "PT",
-  "Greece": "GR",
-  "Ireland": "IE",
-  "New Zealand": "NZ",
-  "Mexico": "MX",
-  "South Africa": "ZA",
-  "Argentina": "AR"
-};
-
 interface InternationalRelationsProps {
   countryName: string;
   countryId: number;
@@ -136,27 +102,6 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
   const getRelationTypeIcon = (type: string) => {
     return relationTypeIcons[type as keyof typeof relationTypeIcons] || relationTypeIcons.default;
   };
-  
-  // Get the country code for a given country name
-  const getCountryCode = (countryName: string): string => {
-    // Check if we have a direct mapping
-    if (countryCodeMap[countryName]) {
-      return countryCodeMap[countryName];
-    }
-    
-    // Handle special cases and variations
-    // Attempt to match with case-insensitive comparison
-    const normalizedName = countryName.toLowerCase().trim();
-    for (const [key, value] of Object.entries(countryCodeMap)) {
-      if (key.toLowerCase() === normalizedName) {
-        return value;
-      }
-    }
-    
-    // If no match found, return a default
-    console.log(`No country code found for: ${countryName}`);
-    return 'xx'; // 'xx' is a special placeholder value for the flag CDN
-  };
 
   return (
     <div className="mb-12">
@@ -181,7 +126,7 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
                 {/* Country Flag */}
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 shadow-sm">
                   <img 
-                    src={`https://flagcdn.com/${relation.countryCode ? relation.countryCode.toLowerCase() : getCountryCode(relation.partnerCountry).toLowerCase()}.svg`}
+                    src={`https://flagcdn.com/${getCountryCode(relation.partnerCountry).toLowerCase()}.svg`}
                     alt={`${relation.partnerCountry} flag`} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
