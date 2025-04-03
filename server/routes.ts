@@ -42,16 +42,224 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.resetAllData();
       }
       
+      // Définition des pays de secours
+      const sampleCountries = [
+        {
+          name: "United States",
+          alpha2Code: "US",
+          alpha3Code: "USA",
+          capital: "Washington, D.C.",
+          region: "Americas",
+          subregion: "North America",
+          population: 329484123,
+          area: 9629091,
+          flagUrl: "https://flagcdn.com/w320/us.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Washington, D.C.",
+            region: "Americas",
+            subregion: "North America",
+            population: 329484123,
+            governmentForm: "Federal presidential constitutional republic"
+          }
+        },
+        {
+          name: "Germany",
+          alpha2Code: "DE",
+          alpha3Code: "DEU",
+          capital: "Berlin",
+          region: "Europe",
+          subregion: "Western Europe",
+          population: 83240525,
+          area: 357114,
+          flagUrl: "https://flagcdn.com/w320/de.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Berlin",
+            region: "Europe",
+            subregion: "Western Europe",
+            population: 83240525,
+            governmentForm: "Federal parliamentary republic"
+          }
+        },
+        {
+          name: "Japan",
+          alpha2Code: "JP",
+          alpha3Code: "JPN",
+          capital: "Tokyo",
+          region: "Asia",
+          subregion: "Eastern Asia",
+          population: 125836021,
+          area: 377930,
+          flagUrl: "https://flagcdn.com/w320/jp.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Tokyo",
+            region: "Asia",
+            subregion: "Eastern Asia",
+            population: 125836021,
+            governmentForm: "Unitary parliamentary constitutional monarchy"
+          }
+        },
+        {
+          name: "Brazil",
+          alpha2Code: "BR",
+          alpha3Code: "BRA",
+          capital: "Brasília",
+          region: "Americas",
+          subregion: "South America",
+          population: 212559409,
+          area: 8515767,
+          flagUrl: "https://flagcdn.com/w320/br.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Brasília",
+            region: "Americas",
+            subregion: "South America",
+            population: 212559409,
+            governmentForm: "Federal presidential constitutional republic"
+          }
+        },
+        {
+          name: "South Africa",
+          alpha2Code: "ZA",
+          alpha3Code: "ZAF",
+          capital: "Pretoria",
+          region: "Africa",
+          subregion: "Southern Africa",
+          population: 59308690,
+          area: 1221037,
+          flagUrl: "https://flagcdn.com/w320/za.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Pretoria",
+            region: "Africa",
+            subregion: "Southern Africa",
+            population: 59308690,
+            governmentForm: "Parliamentary constitutional republic"
+          }
+        },
+        {
+          name: "India",
+          alpha2Code: "IN",
+          alpha3Code: "IND",
+          capital: "New Delhi",
+          region: "Asia",
+          subregion: "Southern Asia",
+          population: 1380004385,
+          area: 3287590,
+          flagUrl: "https://flagcdn.com/w320/in.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "New Delhi",
+            region: "Asia",
+            subregion: "Southern Asia",
+            population: 1380004385,
+            governmentForm: "Federal parliamentary constitutional republic"
+          }
+        },
+        {
+          name: "Australia",
+          alpha2Code: "AU",
+          alpha3Code: "AUS",
+          capital: "Canberra",
+          region: "Oceania",
+          subregion: "Australia and New Zealand",
+          population: 25687041,
+          area: 7692024,
+          flagUrl: "https://flagcdn.com/w320/au.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Canberra",
+            region: "Oceania",
+            subregion: "Australia and New Zealand",
+            population: 25687041,
+            governmentForm: "Federal parliamentary constitutional monarchy"
+          }
+        },
+        {
+          name: "France",
+          alpha2Code: "FR",
+          alpha3Code: "FRA",
+          capital: "Paris",
+          region: "Europe",
+          subregion: "Western Europe",
+          population: 67391582,
+          area: 551695,
+          flagUrl: "https://flagcdn.com/w320/fr.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Paris",
+            region: "Europe",
+            subregion: "Western Europe",
+            population: 67391582,
+            governmentForm: "Unitary semi-presidential republic"
+          }
+        },
+        {
+          name: "China",
+          alpha2Code: "CN",
+          alpha3Code: "CHN",
+          capital: "Beijing",
+          region: "Asia",
+          subregion: "Eastern Asia",
+          population: 1402112000,
+          area: 9640011,
+          flagUrl: "https://flagcdn.com/w320/cn.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Beijing",
+            region: "Asia",
+            subregion: "Eastern Asia",
+            population: 1402112000,
+            governmentForm: "Unitary one-party socialist republic"
+          }
+        },
+        {
+          name: "Egypt",
+          alpha2Code: "EG",
+          alpha3Code: "EGY",
+          capital: "Cairo",
+          region: "Africa",
+          subregion: "Northern Africa",
+          population: 102334404,
+          area: 1002450,
+          flagUrl: "https://flagcdn.com/w320/eg.png",
+          independent: true,
+          unMember: true,
+          countryInfo: {
+            capital: "Cairo",
+            region: "Africa",
+            subregion: "Northern Africa",
+            population: 102334404,
+            governmentForm: "Unitary semi-presidential republic"
+          }
+        }
+      ];
+      
       // Une fois nettoyée, recompter les pays
       const updatedCountries = await storage.getAllCountries();
       
       // N'ajoute des pays que si nous n'en avons pas
       if (updatedCountries.length === 0) {
+        let countriesAdded = false;
+        
         try {
           console.log("Fetching countries from external API...");
-          const response = await axios.get("https://restcountries.com/v3.1/all");
-          const countriesData = response.data;
+          const response = await axios.get("https://restcountries.com/v3.1/all", { 
+            timeout: 5000 // Timeout à 5 secondes pour éviter d'attendre trop longtemps
+          });
           
+          const countriesData = response.data;
           console.log(`Fetched ${countriesData.length} countries from API.`);
           
           for (const countryData of countriesData) {
@@ -90,154 +298,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const existingCountry = await storage.getCountryByCode(country.alpha3Code);
             if (!existingCountry) {
               await storage.createCountry(country);
+              countriesAdded = true;
             }
           }
         } catch (apiError) {
           console.error("Error fetching from external API, using fallback countries data:", apiError);
-          
-          // Sample countries data for fallback
-          const sampleCountries = [
-            {
-              name: "United States",
-              alpha2Code: "US",
-              alpha3Code: "USA",
-              capital: "Washington, D.C.",
-              region: "Americas",
-              subregion: "North America",
-              population: 329484123,
-              area: 9629091,
-              flagUrl: "https://flagcdn.com/w320/us.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Washington, D.C.",
-                region: "Americas",
-                subregion: "North America",
-                population: 329484123,
-                governmentForm: "Federal presidential constitutional republic"
-              }
-            },
-            {
-              name: "Germany",
-              alpha2Code: "DE",
-              alpha3Code: "DEU",
-              capital: "Berlin",
-              region: "Europe",
-              subregion: "Western Europe",
-              population: 83240525,
-              area: 357114,
-              flagUrl: "https://flagcdn.com/w320/de.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Berlin",
-                region: "Europe",
-                subregion: "Western Europe",
-                population: 83240525,
-                governmentForm: "Federal parliamentary republic"
-              }
-            },
-            {
-              name: "Japan",
-              alpha2Code: "JP",
-              alpha3Code: "JPN",
-              capital: "Tokyo",
-              region: "Asia",
-              subregion: "Eastern Asia",
-              population: 125836021,
-              area: 377930,
-              flagUrl: "https://flagcdn.com/w320/jp.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Tokyo",
-                region: "Asia",
-                subregion: "Eastern Asia",
-                population: 125836021,
-                governmentForm: "Unitary parliamentary constitutional monarchy"
-              }
-            },
-            {
-              name: "Brazil",
-              alpha2Code: "BR",
-              alpha3Code: "BRA",
-              capital: "Brasília",
-              region: "Americas",
-              subregion: "South America",
-              population: 212559409,
-              area: 8515767,
-              flagUrl: "https://flagcdn.com/w320/br.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Brasília",
-                region: "Americas",
-                subregion: "South America",
-                population: 212559409,
-                governmentForm: "Federal presidential constitutional republic"
-              }
-            },
-            {
-              name: "South Africa",
-              alpha2Code: "ZA",
-              alpha3Code: "ZAF",
-              capital: "Pretoria",
-              region: "Africa",
-              subregion: "Southern Africa",
-              population: 59308690,
-              area: 1221037,
-              flagUrl: "https://flagcdn.com/w320/za.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Pretoria",
-                region: "Africa",
-                subregion: "Southern Africa",
-                population: 59308690,
-                governmentForm: "Parliamentary constitutional republic"
-              }
-            },
-            {
-              name: "India",
-              alpha2Code: "IN",
-              alpha3Code: "IND",
-              capital: "New Delhi",
-              region: "Asia",
-              subregion: "Southern Asia",
-              population: 1380004385,
-              area: 3287590,
-              flagUrl: "https://flagcdn.com/w320/in.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "New Delhi",
-                region: "Asia",
-                subregion: "Southern Asia",
-                population: 1380004385,
-                governmentForm: "Federal parliamentary constitutional republic"
-              }
-            },
-            {
-              name: "Australia",
-              alpha2Code: "AU",
-              alpha3Code: "AUS",
-              capital: "Canberra",
-              region: "Oceania",
-              subregion: "Australia and New Zealand",
-              population: 25687041,
-              area: 7692024,
-              flagUrl: "https://flagcdn.com/w320/au.png",
-              independent: true,
-              unMember: true,
-              countryInfo: {
-                capital: "Canberra",
-                region: "Oceania",
-                subregion: "Australia and New Zealand",
-                population: 25687041,
-                governmentForm: "Federal parliamentary constitutional monarchy"
-              }
-            }
-          ];
+        }
+        
+        // Si l'API externe a échoué ou n'a pas ajouté de pays, utiliser les données de secours
+        if (!countriesAdded) {
+          console.log("Using fallback countries data");
           
           // Add sample countries to the database (checking for duplicates)
           for (const country of sampleCountries) {
@@ -261,6 +331,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else {
         console.log(`Countries already initialized (${updatedCountries.length} countries found). Skipping initialization.`);
+      }
+      
+      // Vérifie à nouveau - si nous n'avons toujours pas de pays, forcer l'ajout des échantillons
+      const finalCheck = await storage.getAllCountries();
+      if (finalCheck.length === 0) {
+        console.log("EMERGENCY: No countries found after initialization attempts. Forcing fallback data.");
+        
+        for (const country of sampleCountries) {
+          await storage.createCountry({
+            ...country,
+            coatOfArmsUrl: null,
+            mapUrl: null,
+            currencies: null,
+            languages: null,
+            borders: null,
+            timezones: null,
+            startOfWeek: null,
+            capitalInfo: null,
+            postalCode: null,
+            flag: null
+          });
+        }
       }
       
       // Mise à jour finale du nombre de pays (pour informer l'utilisateur)
