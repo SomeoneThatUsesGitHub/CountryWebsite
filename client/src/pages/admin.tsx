@@ -31,6 +31,7 @@ import StatisticsEditor from '@/components/admin/StatisticsEditor';
 import LeadersEditor from '@/components/admin/LeadersEditor';
 import PartiesEditor from '@/components/admin/PartiesEditor';
 import RelationsEditor from '@/components/admin/RelationsEditor';
+import FreedomIndexEditor from '@/components/admin/FreedomIndexEditor';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -453,6 +454,16 @@ const AdminPage: React.FC = () => {
               {/* International Relations Tab */}
               <TabsContent value="relations">
                 <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Freedom Index</CardTitle>
+                      <CardDescription>Manage freedom index data for this country</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <FreedomIndexEditor countryId={selectedCountry.id} />
+                    </CardContent>
+                  </Card>
+                  
                   <Card>
                     <CardHeader>
                       <CardTitle>International Relations</CardTitle>
