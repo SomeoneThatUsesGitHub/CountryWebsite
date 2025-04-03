@@ -14,6 +14,8 @@ import {
   insertEconomicDataSchema,
   insertCountrySchema 
 } from "@shared/schema";
+// Import local data source
+import { countriesData } from './countries-data';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize data fetching for countries
@@ -23,69 +25,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only fetch if we don't have countries already
       if (countries.length === 0) {
-        try {
-          const response = await axios.get("https://restcountries.com/v3.1/all", { 
-            timeout: 10000,
-            headers: {
-              'Accept': 'application/json',
-              'User-Agent': 'WorldInfoApp/1.0'
-            }
-          });
+        console.log("No countries in database. Loading from local data source...");
+        
+        // Use our local data first
+        if (countriesData && countriesData.length > 0) {
+          console.log(`Loading ${countriesData.length} countries from local data source`);
           
-          if (response.status === 200 && Array.isArray(response.data)) {
-            const countriesData = response.data;
-            
-            for (const countryData of countriesData) {
-              try {
-                const country = {
-                  name: countryData.name.common,
-                  alpha2Code: countryData.cca2,
-                  alpha3Code: countryData.cca3,
+          for (const countryData of countriesData) {
+            try {
+              const country = {
+                name: countryData.name.common,
+                alpha2Code: countryData.cca2,
+                alpha3Code: countryData.cca3,
+                capital: countryData.capital?.[0] || null,
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                area: countryData.area || null,
+                flagUrl: countryData.flags?.svg || null,
+                coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+                mapUrl: countryData.maps?.googleMaps || null,
+                independent: countryData.independent || false,
+                unMember: countryData.unMember || true,
+                currencies: countryData.currencies || null,
+                languages: countryData.languages || null,
+                borders: countryData.borders || null,
+                timezones: countryData.timezones || null,
+                startOfWeek: countryData.startOfWeek || null,
+                capitalInfo: countryData.capitalInfo || null,
+                postalCode: countryData.postalCode || null,
+                flag: countryData.flag || null, // emoji
+                countryInfo: {
                   capital: countryData.capital?.[0] || null,
                   region: countryData.region || null,
                   subregion: countryData.subregion || null,
                   population: countryData.population || null,
-                  area: countryData.area || null,
-                  flagUrl: countryData.flags?.svg || null,
-                  coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-                  mapUrl: countryData.maps?.googleMaps || null,
-                  independent: countryData.independent || false,
-                  unMember: countryData.unMember || false,
-                  currencies: countryData.currencies || null,
-                  languages: countryData.languages || null,
-                  borders: countryData.borders || null,
-                  timezones: countryData.timezones || null,
-                  startOfWeek: countryData.startOfWeek || null,
-                  capitalInfo: countryData.capitalInfo || null,
-                  postalCode: countryData.postalCode || null,
-                  flag: countryData.flag || null, // emoji
-                  countryInfo: {
+                  governmentForm: null, // To be added manually or from another source
+                }
+              };
+              
+              await storage.createCountry(country);
+            } catch (countryError) {
+              console.error(`Error processing country ${countryData?.name?.common || 'unknown'}:`, countryError);
+              // Continue processing other countries
+            }
+          }
+          
+          console.log(`Successfully loaded countries from local data source`);
+        } 
+        // If local data fails for some reason, try the API, but only as a backup
+        else {
+          try {
+            const response = await axios.get("https://restcountries.com/v3.1/all", { 
+              timeout: 10000,
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'WorldInfoApp/1.0'
+              }
+            });
+            
+            if (response.status === 200 && Array.isArray(response.data)) {
+              const countriesData = response.data;
+              
+              for (const countryData of countriesData) {
+                try {
+                  const country = {
+                    name: countryData.name.common,
+                    alpha2Code: countryData.cca2,
+                    alpha3Code: countryData.cca3,
                     capital: countryData.capital?.[0] || null,
                     region: countryData.region || null,
                     subregion: countryData.subregion || null,
                     population: countryData.population || null,
-                    governmentForm: null, // To be added manually or from another source
-                  }
-                };
-                
-                await storage.createCountry(country);
-              } catch (countryError) {
-                console.error(`Error processing country ${countryData?.name?.common || 'unknown'}:`, countryError);
-                // Continue processing other countries
+                    area: countryData.area || null,
+                    flagUrl: countryData.flags?.svg || null,
+                    coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+                    mapUrl: countryData.maps?.googleMaps || null,
+                    independent: countryData.independent || false,
+                    unMember: countryData.unMember || false,
+                    currencies: countryData.currencies || null,
+                    languages: countryData.languages || null,
+                    borders: countryData.borders || null,
+                    timezones: countryData.timezones || null,
+                    startOfWeek: countryData.startOfWeek || null,
+                    capitalInfo: countryData.capitalInfo || null,
+                    postalCode: countryData.postalCode || null,
+                    flag: countryData.flag || null, // emoji
+                    countryInfo: {
+                      capital: countryData.capital?.[0] || null,
+                      region: countryData.region || null,
+                      subregion: countryData.subregion || null,
+                      population: countryData.population || null,
+                      governmentForm: null, // To be added manually or from another source
+                    }
+                  };
+                  
+                  await storage.createCountry(country);
+                } catch (countryError) {
+                  console.error(`Error processing country ${countryData?.name?.common || 'unknown'}:`, countryError);
+                  // Continue processing other countries
+                }
               }
+            } else {
+              // Fallback to creating sample countries if API response is not valid
+              await createSampleCountries();
             }
-          } else {
-            // Fallback to creating sample countries if API response is not valid
+          } catch (apiError) {
+            console.error("Error fetching from RestCountries API:", apiError);
+            // Create sample countries as a fallback when API fails
             await createSampleCountries();
           }
-        } catch (apiError) {
-          console.error("Error fetching from RestCountries API:", apiError);
-          // Create sample countries as a fallback when API fails
-          await createSampleCountries();
         }
       }
       
-      res.json({ success: true, message: "Countries data initialized successfully" });
+      // Count countries to report in the response
+      const countAfterInit = await storage.getAllCountries();
+      
+      res.json({ 
+        success: true, 
+        message: `Countries data initialized successfully (${countAfterInit.length} countries)` 
+      });
     } catch (error) {
       console.error("Error initializing countries data:", error);
       res.status(500).json({ success: false, message: "Failed to initialize countries data" });
