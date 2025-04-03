@@ -4,36 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { InternationalRelation, PoliticalSystem } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, AlertOctagon, Calendar, Users } from 'lucide-react';
-
-// Helper function to determine the header color for conflict cards
-function getConflictHeaderColor(type: string): string {
-  switch (type?.toLowerCase()) {
-    case 'military':
-    case 'armed conflict':
-    case 'war':
-      return 'bg-red-600';
-    case 'territorial':
-    case 'border dispute':
-      return 'bg-amber-600';
-    case 'civil':
-    case 'civil conflict':
-    case 'internal':
-      return 'bg-orange-600';
-    case 'diplomatic':
-    case 'political':
-      return 'bg-blue-600';
-    case 'economic':
-    case 'trade':
-    case 'sanctions':
-      return 'bg-emerald-600';
-    case 'ethnic':
-    case 'religious':
-      return 'bg-purple-600';
-    default:
-      return 'bg-gray-600';
-  }
-}
+import { AlertTriangle } from 'lucide-react';
 
 interface InternationalRelationsProps {
   countryName: string;
@@ -392,102 +363,6 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
                   <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">No Freedom Index Data Available</h4>
                   <p className="text-xs sm:text-sm text-gray-500 max-w-md">
                     Freedom index information for {countryName} is currently not available in our database.
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-      
-      {/* Ongoing Conflicts Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-8"
-      >
-        <h3 className="text-xl font-bold mb-4">Ongoing Conflicts</h3>
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-3 sm:p-4 border-b">
-              <div className="flex items-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mr-3 sm:mr-4 shadow-sm flex-shrink-0">
-                  <i className="fas fa-exclamation-triangle text-sm sm:text-xl"></i>
-                </div>
-                <div>
-                  <h4 className="text-base sm:text-lg font-semibold">Current Conflicts</h4>
-                  <p className="text-xs sm:text-sm text-gray-600">Military, territorial, and diplomatic disputes</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-3 sm:p-6">
-              {politicalSystem?.ongoingConflicts && Array.isArray(politicalSystem.ongoingConflicts) && politicalSystem.ongoingConflicts.length > 0 ? (
-                <div className="space-y-3">
-                  {politicalSystem.ongoingConflicts.map((conflict: any, index: number) => (
-                    <div 
-                      key={index} 
-                      className="border rounded-md overflow-hidden shadow-sm"
-                    >
-                      <div className={`p-3 text-white ${getConflictHeaderColor(conflict.type)}`}>
-                        <div className="flex justify-between items-center">
-                          <h5 className="font-medium">{conflict.name}</h5>
-                          <span className="text-xs px-2 py-1 bg-white bg-opacity-20 rounded-full">
-                            {conflict.type || 'Conflict'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-white">
-                        <div className="flex flex-col space-y-2">
-                          {conflict.parties && (
-                            <div className="flex items-center text-sm">
-                              <Users className="h-4 w-4 mr-2 text-gray-500" />
-                              <span className="text-gray-700">
-                                <span className="font-medium">Parties: </span>
-                                {conflict.parties}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {conflict.startYear && (
-                            <div className="flex items-center text-sm">
-                              <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                              <span className="text-gray-700">
-                                <span className="font-medium">Since: </span>
-                                {conflict.startYear}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {conflict.casualties && (
-                            <div className="flex items-center text-sm">
-                              <AlertOctagon className="h-4 w-4 mr-2 text-gray-500" />
-                              <span className="text-gray-700">
-                                <span className="font-medium">Casualties: </span>
-                                {conflict.casualties}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {conflict.description && (
-                            <div className="mt-2 text-sm text-gray-600 border-t pt-2">
-                              {conflict.description}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center py-4 sm:py-8">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                    <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">No Active Conflicts</h4>
-                  <p className="text-xs sm:text-sm text-gray-500 max-w-md">
-                    {countryName} is not currently involved in any major conflicts or disputes according to our database.
                   </p>
                 </div>
               )}
