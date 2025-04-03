@@ -23,42 +23,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only fetch if we don't have countries already
       if (countries.length === 0) {
-        const response = await axios.get("https://restcountries.com/v3.1/all");
-        const countriesData = response.data;
-        
-        for (const countryData of countriesData) {
-          const country = {
-            name: countryData.name.common,
-            alpha2Code: countryData.cca2,
-            alpha3Code: countryData.cca3,
-            capital: countryData.capital?.[0] || null,
-            region: countryData.region || null,
-            subregion: countryData.subregion || null,
-            population: countryData.population || null,
-            area: countryData.area || null,
-            flagUrl: countryData.flags?.svg || null,
-            coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-            mapUrl: countryData.maps?.googleMaps || null,
-            independent: countryData.independent || false,
-            unMember: countryData.unMember || false,
-            currencies: countryData.currencies || null,
-            languages: countryData.languages || null,
-            borders: countryData.borders || null,
-            timezones: countryData.timezones || null,
-            startOfWeek: countryData.startOfWeek || null,
-            capitalInfo: countryData.capitalInfo || null,
-            postalCode: countryData.postalCode || null,
-            flag: countryData.flag || null, // emoji
-            countryInfo: {
+        try {
+          // First try the API
+          const response = await axios.get("https://restcountries.com/v3.1/all");
+          const countriesData = response.data;
+          
+          for (const countryData of countriesData) {
+            const country = {
+              name: countryData.name.common,
+              alpha2Code: countryData.cca2,
+              alpha3Code: countryData.cca3,
               capital: countryData.capital?.[0] || null,
               region: countryData.region || null,
               subregion: countryData.subregion || null,
               population: countryData.population || null,
-              governmentForm: null, // To be added manually or from another source
-            }
-          };
+              area: countryData.area || null,
+              flagUrl: countryData.flags?.svg || null,
+              coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+              mapUrl: countryData.maps?.googleMaps || null,
+              independent: countryData.independent || false,
+              unMember: countryData.unMember || false,
+              currencies: countryData.currencies || null,
+              languages: countryData.languages || null,
+              borders: countryData.borders || null,
+              timezones: countryData.timezones || null,
+              startOfWeek: countryData.startOfWeek || null,
+              capitalInfo: countryData.capitalInfo || null,
+              postalCode: countryData.postalCode || null,
+              flag: countryData.flag || null, // emoji
+              countryInfo: {
+                capital: countryData.capital?.[0] || null,
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                governmentForm: null, // To be added manually or from another source
+              }
+            };
+            
+            await storage.createCountry(country);
+          }
+        } catch (apiError) {
+          console.error("Error fetching from API, using local data instead:", apiError);
           
-          await storage.createCountry(country);
+          // If API fails, try local data
+          const fs = await import('fs');
+          const path = await import('path');
+          const { fileURLToPath } = await import('url');
+          
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = path.dirname(__filename);
+          const localDataPath = path.join(__dirname, '..', 'countries-data.json');
+          
+          if (fs.existsSync(localDataPath)) {
+            const countriesData = JSON.parse(fs.readFileSync(localDataPath, 'utf8'));
+            console.log(`Loading ${countriesData.length} countries from local data`);
+            
+            for (const countryData of countriesData) {
+              const country = {
+                name: countryData.name,
+                alpha2Code: countryData.alpha2Code,
+                alpha3Code: countryData.alpha3Code,
+                capital: countryData.capital || null,
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                area: countryData.area || null,
+                flagUrl: countryData.flagUrl || null,
+                independent: countryData.independent || false,
+                unMember: countryData.unMember || false,
+                countryInfo: {
+                  capital: countryData.capital || null,
+                  region: countryData.region || null,
+                  subregion: countryData.subregion || null,
+                  population: countryData.population || null,
+                  governmentForm: null, // To be added manually
+                }
+              };
+              
+              await storage.createCountry(country);
+            }
+          } else {
+            throw new Error(`Local data file not found at ${localDataPath}`);
+          }
         }
       }
       
