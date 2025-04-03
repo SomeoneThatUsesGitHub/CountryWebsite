@@ -74,6 +74,7 @@ export const politicalSystems = pgTable("politicalSystems", {
   laws: jsonb("laws"), // array of laws
   organizations: jsonb("organizations"), // array of international organizations
   hasUnstablePoliticalSituation: boolean("hasUnstablePoliticalSituation").default(false),
+  ongoingConflicts: jsonb("ongoingConflicts"), // array of ongoing conflicts
 });
 
 // International Relations schema
