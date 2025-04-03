@@ -19,13 +19,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize data fetching for countries
   app.get("/api/initialize", async (req, res) => {
     try {
+      // Vérifie si nous avons besoin d'ajouter des pays
       const countries = await storage.getAllCountries();
       
-      // Only fetch if we don't have countries already
-      if (countries.length === 0) {
+      // Si nous n'avons pas de pays OU si nous détectons des doublons, nous nettoyons d'abord
+      const countCodes = new Map();
+      let hasDuplicates = false;
+      
+      // Vérifie les doublons
+      for (const country of countries) {
+        const code = country.alpha3Code;
+        if (code && countCodes.has(code)) {
+          hasDuplicates = true;
+          break;
+        }
+        countCodes.set(code, true);
+      }
+      
+      // S'il y a des doublons, réinitialiser la base de données
+      if (hasDuplicates) {
+        console.log("Duplicate countries detected. Resetting countries data...");
+        storage.resetAllData();
+      }
+      
+      // Une fois nettoyée, recompter les pays
+      const updatedCountries = await storage.getAllCountries();
+      
+      // N'ajoute des pays que si nous n'en avons pas
+      if (updatedCountries.length === 0) {
         try {
+          console.log("Fetching countries from external API...");
           const response = await axios.get("https://restcountries.com/v3.1/all");
           const countriesData = response.data;
+          
+          console.log(`Fetched ${countriesData.length} countries from API.`);
           
           for (const countryData of countriesData) {
             const country = {
@@ -59,7 +86,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             };
             
-            await storage.createCountry(country);
+            // Vérifie si le pays existe déjà avant de l'ajouter
+            const existingCountry = await storage.getCountryByCode(country.alpha3Code);
+            if (!existingCountry) {
+              await storage.createCountry(country);
+            }
           }
         } catch (apiError) {
           console.error("Error fetching from external API, using fallback countries data:", apiError);
@@ -208,28 +239,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           ];
           
-          // Add sample countries to the database
+          // Add sample countries to the database (checking for duplicates)
           for (const country of sampleCountries) {
-            await storage.createCountry({
-              ...country,
-              coatOfArmsUrl: null,
-              mapUrl: null,
-              currencies: null,
-              languages: null,
-              borders: null,
-              timezones: null,
-              startOfWeek: null,
-              capitalInfo: null,
-              postalCode: null,
-              flag: null
-            });
+            const existingCountry = await storage.getCountryByCode(country.alpha3Code);
+            if (!existingCountry) {
+              await storage.createCountry({
+                ...country,
+                coatOfArmsUrl: null,
+                mapUrl: null,
+                currencies: null,
+                languages: null,
+                borders: null,
+                timezones: null,
+                startOfWeek: null,
+                capitalInfo: null,
+                postalCode: null,
+                flag: null
+              });
+            }
           }
         }
       } else {
-        console.log(`Countries already initialized (${countries.length} countries found). Skipping initialization.`);
+        console.log(`Countries already initialized (${updatedCountries.length} countries found). Skipping initialization.`);
       }
       
-      res.json({ success: true, message: "Countries data initialized successfully" });
+      // Mise à jour finale du nombre de pays (pour informer l'utilisateur)
+      const finalCountriesCount = await storage.getAllCountries();
+      res.json({ 
+        success: true, 
+        message: "Countries data initialized successfully", 
+        count: finalCountriesCount.length,
+        hasDuplicates: hasDuplicates
+      });
     } catch (error) {
       console.error("Error initializing countries data:", error);
       res.status(500).json({ success: false, message: "Failed to initialize countries data" });
@@ -271,6 +312,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error resetting data:", error);
       res.status(500).json({ success: false, message: "Failed to reset data" });
+    }
+  });
+  
+  // Debug route to detect and remove duplicate countries
+  app.post("/api/debug/deduplicate-countries", async (req, res) => {
+    try {
+      const countries = await storage.getAllCountries();
+      console.log(`Checking for duplicates among ${countries.length} countries...`);
+      
+      // Collect countries by alpha3Code
+      const countriesByCode = new Map();
+      const duplicates = [];
+      
+      // Find duplicates
+      for (const country of countries) {
+        const code = country.alpha3Code;
+        if (!code) continue;
+        
+        if (countriesByCode.has(code)) {
+          duplicates.push({
+            code,
+            duplicate: country,
+            original: countriesByCode.get(code)
+          });
+        } else {
+          countriesByCode.set(code, country);
+        }
+      }
+      
+      console.log(`Found ${duplicates.length} duplicate countries`);
+      
+      // If there are duplicates, reset all data
+      if (duplicates.length > 0) {
+        storage.resetAllData();
+        console.log("Reset all data due to country duplicates");
+        
+        // Trigger reinitialization by making a request to the initialize endpoint
+        await axios.get(`http://localhost:${process.env.PORT || 5000}/api/initialize`);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Check complete. Found ${duplicates.length} duplicates.`,
+        totalCountries: countries.length,
+        uniqueCountries: countriesByCode.size,
+        duplicatesFound: duplicates.length,
+        wasReset: duplicates.length > 0
+      });
+    } catch (error) {
+      console.error("Error checking for duplicate countries:", error);
+      res.status(500).json({ success: false, message: "Failed to check for duplicate countries" });
     }
   });
 

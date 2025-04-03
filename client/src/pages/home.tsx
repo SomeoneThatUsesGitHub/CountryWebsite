@@ -1,53 +1,12 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Country } from '@/types';
 import { groupCountriesByRegion } from '@/lib/helpers';
 import ContinentSection from '@/components/home/ContinentSection';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { apiRequest } from '@/lib/queryClient';
-import { toast } from '@/hooks/use-toast';
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [resetting, setResetting] = useState(false);
-  const queryClient = useQueryClient();
-
-  // Fonction pour réinitialiser les données
-  const resetAllData = async () => {
-    try {
-      if (confirm("Êtes-vous sûr de vouloir réinitialiser toutes les données? Cette action supprimera toutes les données existantes.")) {
-        setResetting(true);
-        toast({
-          title: "Réinitialisation en cours",
-          description: "Suppression de toutes les données...",
-        });
-        
-        const result = await apiRequest('POST', '/api/debug/reset');
-        
-        if (result.success) {
-          toast({
-            title: "Succès",
-            description: "Toutes les données ont été réinitialisées. La page va être rechargée.",
-          });
-          
-          // Recharger la page après 2 secondes
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la réinitialisation:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de réinitialiser les données.",
-        variant: "destructive",
-      });
-    } finally {
-      setResetting(false);
-    }
-  };
 
   // Fetch all countries
   const { data: countries, isLoading, error } = useQuery<Country[]>({
@@ -74,18 +33,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-3xl font-bold text-center flex-grow">Explore Countries by Continent</h2>
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={resetAllData}
-          disabled={resetting}
-          className="text-xs"
-        >
-          {resetting ? "Réinitialisation..." : "Réinitialiser les données"}
-        </Button>
-      </div>
+      <h2 className="text-3xl font-bold text-center mb-2">Explore Countries by Continent</h2>
       <p className="text-gray-600 text-center mb-10 max-w-2xl mx-auto">
         Discover political systems, economic data, and historical timelines of countries around the world
       </p>
