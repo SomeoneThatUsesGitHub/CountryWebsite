@@ -181,7 +181,7 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
                 {/* Country Flag */}
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-white flex-shrink-0 shadow-sm">
                   <img 
-                    src={`https://flagcdn.com/${relation.countryCode ? relation.countryCode.toLowerCase() : getCountryCode(relation.partnerCountry).toLowerCase()}.svg`}
+                    src={`https://flagcdn.com/${getCountryCode(relation.partnerCountry).toLowerCase()}.svg`}
                     alt={`${relation.partnerCountry} flag`} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
