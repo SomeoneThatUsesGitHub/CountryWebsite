@@ -126,30 +126,38 @@ const ConflictsEditor: React.FC<ConflictsEditorProps> = ({ countryId }) => {
       
       // Update the political system with the new conflicts
       if (politicalSystem) {
+        // Political system exists, update it
         await apiRequest('PATCH', `/api/countries/${countryId}/political-system/${politicalSystem.id}`, {
           ongoingConflicts: updatedConflicts,
         });
-        
-        // Refetch to update the UI
-        refetchPoliticalSystem();
-        
-        // Reset the form
-        form.reset({
-          name: '',
-          type: 'Territorial',
-          status: 'Active',
-          year: new Date().getFullYear(),
-          description: '',
-        });
-        
-        // Show success message
-        toast({
-          title: editIndex !== null ? 'Conflict Updated' : 'Conflict Added',
-          description: editIndex !== null 
-            ? 'The conflict has been successfully updated.' 
-            : 'A new conflict has been added to the country profile.',
+      } else {
+        // Political system doesn't exist yet, create it
+        await apiRequest('POST', `/api/countries/${countryId}/political-system`, {
+          type: 'Republic', // Default value
+          ongoingConflicts: updatedConflicts,
+          countryId: countryId
         });
       }
+      
+      // Refetch to update the UI
+      refetchPoliticalSystem();
+      
+      // Reset the form
+      form.reset({
+        name: '',
+        type: 'Territorial',
+        status: 'Active',
+        year: new Date().getFullYear(),
+        description: '',
+      });
+      
+      // Show success message
+      toast({
+        title: editIndex !== null ? 'Conflict Updated' : 'Conflict Added',
+        description: editIndex !== null 
+          ? 'The conflict has been successfully updated.' 
+          : 'A new conflict has been added to the country profile.',
+      });
       
     } catch (error) {
       console.error('Failed to update conflicts:', error);
@@ -186,6 +194,14 @@ const ConflictsEditor: React.FC<ConflictsEditorProps> = ({ countryId }) => {
         toast({
           title: 'Conflict Removed',
           description: 'The conflict has been successfully removed.',
+        });
+      } else {
+        // This shouldn't happen normally since if there's a conflict to delete, 
+        // a political system must exist, but just in case
+        toast({
+          title: 'Error',
+          description: 'Political system not found. Please refresh the page and try again.',
+          variant: 'destructive',
         });
       }
       
@@ -242,7 +258,163 @@ const ConflictsEditor: React.FC<ConflictsEditorProps> = ({ countryId }) => {
   };
 
   if (isPoliticalSystemLoading) {
-    return <div>Loading political system data...</div>;
+    return <div className="text-center p-6">Loading political system data...</div>;
+  }
+  
+  // Show informative message if there's no political system yet, but we're not loading
+  if (!politicalSystem && !isPoliticalSystemLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <h3 className="text-amber-800 font-medium mb-2">No Political System Found</h3>
+          <p className="text-amber-700 mb-2">
+            You can start adding conflicts below. A basic political system will be created automatically.
+          </p>
+        </div>
+        
+        {/* Add/Edit Conflict Form */}
+        <div>
+          <h3 className="text-lg font-medium mb-4">
+            Add New Conflict
+          </h3>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Form fields (same as main return) */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Conflict Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Crimea Dispute" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Enter the name of the conflict or dispute
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Conflict Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a conflict type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Territorial">Territorial</SelectItem>
+                          <SelectItem value="Ethnic">Ethnic</SelectItem>
+                          <SelectItem value="Religious">Religious</SelectItem>
+                          <SelectItem value="Political">Political</SelectItem>
+                          <SelectItem value="Economic">Economic</SelectItem>
+                          <SelectItem value="Civil War">Civil War</SelectItem>
+                          <SelectItem value="Diplomatic">Diplomatic</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Frozen">Frozen</SelectItem>
+                          <SelectItem value="Dormant">Dormant</SelectItem>
+                          <SelectItem value="Resolved">Resolved</SelectItem>
+                          <SelectItem value="Escalating">Escalating</SelectItem>
+                          <SelectItem value="Peace Process">Peace Process</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year Started</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="e.g., 2014" 
+                        {...field} 
+                        value={field.value === null ? '' : field.value}
+                        onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Enter the year when the conflict started (optional)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Provide a brief description of the conflict"
+                        className="min-h-[100px] resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Briefly describe the nature and context of the conflict (optional)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit">
+                  Add Conflict
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
+    );
   }
 
   return (
