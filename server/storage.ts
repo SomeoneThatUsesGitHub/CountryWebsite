@@ -199,36 +199,7 @@ export class MemStorage implements IStorage {
 
   async createCountry(country: InsertCountry): Promise<Country> {
     const id = this.countryId++;
-    
-    // Ensure all required fields are non-undefined
-    const newCountry: Country = {
-      id,
-      name: country.name,
-      alpha2Code: country.alpha2Code,
-      alpha3Code: country.alpha3Code,
-      region: country.region,
-      capital: country.capital || null,
-      subregion: country.subregion || null,
-      population: country.population || null,
-      area: country.area || null,
-      flagUrl: country.flagUrl || null,
-      coatOfArmsUrl: country.coatOfArmsUrl || null,
-      mapUrl: country.mapUrl || null,
-      independent: country.independent || false,
-      unMember: country.unMember || false,
-      currencies: country.currencies || null,
-      languages: country.languages || null,
-      borders: country.borders || null,
-      timezones: country.timezones || null,
-      startOfWeek: country.startOfWeek || null,
-      capitalInfo: country.capitalInfo || null,
-      postalCode: country.postalCode || null,
-      flag: country.flag || null,
-      countryInfo: country.countryInfo || {
-        governmentForm: null
-      }
-    };
-    
+    const newCountry: Country = { ...country, id };
     this.countries.set(id, newCountry);
     return newCountry;
   }
