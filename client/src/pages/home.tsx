@@ -4,9 +4,11 @@ import { Country } from '@/types';
 import { groupCountriesByRegion } from '@/lib/helpers';
 import ContinentSection from '@/components/home/ContinentSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedContinent, setExpandedContinent] = useState<string | null>(null);
 
   // Fetch all countries
   const { data: countries, isLoading, error } = useQuery<Country[]>({
@@ -101,6 +103,19 @@ const HomePage: React.FC = () => {
           key={region} 
           continent={region} 
           countries={countries}
+          expanded={expandedContinent === region}
+          onToggleExpand={() => {
+            setExpandedContinent(expandedContinent === region ? null : region);
+            // Scroll to the section when expanding
+            if (expandedContinent !== region) {
+              setTimeout(() => {
+                document.getElementById(`continent-${region}`)?.scrollIntoView({ 
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+              }, 100);
+            }
+          }}
         />
       ))}
     </div>
