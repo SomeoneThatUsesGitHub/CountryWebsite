@@ -16,26 +16,30 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
 
   return (
     <div 
-      className="relative bg-cover bg-center h-64 md:h-72" 
+      className="relative bg-cover bg-center h-64 md:h-72 flex flex-col justify-between" 
       style={{ backgroundImage: `url(${country.flagUrl})` }}
     >
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/30 z-0"></div>
       
-      {/* Content */}
-      <div className="container mx-auto px-4 h-full flex items-end relative z-10 pb-6 md:pb-8">
-        <div className="w-full">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
-            <button 
-              onClick={handleBack}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white"
-            >
-              <i className="fas fa-arrow-left text-xs sm:text-sm"></i>
-            </button>
-            <div className="bg-primary/80 backdrop-blur-sm text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm">
-              {country.region || 'Unknown Region'}
-            </div>
+      {/* Top Navigation */}
+      <div className="container mx-auto px-4 pt-4 relative z-10">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+          <button 
+            onClick={handleBack}
+            className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white"
+          >
+            <i className="fas fa-arrow-left text-xs sm:text-sm"></i>
+          </button>
+          <div className="bg-primary/80 backdrop-blur-sm text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm">
+            {country.region || 'Unknown Region'}
           </div>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="container mx-auto px-4 relative z-10 pb-6 md:pb-8">
+        <div className="w-full">
           
           <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 sm:mb-2">{country.name}</h1>
           

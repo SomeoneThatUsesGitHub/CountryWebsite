@@ -18,12 +18,12 @@ const CountryTabs: React.FC<CountryTabsProps> = ({ activeTab, onTabChange }) => 
     <div className="bg-white border-b sticky top-0 z-20">
       <div className="container mx-auto px-2 sm:px-4">
         <div className="relative overflow-x-auto scrollbar-hide">
-          <nav className="flex space-x-2 xxs:space-x-3 sm:space-x-4 md:space-x-6 py-0 sm:py-1">
+          <nav className="flex space-x-3 sm:space-x-6 md:space-x-8 py-1">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`tab-button py-1.5 sm:py-3 text-xs xxs:text-sm sm:text-base font-medium border-b-2 whitespace-nowrap transition-colors ${
+                className={`tab-button py-2 sm:py-4 text-sm sm:text-base font-medium border-b-2 whitespace-nowrap transition-colors ${
                   activeTab === tab.id 
                     ? 'text-primary border-primary' 
                     : 'text-gray-500 hover:text-gray-700 border-transparent'
