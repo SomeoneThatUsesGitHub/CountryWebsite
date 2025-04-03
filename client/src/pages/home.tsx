@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Country } from '@/types';
 import { groupCountriesByRegion } from '@/lib/helpers';
@@ -8,26 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Create a cache-busting key that changes every hour to get different countries on reload
-  const [cacheBuster, setCacheBuster] = useState(() => {
-    // Generate a timestamp that changes every hour for cache busting
-    const now = new Date();
-    return `${now.getDate()}-${now.getHours()}`;
-  });
-  
-  // Force update the cache buster periodically to refresh the random sets
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      setCacheBuster(`${now.getDate()}-${now.getHours()}`);
-    }, 60 * 60 * 1000); // Update every hour
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Fetch all countries with cache busting to ensure fresh randomization
+  // Fetch all countries
   const { data: countries, isLoading, error } = useQuery<Country[]>({
-    queryKey: ['/api/countries', cacheBuster],
+    queryKey: ['/api/countries'],
   });
 
   // Group countries by region (continent)
