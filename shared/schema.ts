@@ -85,6 +85,7 @@ export const internationalRelations = pgTable("internationalRelations", {
   relationStrength: text("relationStrength"), // Strong, Moderate, Weak
   details: text("details"),
   startDate: timestamp("startDate"),
+  isoCode: text("isoCode"), // ISO 3166-1 alpha-2 country code for the flag
 });
 
 // Historical Laws schema

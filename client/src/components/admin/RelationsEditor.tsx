@@ -32,6 +32,7 @@ const relationSchema = z.object({
   relationStrength: z.string().nullable(),
   details: z.string().nullable(),
   startDate: z.string().nullable().transform(val => val ? new Date(val) : null),
+  isoCode: z.string().nullable(),
 });
 
 type RelationFormValues = z.infer<typeof relationSchema>;
@@ -123,6 +124,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
       relationStrength: 'Moderate',
       details: '',
       startDate: null,
+      isoCode: null,
     },
   });
 
@@ -141,6 +143,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
         relationStrength: selectedRelation.relationStrength,
         details: selectedRelation.details,
         startDate: formattedDate,
+        isoCode: selectedRelation.isoCode,
       });
     } else {
       form.reset({
@@ -149,6 +152,7 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
         relationStrength: 'Moderate',
         details: '',
         startDate: null,
+        isoCode: null,
       });
     }
   }, [isEditing, selectedRelation, form]);
@@ -379,6 +383,27 @@ const RelationsEditor: React.FC<RelationsEditorProps> = ({ countryId }) => {
                   </FormControl>
                   <FormDescription>
                     When this relationship was established
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isoCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country ISO Code</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field}
+                      placeholder="e.g., US, GB, DE" 
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    2-letter ISO country code for the flag (e.g., US for United States)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
