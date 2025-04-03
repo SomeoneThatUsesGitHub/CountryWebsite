@@ -225,6 +225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
+      } else {
+        console.log(`Countries already initialized (${countries.length} countries found). Skipping initialization.`);
       }
       
       res.json({ success: true, message: "Countries data initialized successfully" });
@@ -258,6 +260,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching country codes:", error);
       res.status(500).json({ message: "Failed to fetch country codes" });
+    }
+  });
+  
+  // Debug route to reset all data (for development only)
+  app.post("/api/debug/reset", async (req, res) => {
+    try {
+      storage.resetAllData();
+      res.json({ success: true, message: "All data has been reset successfully" });
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      res.status(500).json({ success: false, message: "Failed to reset data" });
     }
   });
 
