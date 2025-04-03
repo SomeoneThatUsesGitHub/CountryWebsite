@@ -27,11 +27,11 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <button 
             onClick={handleBack}
-            className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-white"
+            className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-white"
           >
-            <i className="fas fa-arrow-left text-sm sm:text-base"></i>
+            <i className="fas fa-arrow-left text-base sm:text-lg"></i>
           </button>
-          <div className="bg-primary/80 backdrop-blur-sm text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
+          <div className="bg-primary/80 backdrop-blur-sm text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-medium">
             {country.region || 'Unknown Region'}
           </div>
         </div>
@@ -41,20 +41,20 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
       <div className="container mx-auto px-4 relative z-10 pb-6 md:pb-8">
         <div className="w-full">
           
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-1 sm:mb-2">{country.name}</h1>
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 sm:mb-3">{country.name}</h1>
           
-          <div className="grid grid-cols-2 xxs:flex xxs:flex-wrap gap-1.5 sm:gap-2 mt-2 mb-2">
-            <div className="bg-white/20 backdrop-blur-sm text-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1 sm:gap-2 text-[10px] xs:text-xs sm:text-sm">
+          <div className="grid grid-cols-2 xxs:flex xxs:flex-wrap gap-2 sm:gap-3 mt-3 mb-3">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg flex items-center gap-2 sm:gap-3 text-xs xs:text-sm sm:text-base">
               <i className="fas fa-users"></i>
               <span>{formatNumber(country.population || 0)}</span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1 sm:gap-2 text-[10px] xs:text-xs sm:text-sm">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg flex items-center gap-2 sm:gap-3 text-xs xs:text-sm sm:text-base">
               <i className="fas fa-map-marker-alt"></i>
               <span>{country.capital ? (country.capital.length > 15 ? `${country.capital.substring(0, 13)}...` : country.capital) : 'No capital'}</span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1 sm:gap-2 text-[10px] xs:text-xs sm:text-sm">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg flex items-center gap-2 sm:gap-3 text-xs xs:text-sm sm:text-base">
               <i className="fas fa-flag"></i>
               <span>
                 {country.countryInfo?.governmentForm && country.countryInfo.governmentForm.length > 15 
@@ -63,7 +63,7 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
               </span>
             </div>
             
-            <div className="bg-white/20 backdrop-blur-sm text-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1 sm:gap-2 text-[10px] xs:text-xs sm:text-sm">
+            <div className="bg-white/20 backdrop-blur-sm text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg flex items-center gap-2 sm:gap-3 text-xs xs:text-sm sm:text-base">
               <i className="fas fa-map"></i>
               <span>{country.area ? `${formatNumber(country.area)} km²` : 'No size'}</span>
             </div>
