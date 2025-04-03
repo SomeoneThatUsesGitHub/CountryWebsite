@@ -14,6 +14,7 @@ import {
   insertEconomicDataSchema,
   insertCountrySchema 
 } from "@shared/schema";
+import { countryData } from "./staticCountryData";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize data fetching for countries
@@ -23,42 +24,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only fetch if we don't have countries already
       if (countries.length === 0) {
-        const response = await axios.get("https://restcountries.com/v3.1/all");
-        const countriesData = response.data;
-        
-        for (const countryData of countriesData) {
-          const country = {
-            name: countryData.name.common,
-            alpha2Code: countryData.cca2,
-            alpha3Code: countryData.cca3,
-            capital: countryData.capital?.[0] || null,
-            region: countryData.region || null,
-            subregion: countryData.subregion || null,
-            population: countryData.population || null,
-            area: countryData.area || null,
-            flagUrl: countryData.flags?.svg || null,
-            coatOfArmsUrl: countryData.coatOfArms?.svg || null,
-            mapUrl: countryData.maps?.googleMaps || null,
-            independent: countryData.independent || false,
-            unMember: countryData.unMember || false,
-            currencies: countryData.currencies || null,
-            languages: countryData.languages || null,
-            borders: countryData.borders || null,
-            timezones: countryData.timezones || null,
-            startOfWeek: countryData.startOfWeek || null,
-            capitalInfo: countryData.capitalInfo || null,
-            postalCode: countryData.postalCode || null,
-            flag: countryData.flag || null, // emoji
-            countryInfo: {
+        try {
+          // Try to fetch from the external API first
+          const response = await axios.get("https://restcountries.com/v3.1/all", { timeout: 5000 });
+          const countriesData = response.data;
+          
+          for (const countryData of countriesData) {
+            const country = {
+              name: countryData.name.common,
+              alpha2Code: countryData.cca2,
+              alpha3Code: countryData.cca3,
               capital: countryData.capital?.[0] || null,
               region: countryData.region || null,
               subregion: countryData.subregion || null,
               population: countryData.population || null,
-              governmentForm: null, // To be added manually or from another source
-            }
-          };
+              area: countryData.area || null,
+              flagUrl: countryData.flags?.svg || null,
+              coatOfArmsUrl: countryData.coatOfArms?.svg || null,
+              mapUrl: countryData.maps?.googleMaps || null,
+              independent: countryData.independent || false,
+              unMember: countryData.unMember || false,
+              currencies: countryData.currencies || null,
+              languages: countryData.languages || null,
+              borders: countryData.borders || null,
+              timezones: countryData.timezones || null,
+              startOfWeek: countryData.startOfWeek || null,
+              capitalInfo: countryData.capitalInfo || null,
+              postalCode: countryData.postalCode || null,
+              flag: countryData.flag || null, // emoji
+              countryInfo: {
+                capital: countryData.capital?.[0] || null,
+                region: countryData.region || null,
+                subregion: countryData.subregion || null,
+                population: countryData.population || null,
+                governmentForm: null, // To be added manually or from another source
+              }
+            };
+            
+            await storage.createCountry(country);
+          }
+        } catch (apiError) {
+          console.log("Error fetching from external API, using static data:", apiError);
           
-          await storage.createCountry(country);
+          // Fallback to using static data
+          for (const country of countryData) {
+            await storage.createCountry(country);
+          }
         }
       }
       
