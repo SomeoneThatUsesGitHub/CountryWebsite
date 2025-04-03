@@ -23,15 +23,15 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/30 z-0"></div>
       
       {/* Top Navigation */}
-      <div className="container mx-auto px-4 pt-4 relative z-10">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+      <div className="container mx-auto px-4 pt-5 relative z-10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <button 
             onClick={handleBack}
-            className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white"
+            className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-white"
           >
-            <i className="fas fa-arrow-left text-xs sm:text-sm"></i>
+            <i className="fas fa-arrow-left text-sm sm:text-base"></i>
           </button>
-          <div className="bg-primary/80 backdrop-blur-sm text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm">
+          <div className="bg-primary/80 backdrop-blur-sm text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
             {country.region || 'Unknown Region'}
           </div>
         </div>
@@ -41,7 +41,7 @@ const CountryBanner: React.FC<CountryBannerProps> = ({ country }) => {
       <div className="container mx-auto px-4 relative z-10 pb-6 md:pb-8">
         <div className="w-full">
           
-          <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 sm:mb-2">{country.name}</h1>
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-1 sm:mb-2">{country.name}</h1>
           
           <div className="grid grid-cols-2 xxs:flex xxs:flex-wrap gap-1.5 sm:gap-2 mt-2 mb-2">
             <div className="bg-white/20 backdrop-blur-sm text-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1 sm:gap-2 text-[10px] xs:text-xs sm:text-sm">
