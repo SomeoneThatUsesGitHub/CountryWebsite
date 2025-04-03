@@ -8,6 +8,76 @@ interface InternationalRelationsProps {
   countryId: number;
 }
 
+// Convert country name to country code for flag URLs
+function getCountryCode(countryName: string): string {
+  // Common country names to code mapping
+  const countryCodeMap: Record<string, string> = {
+    'Afghanistan': 'AF',
+    'Albania': 'AL',
+    'Algeria': 'DZ',
+    'Argentina': 'AR',
+    'Australia': 'AU',
+    'Austria': 'AT',
+    'Belgium': 'BE',
+    'Brazil': 'BR',
+    'Bulgaria': 'BG',
+    'Canada': 'CA',
+    'Chile': 'CL',
+    'China': 'CN',
+    'Colombia': 'CO',
+    'Croatia': 'HR',
+    'Cuba': 'CU',
+    'Czech Republic': 'CZ',
+    'Denmark': 'DK',
+    'Egypt': 'EG',
+    'Finland': 'FI',
+    'France': 'FR',
+    'Germany': 'DE',
+    'Greece': 'GR',
+    'Hungary': 'HU',
+    'Iceland': 'IS',
+    'India': 'IN',
+    'Indonesia': 'ID',
+    'Iran': 'IR',
+    'Iraq': 'IQ',
+    'Ireland': 'IE',
+    'Israel': 'IL',
+    'Italy': 'IT',
+    'Japan': 'JP',
+    'Kazakhstan': 'KZ',
+    'Kenya': 'KE',
+    'South Korea': 'KR', 
+    'Mexico': 'MX',
+    'Netherlands': 'NL',
+    'New Zealand': 'NZ',
+    'Nigeria': 'NG',
+    'Norway': 'NO',
+    'Pakistan': 'PK',
+    'Peru': 'PE',
+    'Philippines': 'PH',
+    'Poland': 'PL',
+    'Portugal': 'PT',
+    'Romania': 'RO',
+    'Russia': 'RU',
+    'Saudi Arabia': 'SA',
+    'Serbia': 'RS',
+    'Singapore': 'SG',
+    'South Africa': 'ZA',
+    'Spain': 'ES',
+    'Sweden': 'SE',
+    'Switzerland': 'CH',
+    'Thailand': 'TH',
+    'Turkey': 'TR',
+    'Ukraine': 'UA',
+    'United Arab Emirates': 'AE',
+    'United Kingdom': 'GB',
+    'United States': 'US',
+    'Vietnam': 'VN',
+  };
+  
+  return countryCodeMap[countryName] || 'xx'; // Return 'xx' as fallback for unknown countries
+}
+
 const InternationalRelations: React.FC<InternationalRelationsProps> = ({ 
   countryName, 
   countryId
@@ -183,83 +253,6 @@ const InternationalRelations: React.FC<InternationalRelationsProps> = ({
             </div>
           </div>
         )}
-      </div>
-      
-      {/* Historical Laws */}
-      <div className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-5 rounded-lg shadow-sm">
-        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
-          <i className="fas fa-gavel text-primary mr-2"></i>
-          Historical Laws
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { 
-              name: 'Constitutional Reform', 
-              year: '2010', 
-              description: 'Major revision of the constitution that strengthened democratic institutions and expanded civil liberties.', 
-              icon: 'fa-landmark'
-            },
-            { 
-              name: 'Environmental Protection Act', 
-              year: '2015', 
-              description: 'Landmark legislation establishing strict environmental standards and conservation regulations.', 
-              icon: 'fa-tree'
-            },
-            { 
-              name: 'Digital Rights Law', 
-              year: '2018', 
-              description: 'Comprehensive legislation protecting digital privacy and regulating tech companies.', 
-              icon: 'fa-shield-alt'
-            }
-          ].map((law, index) => (
-            <motion.div 
-              key={index} 
-              className="bg-white rounded-lg overflow-hidden shadow-sm"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 + (index * 0.1) }}
-            >
-              <div className="p-3 bg-primary/10 border-b border-primary/20">
-                <div className="flex items-center gap-2">
-                  <i className={`fas ${law.icon} text-primary`}></i>
-                  <h5 className="font-semibold">{law.name}</h5>
-                </div>
-                <p className="text-xs text-gray-600 mt-1">Enacted in {law.year}</p>
-              </div>
-              <div className="p-3">
-                <p className="text-sm text-gray-600">{law.description}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-      
-      {/* International Organizations */}
-      <div className="mt-6 bg-white p-5 rounded-lg shadow-sm border border-primary/10">
-        <h4 className="font-semibold mb-4 text-gray-800 flex items-center">
-          <i className="fas fa-globe-americas text-primary mr-2"></i>
-          International Organizations Membership
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {[
-            { name: 'United Nations', icon: 'fa-globe-americas', color: 'bg-blue-50 text-blue-600 border-blue-200' },
-            { name: 'World Trade Organization', icon: 'fa-balance-scale', color: 'bg-green-50 text-green-600 border-green-200' },
-            { name: 'G20', icon: 'fa-users', color: 'bg-purple-50 text-purple-600 border-purple-200' },
-            { name: 'NATO', icon: 'fa-shield-alt', color: 'bg-red-50 text-red-600 border-red-200' },
-            { name: 'World Health Organization', icon: 'fa-heartbeat', color: 'bg-teal-50 text-teal-600 border-teal-200' }
-          ].map((org, index) => (
-            <motion.div 
-              key={org.name}
-              className={`flex items-center gap-2 p-3 rounded-lg border ${org.color}`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 + (index * 0.1) }}
-            >
-              <i className={`fas ${org.icon} text-lg`}></i>
-              <p className="text-sm font-medium">{org.name}</p>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </div>
   );
